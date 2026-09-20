@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AI FPS Match Spectator</title>
+  <title>Smart AI FPS Match Spectator</title>
   <style>
     body {
       margin: 0;
@@ -80,7 +80,6 @@
   </div>
 
   <script>
-    // 맵 및 게임 서포트 모듈
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a24);
     scene.fog = new THREE.FogExp2(0x1a1a24, 0.015);
@@ -95,38 +94,125 @@
     const light = new THREE.DirectionalLight(0xffffff, 1);
     light.position.set(20, 40, 20);
     light.castShadow = true;
-    light.shadow.mapSize.width = 1024;
-    light.shadow.mapSize.height = 1024;
     scene.add(light);
     scene.add(new THREE.AmbientLight(0x666666));
 
     // 바닥
-    const floorGeo = new THREE.PlaneGeometry(60, 60);
+    const MAP_SIZE = 60;
+    const GRID_SIZE = 30; // 30x30 내비게이션 그리드
+    const CELL_SIZE = MAP_SIZE / GRID_SIZE;
+
+    const floorGeo = new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE);
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // 지형지물 (엄폐물)
+    // 그리드 맵 데이터 초기화 (0: 이동가능, 1: 장애물)
+    const gridMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+
+    function worldToGrid(x, z) {
+      const gx = Math.floor((x + MAP_SIZE / 2) / CELL_SIZE);
+      const gz = Math.floor((z + MAP_SIZE / 2) / CELL_SIZE);
+      return {
+        x: Math.max(0, Math.min(GRID_SIZE - 1, gx)),
+        z: Math.max(0, Math.min(GRID_SIZE - 1, gz))
+      };
+    }
+
+    function gridToWorld(gx, gz) {
+      return {
+        x: (gx + 0.5) * CELL_SIZE - MAP_SIZE / 2,
+        z: (gz + 0.5) * CELL_SIZE - MAP_SIZE / 2
+      };
+    }
+
+    // 지형지물 배치 및 그리드 맵 마킹
     const obstacles = [];
     function createObstacle(x, z, w, h, d) {
       const geo = new THREE.BoxGeometry(w, h, d);
       const mat = new THREE.MeshStandardMaterial({ color: 0x444455, roughness: 0.5 });
       const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(x, h/2, z);
+      mesh.position.set(x, h / 2, z);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       scene.add(mesh);
       obstacles.push(mesh);
+
+      // 장애물 부근 그리드 셀 차단 (여유공간 포함)
+      const min = worldToGrid(x - w / 2 - 1, z - d / 2 - 1);
+      const max = worldToGrid(x + w / 2 + 1, z + d / 2 + 1);
+      for (let gx = min.x; gx <= max.x; gx++) {
+        for (let gz = min.z; gz <= max.z; gz++) {
+          gridMap[gx][gz] = 1;
+        }
+      }
     }
 
-    // 장애물배치
-    createObstacle(0, 0, 8, 4, 8);
+    createObstacle(0, 0, 10, 4, 10);
     createObstacle(-12, -10, 6, 3, 6);
     createObstacle(12, 10, 6, 3, 6);
     createObstacle(-10, 12, 4, 3, 10);
     createObstacle(10, -12, 4, 3, 10);
+
+    // A* 길찾기 알고리즘
+    function findPath(startPos, targetPos) {
+      const start = worldToGrid(startPos.x, startPos.z);
+      const target = worldToGrid(targetPos.x, targetPos.z);
+
+      const openList = [];
+      const closedList = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false));
+      const parent = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
+
+      const gScore = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(Infinity));
+      const fScore = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(Infinity));
+
+      gScore[start.x][start.z] = 0;
+      fScore[start.x][start.z] = Math.hypot(target.x - start.x, target.z - start.z);
+
+      openList.push(start);
+
+      while (openList.length > 0) {
+        // fScore가 가장 작은 노드 선택
+        openList.sort((a, b) => fScore[a.x][a.z] - fScore[b.x][b.z]);
+        const current = openList.shift();
+
+        if (current.x === target.x && current.z === target.z) {
+          const path = [];
+          let curr = current;
+          while (curr) {
+            path.push(gridToWorld(curr.x, curr.z));
+            curr = parent[curr.x][curr.z];
+          }
+          return path.reverse();
+        }
+
+        closedList[current.x][current.z] = true;
+
+        const neighbors = [
+          { x: current.x + 1, z: current.z }, { x: current.x - 1, z: current.z },
+          { x: current.x, z: current.z + 1 }, { x: current.x, z: current.z - 1 }
+        ];
+
+        for (const n of neighbors) {
+          if (n.x < 0 || n.x >= GRID_SIZE || n.z < 0 || n.z >= GRID_SIZE) continue;
+          if (gridMap[n.x][n.z] === 1 || closedList[n.x][n.z]) continue;
+
+          const tentativeG = gScore[current.x][current.z] + 1;
+          if (tentativeG < gScore[n.x][n.z]) {
+            parent[n.x][n.z] = current;
+            gScore[n.x][n.z] = tentativeG;
+            fScore[n.x][n.z] = tentativeG + Math.hypot(target.x - n.x, target.z - n.z);
+
+            if (!openList.some(o => o.x === n.x && o.z === n.z)) {
+              openList.push(n);
+            }
+          }
+        }
+      }
+      return null; // 경로가 없을 때
+    }
 
     // AI 봇 클래스
     class Bot {
@@ -135,10 +221,11 @@
         this.color = color;
         this.hp = 100;
         this.kills = 0;
-        this.speed = 0.12;
+        this.speed = 0.14;
         this.lastShot = 0;
+        this.path = [];
+        this.lastPathCalc = 0;
 
-        // 메시 생성
         const group = new THREE.Group();
         const bodyGeo = new THREE.CylinderGeometry(0.6, 0.6, 1.8, 16);
         const bodyMat = new THREE.MeshStandardMaterial({ color: color });
@@ -147,7 +234,6 @@
         body.castShadow = true;
         group.add(body);
 
-        // 총기 표시
         const gunGeo = new THREE.BoxGeometry(0.2, 0.2, 0.8);
         const gunMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
         const gun = new THREE.Mesh(gunGeo, gunMat);
@@ -162,6 +248,7 @@
       reset(x, z) {
         this.hp = 100;
         this.mesh.position.set(x, 0, z);
+        this.path = [];
       }
 
       update(target) {
@@ -170,61 +257,79 @@
         const myPos = this.mesh.position;
         const targetPos = target.mesh.position;
 
-        // 타겟 방향 계산
-        const dir = new THREE.Vector3().subVectors(targetPos, myPos);
-        const dist = dir.length();
-        dir.y = 0;
-        dir.normalize();
+        const dirToTarget = new THREE.Vector3().subVectors(targetPos, myPos);
+        const distToTarget = dirToTarget.length();
+        dirToTarget.y = 0;
+        dirToTarget.normalize();
 
-        // 회전
-        const angle = Math.atan2(dir.x, dir.z);
-        this.mesh.rotation.y = angle + Math.PI;
-
-        // 레이캐스팅으로 장애물 확인
+        // 시야 확보 여부 레이캐스팅
         const raycaster = new THREE.Raycaster(
           new THREE.Vector3(myPos.x, 1, myPos.z),
-          dir, 0, dist
+          dirToTarget, 0, distToTarget
         );
         const hits = raycaster.intersectObjects(obstacles);
+        const hasLineOfSight = (hits.length === 0);
 
-        // 이동 및 시야 제어 AI
-        if (hits.length === 0) {
-          // 시야 확보됨: 거리를 두고 사격
-          if (dist > 8) {
-            this.mesh.position.addScaledVector(dir, this.speed);
-          } else if (dist < 4) {
-            this.mesh.position.addScaledVector(dir, -this.speed);
+        if (hasLineOfSight) {
+          // 시야 확보 시: 정면 주시 및 거리 조절하며 교전
+          const angle = Math.atan2(dirToTarget.x, dirToTarget.z);
+          this.mesh.rotation.y = angle + Math.PI;
+
+          if (distToTarget > 12) {
+            this.mesh.position.addScaledVector(dirToTarget, this.speed);
+          } else if (distToTarget < 5) {
+            this.mesh.position.addScaledVector(dirToTarget, -this.speed);
           }
           this.shoot(target);
         } else {
-          // 장애물에 가려짐: 시회 이동 (돌아가기)
-          const sideDir = new THREE.Vector3(-dir.z, 0, dir.x);
-          this.mesh.position.addScaledVector(sideDir, this.speed);
+          // 시야 가림 시: A* 알고리즘으로 경로 계산하여 상대방 추적
+          const now = Date.now();
+          if (now - this.lastPathCalc > 500 || this.path.length === 0) {
+            this.path = findPath(myPos, targetPos) || [];
+            this.lastPathCalc = now;
+          }
+
+          if (this.path.length > 1) {
+            const nextWaypoint = this.path[1];
+            const moveDir = new THREE.Vector3(
+              nextWaypoint.x - myPos.x,
+              0,
+              nextWaypoint.z - myPos.z
+            );
+            const distToWaypoint = moveDir.length();
+
+            if (distToWaypoint < 0.8) {
+              this.path.shift();
+            } else {
+              moveDir.normalize();
+              const angle = Math.atan2(moveDir.x, moveDir.z);
+              this.mesh.rotation.y = angle + Math.PI;
+              this.mesh.position.addScaledVector(moveDir, this.speed);
+            }
+          }
         }
 
-        // 맵 경계 제한
-        this.mesh.position.x = Math.max(-28, Math.min(28, this.mesh.position.x));
-        this.mesh.position.z = Math.max(-28, Math.min(28, this.mesh.position.z));
+        // 맵 경계 제약
+        this.mesh.position.x = Math.max(-27, Math.min(27, this.mesh.position.x));
+        this.mesh.position.z = Math.max(-27, Math.min(27, this.mesh.position.z));
       }
 
       shoot(target) {
         const now = Date.now();
-        if (now - this.lastShot < 350) return; // 연사 속도
+        if (now - this.lastShot < 300) return;
         this.lastShot = now;
 
-        // 궤적 생성
         const bulletGeo = new THREE.BufferGeometry().setFromPoints([
           this.mesh.position.clone().add(new THREE.Vector3(0, 1.1, 0)),
-          target.mesh.position.clone().add(new THREE.Vector3(0, 0.9 + (Math.random()-0.5)*0.5, 0))
+          target.mesh.position.clone().add(new THREE.Vector3(0, 0.9 + (Math.random() - 0.5) * 0.4, 0))
         ]);
         const bulletMat = new THREE.LineBasicMaterial({ color: this.color === 0xff3333 ? 0xffaaaa : 0xaaaaff });
         const line = new THREE.Line(bulletGeo, bulletMat);
         scene.add(line);
         setTimeout(() => scene.remove(line), 40);
 
-        // 명중 및 데미지 판정 (거리 및 명중률 계산)
-        if (Math.random() < 0.7) {
-          target.takeDamage(12, this);
+        if (Math.random() < 0.75) {
+          target.takeDamage(10, this);
         }
       }
 
@@ -244,31 +349,28 @@
     const redBot = new Bot(0xff3333, -20, -20, 'RED');
     const blueBot = new Bot(0x3388ff, 20, 20, 'BLUE');
 
-    // 관전 카메라 상태
     let currentCamMode = 'top';
-
     window.setCamView = function(mode) {
       currentCamMode = mode;
     };
 
     function updateCamera() {
       if (currentCamMode === 'top') {
-        camera.position.set(0, 45, 0);
+        camera.position.set(0, 48, 0);
         camera.lookAt(0, 0, 0);
       } else if (currentCamMode === 'red') {
         const p = redBot.mesh.position;
         const rot = redBot.mesh.rotation.y;
-        camera.position.set(p.x + Math.sin(rot)*2, 2.2, p.z + Math.cos(rot)*2);
-        camera.lookAt(p.x - Math.sin(rot)*10, 1.5, p.z - Math.cos(rot)*10);
+        camera.position.set(p.x + Math.sin(rot) * 2, 2.2, p.z + Math.cos(rot) * 2);
+        camera.lookAt(p.x - Math.sin(rot) * 10, 1.5, p.z - Math.cos(rot) * 10);
       } else if (currentCamMode === 'blue') {
         const p = blueBot.mesh.position;
         const rot = blueBot.mesh.rotation.y;
-        camera.position.set(p.x + Math.sin(rot)*2, 2.2, p.z + Math.cos(rot)*2);
-        camera.lookAt(p.x - Math.sin(rot)*10, 1.5, p.z - Math.cos(rot)*10);
+        camera.position.set(p.x + Math.sin(rot) * 2, 2.2, p.z + Math.cos(rot) * 2);
+        camera.lookAt(p.x - Math.sin(rot) * 10, 1.5, p.z - Math.cos(rot) * 10);
       }
     }
 
-    // UI 업데이트
     function updateUI() {
       document.getElementById('hp-red').innerText = `HP: ${redBot.hp}`;
       document.getElementById('score-red').innerText = `${redBot.kills} Kills`;
@@ -276,7 +378,6 @@
       document.getElementById('score-blue').innerText = `${blueBot.kills} Kills`;
     }
 
-    // 메인 루프
     function animate() {
       requestAnimationFrame(animate);
 
@@ -289,7 +390,6 @@
       renderer.render(scene, camera);
     }
 
-    // 창 리사이즈
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
