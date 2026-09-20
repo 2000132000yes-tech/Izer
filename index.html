@@ -1,998 +1,302 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>발로란트 스타일 탑다운 슈팅 게임</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        body {
-            background-color: #0d1117;
-            color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        #game-container {
-            position: relative;
-            width: 360px;
-            height: 600px;
-            background-color: #bda07b;
-            border: 3px solid #222;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
-        }
-        canvas {
-            display: block;
-        }
-        /* UI 레이어 */
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        /* 상단 UI 바 */
-        #top-bar {
-            position: absolute;
-            top: 10px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 12px;
-        }
-        .stage-diamond {
-            width: 32px;
-            height: 32px;
-            background: #fff;
-            border: 2px solid #111;
-            transform: rotate(45deg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-        }
-        .stage-number {
-            transform: rotate(-45deg);
-            font-size: 14px;
-            font-weight: bold;
-            color: #111;
-        }
-        .info-box {
-            background: rgba(15, 25, 35, 0.88);
-            border: 1px solid #ff4655;
-            color: #ece8e1;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        /* 버튼 */
-        #start-btn {
-            position: absolute;
-            bottom: 88px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 8px 22px;
-            font-size: 13px;
-            font-weight: bold;
-            color: #fff;
-            background: #ff4655;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            pointer-events: auto;
-            box-shadow: 0 4px 10px rgba(255,70,85,0.4);
-        }
-        #start-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
-
-        /* 카드 덱 버튼 */
-        #deck-area {
-            position: absolute;
-            bottom: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 65px;
-            height: 65px;
-            background: #0f1923;
-            border: 2px solid #ff4655;
-            border-radius: 6px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            pointer-events: auto;
-            font-weight: bold;
-            font-size: 12px;
-            color: #ece8e1;
-        }
-        #deck-area.disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* 요원 선택 카드 컨테이너 */
-        #card-container {
-            position: absolute;
-            top: 38%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            gap: 10px;
-            pointer-events: auto;
-        }
-        
-        .agent-card {
-            position: relative;
-            width: 100px;
-            height: 140px;
-            background: #0f1923;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 5px;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.7);
-            animation: cardPop 0.25s ease-out forwards;
-        }
-
-        /* 제트 카드 스타일 (연두색 테두리) */
-        .agent-card.jett {
-            border: 2px solid #2ecc71;
-        }
-        .agent-card.jett .agent-type { color: #2ecc71; }
-        .agent-card.jett .agent-rarity { color: #2ecc71; }
-
-        /* 피닉스 카드 스타일 (하늘색 테두리 및 파란색 레어 글씨) */
-        .agent-card.phoenix {
-            border: 2px solid #00d2ff;
-        }
-        .agent-card.phoenix .agent-type { color: #00d2ff; }
-        .agent-card.phoenix .agent-rarity { color: #2980b9; }
-
-        .agent-type { font-size: 11px; font-weight: bold; letter-spacing: 1px; }
-        .agent-name { font-size: 15px; font-weight: 900; color: #fff; margin: auto 0; }
-        .agent-rarity { font-size: 11px; font-weight: bold; }
-
-        /* 카드 설명 툴팁 */
-        .card-tooltip {
-            position: absolute;
-            bottom: -85px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 170px;
-            background: rgba(15, 25, 35, 0.95);
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 6px;
-            font-size: 9px;
-            color: #ece8e1;
-            line-height: 1.3;
-            pointer-events: none;
-            display: none;
-            z-index: 10;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.8);
-        }
-        .agent-card:hover .card-tooltip { display: block; }
-
-        @keyframes cardPop {
-            0% { opacity: 0; transform: translateY(20px) scale(0.8); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        /* 승패 알림 배너 */
-        #result-banner {
-            position: absolute;
-            top: 70px;
-            left: 0;
-            width: 100%;
-            padding: 10px 0;
-            text-align: center;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(15, 25, 35, 0.93);
-            border-top: 2px solid #ff4655;
-            border-bottom: 2px solid #ff4655;
-        }
-        .banner-title { font-size: 22px; font-weight: 900; letter-spacing: 2px; }
-        .banner-title.won { color: #00f0ff; }
-        .banner-title.lost { color: #ff4655; }
-        .banner-reward { font-size: 12px; font-weight: bold; color: #2ecc71; margin-top: 2px; }
-
-        /* 데미지 텍스트 */
-        .damage-text {
-            position: absolute;
-            font-weight: bold;
-            font-size: 12px;
-            pointer-events: none;
-            animation: floatUp 0.7s ease-out forwards;
-        }
-        .damage-text.normal { color: #ffffff; text-shadow: 0 0 3px #000; }
-        .damage-text.headshot { color: #ff4655; font-size: 16px; text-shadow: 0 0 5px #000; }
-        .damage-text.heal { color: #2ecc71; font-size: 12px; text-shadow: 0 0 3px #000; }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translate(-50%, 0); }
-            100% { opacity: 0; transform: translate(-50%, -25px); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AI FPS Match Spectator</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: none;
+    }
+    #ui {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+      width: 90%;
+      max-width: 400px;
+    }
+    .score-card {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      color: white;
+      text-align: center;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      backdrop-filter: blur(4px);
+    }
+    .red { background: rgba(220, 53, 69, 0.85); }
+    .blue { background: rgba(13, 110, 253, 0.85); }
+    .score { font-size: 20px; margin-top: 4px; }
+    #controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      padding: 12px 18px;
+      border-radius: 20px;
+      font-size: 14px;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+    }
+    .btn:active { background: rgba(255, 255, 255, 0.5); }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-
-<div id="game-container">
-    <canvas id="gameCanvas" width="360" height="600"></canvas>
-    
-    <div id="ui-layer">
-        <div id="top-bar">
-            <div class="stage-diamond">
-                <div class="stage-number" id="stage-num">1</div>
-            </div>
-            <div class="info-box" id="gun-display">총기: 클래식</div>
-            <div class="info-box" id="credit-display">크레딧: 0원</div>
-        </div>
-
-        <button id="start-btn" disabled>라운드 시작</button>
-        <div id="deck-area"><span>DECK</span></div>
-        <div id="card-container"></div>
-
-        <div id="result-banner">
-            <div class="banner-title" id="banner-title">ROUND WON</div>
-            <div class="banner-reward" id="banner-reward">+3200 크레딧</div>
-        </div>
+  <div id="ui">
+    <div class="score-card red">
+      <div>AI RED</div>
+      <div id="hp-red">HP: 100</div>
+      <div id="score-red" class="score">0 Kills</div>
     </div>
-</div>
+    <div class="score-card blue">
+      <div>AI BLUE</div>
+      <div id="hp-blue">HP: 100</div>
+      <div id="score-blue" class="score">0 Kills</div>
+    </div>
+  </div>
 
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+  <div id="controls">
+    <button class="btn" onclick="setCamView('top')">탑뷰</button>
+    <button class="btn" onclick="setCamView('red')">RED 시점</button>
+    <button class="btn" onclick="setCamView('blue')">BLUE 시점</button>
+  </div>
 
-const AudioContext = window.AudioContext || window.webkitAudioContext;
-let audioCtx = null;
+  <script>
+    // 맵 및 게임 서포트 모듈
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a24);
+    scene.fog = new THREE.FogExp2(0x1a1a24, 0.015);
 
-function playGunSound(gunType) {
-    if (!audioCtx) audioCtx = new AudioContext();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
 
-    const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    // 조명
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(20, 40, 20);
+    light.castShadow = true;
+    light.shadow.mapSize.width = 1024;
+    light.shadow.mapSize.height = 1024;
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x666666));
 
-    if (gunType === 'SHERIFF') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(140, now);
-        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.2);
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-    } else {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(180, now);
-        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.12);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+    // 바닥
+    const floorGeo = new THREE.PlaneGeometry(60, 60);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // 지형지물 (엄폐물)
+    const obstacles = [];
+    function createObstacle(x, z, w, h, d) {
+      const geo = new THREE.BoxGeometry(w, h, d);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x444455, roughness: 0.5 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x, h/2, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      obstacles.push(mesh);
     }
 
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.2);
-}
+    // 장애물배치
+    createObstacle(0, 0, 8, 4, 8);
+    createObstacle(-12, -10, 6, 3, 6);
+    createObstacle(12, 10, 6, 3, 6);
+    createObstacle(-10, 12, 4, 3, 10);
+    createObstacle(10, -12, 4, 3, 10);
 
-// 게임 변수
-let stage = 1;
-let credits = 0;
-let roundKills = 0;
-let gameState = 'PREPARE';
-let cardDrawn = false;
-let myHeadshotProb = 0.10;
-let enemyHeadshotProb = 0.10;
-let shakeTime = 0;
-
-const GUNS = {
-    CLASSIC: { name: '클래식', bodyDmg: 22, headDmg: 65, speed: 13, cooldown: 38, type: 'CLASSIC' },
-    GHOST: { name: '고스트', bodyDmg: 40, headDmg: 90, speed: 15, cooldown: 28, type: 'GHOST' },
-    SHERIFF: { name: '셰리프', bodyDmg: 65, headDmg: 145, speed: 17, cooldown: 50, type: 'SHERIFF' }
-};
-
-let obstacles = [];
-let grassDetails = [];
-let rockDetails = [];
-let allies = [];
-let enemies = [];
-let bullets = [];
-let particles = [];
-let muzzleFlashes = [];
-
-const stageNumEl = document.getElementById('stage-num');
-const gunDisplayEl = document.getElementById('gun-display');
-const creditDisplayEl = document.getElementById('credit-display');
-const startBtn = document.getElementById('start-btn');
-const deckArea = document.getElementById('deck-area');
-const cardContainer = document.getElementById('card-container');
-const resultBanner = document.getElementById('result-banner');
-const bannerTitle = document.getElementById('banner-title');
-const bannerReward = document.getElementById('banner-reward');
-
-// --- Entity 클래스 ---
-
-class Entity {
-    constructor(x, y, isEnemy, gun, agentType = 'JETT') {
-        this.x = x;
-        this.y = y;
-        this.radius = 9;
-        this.isEnemy = isEnemy;
-        this.agentType = agentType; // 'JETT' 또는 'PHOENIX'
-        this.maxHp = isEnemy ? 130 + (stage - 1) * 20 : 150;
-        this.hp = this.maxHp;
-        this.gun = gun;
-        
-        this.vx = 0;
-        this.vy = 0;
-        this.angle = 0;
-        this.targetAngle = 0;
-        this.maxSpeed = 1.4;
-        this.shootCooldown = 0;
-
-        this.aiState = 'SEARCH';
-        this.target = null;
-        this.sightRange = 210;
-        this.coverPoint = null;
-        this.healTimer = 0;
-        this.patrolAngle = Math.random() * Math.PI * 2;
-        this.patrolTimer = 0;
-    }
-
-    update() {
-        if (this.hp <= 0) return;
-        if (this.shootCooldown > 0) this.shootCooldown--;
-
-        const opponentTeam = this.isEnemy ? allies : enemies;
-        const aliveOpponents = opponentTeam.filter(e => e.hp > 0);
-
-        // 시야 내 적 탐색
-        let visibleTarget = null;
-        let minDist = Infinity;
-
-        for (let opp of aliveOpponents) {
-            let d = Math.hypot(opp.x - this.x, opp.y - this.y);
-            if (d < this.sightRange && d < minDist) {
-                if (hasLineOfSight(this.x, this.y, opp.x, opp.y)) {
-                    minDist = d;
-                    visibleTarget = opp;
-                }
-            }
-        }
-
-        // 지능형 상태 변경
-        if (this.hp < this.maxHp * 0.38) {
-            this.aiState = 'RETREAT_HEAL';
-        } else if (visibleTarget) {
-            this.aiState = 'ENGAGE';
-            this.target = visibleTarget;
-        } else {
-            this.aiState = 'SEARCH';
-            this.target = null;
-        }
-
-        // 상태별 이동 로직
-        if (this.aiState === 'RETREAT_HEAL') {
-            this.findSafeCoverAndRetreat(aliveOpponents);
-        } else if (this.aiState === 'ENGAGE' && this.target) {
-            let desiredAng = Math.atan2(this.target.y - this.y, this.target.x - this.x);
-            this.targetAngle = desiredAng;
-
-            if (minDist > 90) {
-                this.moveWithAvoidance(desiredAng);
-            } else {
-                let strafe = desiredAng + (Math.sin(Date.now() / 180) > 0 ? 1.1 : -1.1);
-                this.moveWithAvoidance(strafe);
-
-                if (this.shootCooldown <= 0) {
-                    this.shoot();
-                    this.shootCooldown = this.gun.cooldown;
-                }
-            }
-        } else {
-            // 순찰 및 수색
-            this.patrolTimer--;
-            if (this.patrolTimer <= 0) {
-                this.patrolAngle += (Math.random() - 0.5) * 1.2;
-                this.patrolTimer = 40 + Math.floor(Math.random() * 30);
-            }
-            this.targetAngle = this.patrolAngle;
-            this.moveWithAvoidance(this.patrolAngle);
-        }
-
-        // 부드러운 회전 및 가속
-        this.angle += (this.targetAngle - this.angle) * 0.15;
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vx *= 0.82;
-        this.vy *= 0.82;
-
-        this.resolveWallAndUnitCollisions();
-    }
-
-    // 적 시선에 안 보이는 안전한 벽 뒤로 후퇴 (아군 지원 유도)
-    findSafeCoverAndRetreat(aliveOpponents) {
-        if (!this.coverPoint) {
-            let bestCover = null;
-            let maxSafetyScore = -Infinity;
-
-            for (let obs of obstacles) {
-                let corners = [
-                    { x: obs.x - 15, y: obs.y - 15 },
-                    { x: obs.x + obs.w + 15, y: obs.y - 15 },
-                    { x: obs.x - 15, y: obs.y + obs.h + 15 },
-                    { x: obs.x + obs.w + 15, y: obs.y + obs.h + 15 }
-                ];
-
-                for (let pt of corners) {
-                    let isExposedToEnemy = false;
-                    for (let opp of aliveOpponents) {
-                        if (hasLineOfSight(pt.x, pt.y, opp.x, opp.y)) {
-                            isExposedToEnemy = true;
-                            break;
-                        }
-                    }
-
-                    if (!isExposedToEnemy) {
-                        let distToMe = Math.hypot(pt.x - this.x, pt.y - this.y);
-                        let score = -distToMe; // 가까운 곳 우대
-                        if (score > maxSafetyScore) {
-                            maxSafetyScore = score;
-                            bestCover = pt;
-                        }
-                    }
-                }
-            }
-
-            // 완전 안전한 벽이 없으면 아군 집결 지역(아래쪽)으로 후퇴
-            this.coverPoint = bestCover || { x: canvas.width / 2, y: 520 };
-        }
-
-        let retreatAng = Math.atan2(this.coverPoint.y - this.y, this.coverPoint.x - this.x);
-        this.targetAngle = retreatAng;
-        this.moveWithAvoidance(retreatAng);
-
-        if (Math.hypot(this.coverPoint.x - this.x, this.coverPoint.y - this.y) < 25) {
-            this.healTimer++;
-            if (this.healTimer % 35 === 0 && this.hp < this.maxHp) {
-                this.hp = Math.min(this.maxHp, this.hp + 12);
-                showDamageText(this.x, this.y - 10, 12, false, true);
-                if (this.hp >= this.maxHp * 0.8) {
-                    this.aiState = 'SEARCH';
-                    this.coverPoint = null;
-                }
-            }
-        }
-    }
-
-    // 장애물 감지 및 우회 이동 (왔다 갔다 방지)
-    moveWithAvoidance(desiredAngle) {
-        let testX = this.x + Math.cos(desiredAngle) * 18;
-        let testY = this.y + Math.sin(desiredAngle) * 18;
-
-        let finalAngle = desiredAngle;
-        if (checkObstacleCollision(testX, testY, this.radius)) {
-            // 장애물이 가로막으면 좌우로 각도 틀어서 우회
-            let leftAng = desiredAngle - Math.PI / 3;
-            let rightAng = desiredAngle + Math.PI / 3;
-
-            let leftX = this.x + Math.cos(leftAng) * 18;
-            let leftY = this.y + Math.sin(leftAng) * 18;
-
-            finalAngle = !checkObstacleCollision(leftX, leftY, this.radius) ? leftAng : rightAng;
-        }
-
-        this.vx += Math.cos(finalAngle) * this.maxSpeed * 0.2;
-        this.vy += Math.sin(finalAngle) * this.maxSpeed * 0.2;
-    }
-
-    resolveWallAndUnitCollisions() {
-        for (let obs of obstacles) {
-            let closestX = Math.max(obs.x, Math.min(this.x, obs.x + obs.w));
-            let closestY = Math.max(obs.y, Math.min(this.y, obs.y + obs.h));
-
-            let dx = this.x - closestX;
-            let dy = this.y - closestY;
-            let dist = Math.hypot(dx, dy);
-
-            if (dist < this.radius + 1) {
-                let overlap = (this.radius + 1) - dist;
-                if (dist === 0) { dx = 1; dy = 0; dist = 1; }
-                this.x += (dx / dist) * overlap;
-                this.y += (dy / dist) * overlap;
-                this.vx *= 0.4;
-                this.vy *= 0.4;
-            }
-        }
-
-        this.x = Math.max(this.radius + 2, Math.min(canvas.width - this.radius - 2, this.x));
-        this.y = Math.max(this.radius + 2, Math.min(canvas.height - this.radius - 2, this.y));
-    }
-
-    shoot() {
-        let handX = this.x + Math.cos(this.angle + 0.3) * 10;
-        let handY = this.y + Math.sin(this.angle + 0.3) * 10;
-
-        bullets.push(new Bullet(handX, handY, this.angle, this.gun, this.isEnemy));
-        muzzleFlashes.push({ x: handX, y: handY, angle: this.angle, life: 4 });
-        shakeTime = 3;
-        playGunSound(this.gun.type);
-    }
-
-    draw() {
-        if (this.hp <= 0) return;
-
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-
-        if (this.isEnemy) {
-            // 적군 (붉은색)
-            ctx.fillStyle = '#e74c3c';
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#922b21';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-        } else if (this.agentType === 'JETT') {
-            // 아군 제트 (푸른 몸체 + 백발)
-            ctx.fillStyle = '#2980b9';
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#1b4f72';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // 백발 꽁지
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(-1, 0, this.radius * 0.7, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#a3e4d7';
-            ctx.beginPath();
-            ctx.moveTo(-this.radius * 0.8, -3);
-            ctx.lineTo(-this.radius * 1.5, 0);
-            ctx.lineTo(-this.radius * 0.8, 3);
-            ctx.fill();
-        } else if (this.agentType === 'PHOENIX') {
-            // 피닉스 캐릭터 모델링 (어두운 피부, 검은 드레드 헤어, 주황색 빛 자켓)
-            ctx.fillStyle = '#2c3e50'; // 검은 자켓 외곽
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 피닉스 어두운 피부 톤 (얼굴)
-            ctx.fillStyle = '#6e473b';
-            ctx.beginPath();
-            ctx.arc(2, 0, this.radius * 0.65, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 주황/불꽃빛 자켓 안감 연출
-            ctx.fillStyle = '#e67e22';
-            ctx.beginPath();
-            ctx.arc(-2, 0, this.radius * 0.45, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 검은 드레드 머리 스타일
-            ctx.fillStyle = '#111111';
-            ctx.beginPath();
-            ctx.arc(-this.radius * 0.5, 0, this.radius * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // 총기 렌더링
-        ctx.save();
-        ctx.translate(5, 5);
-        ctx.fillStyle = '#2c3e50';
-        ctx.fillRect(0, -1.5, 7, 3);
-        ctx.restore();
-
-        ctx.restore();
-
-        this.drawUI();
-    }
-
-    drawUI() {
-        const barW = 24;
-        const barH = 3;
-        const barX = this.x - barW / 2;
-        const barY = this.y - this.radius - 9;
-
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(barX, barY, barW, barH);
-
-        const hpPercent = Math.max(0, this.hp / this.maxHp);
-        ctx.fillStyle = this.isEnemy ? '#e74c3c' : '#2ecc71';
-        ctx.fillRect(barX, barY, barW * hpPercent, barH);
-    }
-}
-
-class Bullet {
-    constructor(x, y, angle, gun, isEnemy) {
-        this.x = x;
-        this.y = y;
-        this.angle = angle;
-        this.gun = gun;
-        this.isEnemy = isEnemy;
-        this.speed = gun.speed;
-        this.active = true;
-    }
-
-    update() {
-        if (!this.active) return;
-
-        let nextX = this.x + Math.cos(this.angle) * this.speed;
-        let nextY = this.y + Math.sin(this.angle) * this.speed;
-
-        if (checkObstacleCollision(nextX, nextY, 1.5)) {
-            this.active = false;
-            return;
-        }
-
-        this.x = nextX;
-        this.y = nextY;
-
-        const targets = this.isEnemy ? allies : enemies;
-        for (let target of targets) {
-            if (target.hp > 0 && Math.hypot(target.x - this.x, target.y - this.y) < target.radius) {
-                this.hit(target);
-                this.active = false;
-                break;
-            }
-        }
-
-        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-            this.active = false;
-        }
-    }
-
-    hit(target) {
-        let prob = this.isEnemy ? enemyHeadshotProb : myHeadshotProb;
-        let isHead = Math.random() < prob;
-        let damage = isHead ? this.gun.headDmg : this.gun.bodyDmg;
-
-        target.hp -= damage;
-        showDamageText(target.x, target.y - 10, damage, isHead);
-
-        if (target.hp <= 0) {
-            if (!this.isEnemy) roundKills++;
-            explode(target.x, target.y, target.isEnemy);
-        }
-    }
-
-    draw() {
-        if (!this.active) return;
-        ctx.save();
-        ctx.strokeStyle = '#f1c40f';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.x - Math.cos(this.angle) * 7, this.y - Math.sin(this.angle) * 7);
-        ctx.stroke();
-        ctx.restore();
-    }
-}
-
-class Particle {
-    constructor(x, y, color) {
-        this.x = x;
-        this.y = y;
+    // AI 봇 클래스
+    class Bot {
+      constructor(color, startX, startZ, name) {
+        this.name = name;
         this.color = color;
-        this.vx = (Math.random() - 0.5) * 4;
-        this.vy = (Math.random() - 0.5) * 4;
-        this.life = 16;
-        this.maxLife = 16;
-        this.size = Math.random() * 2 + 1;
-    }
+        this.hp = 100;
+        this.kills = 0;
+        this.speed = 0.12;
+        this.lastShot = 0;
 
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.life--;
-    }
+        // 메시 생성
+        const group = new THREE.Group();
+        const bodyGeo = new THREE.CylinderGeometry(0.6, 0.6, 1.8, 16);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: color });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.y = 0.9;
+        body.castShadow = true;
+        group.add(body);
 
-    draw() {
-        ctx.save();
-        ctx.globalAlpha = this.life / this.maxLife;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-    }
-}
+        // 총기 표시
+        const gunGeo = new THREE.BoxGeometry(0.2, 0.2, 0.8);
+        const gunMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const gun = new THREE.Mesh(gunGeo, gunMat);
+        gun.position.set(0.4, 1.1, -0.5);
+        group.add(gun);
 
-// --- 보조 및 맵 로직 ---
+        this.mesh = group;
+        this.mesh.position.set(startX, 0, startZ);
+        scene.add(this.mesh);
+      }
 
-function checkObstacleCollision(x, y, r) {
-    for (let obs of obstacles) {
-        if (x + r > obs.x && x - r < obs.x + obs.w &&
-            y + r > obs.y && y - r < obs.y + obs.h) {
-            return true;
+      reset(x, z) {
+        this.hp = 100;
+        this.mesh.position.set(x, 0, z);
+      }
+
+      update(target) {
+        if (this.hp <= 0) return;
+
+        const myPos = this.mesh.position;
+        const targetPos = target.mesh.position;
+
+        // 타겟 방향 계산
+        const dir = new THREE.Vector3().subVectors(targetPos, myPos);
+        const dist = dir.length();
+        dir.y = 0;
+        dir.normalize();
+
+        // 회전
+        const angle = Math.atan2(dir.x, dir.z);
+        this.mesh.rotation.y = angle + Math.PI;
+
+        // 레이캐스팅으로 장애물 확인
+        const raycaster = new THREE.Raycaster(
+          new THREE.Vector3(myPos.x, 1, myPos.z),
+          dir, 0, dist
+        );
+        const hits = raycaster.intersectObjects(obstacles);
+
+        // 이동 및 시야 제어 AI
+        if (hits.length === 0) {
+          // 시야 확보됨: 거리를 두고 사격
+          if (dist > 8) {
+            this.mesh.position.addScaledVector(dir, this.speed);
+          } else if (dist < 4) {
+            this.mesh.position.addScaledVector(dir, -this.speed);
+          }
+          this.shoot(target);
+        } else {
+          // 장애물에 가려짐: 시회 이동 (돌아가기)
+          const sideDir = new THREE.Vector3(-dir.z, 0, dir.x);
+          this.mesh.position.addScaledVector(sideDir, this.speed);
         }
-    }
-    return false;
-}
 
-function hasLineOfSight(x1, y1, x2, y2) {
-    let steps = 10;
-    for (let i = 0; i <= steps; i++) {
-        let px = x1 + (x2 - x1) * (i / steps);
-        let py = y1 + (y2 - y1) * (i / steps);
-        if (checkObstacleCollision(px, py, 1.5)) return false;
-    }
-    return true;
-}
+        // 맵 경계 제한
+        this.mesh.position.x = Math.max(-28, Math.min(28, this.mesh.position.x));
+        this.mesh.position.z = Math.max(-28, Math.min(28, this.mesh.position.z));
+      }
 
-function initMap() {
-    obstacles = [];
-    const count = 4 + Math.floor(Math.random() * 2);
-    for (let i = 0; i < count; i++) {
-        let w = 42 + Math.random() * 28;
-        let h = 42 + Math.random() * 28;
-        let x = 25 + Math.random() * (canvas.width - w - 50);
-        let y = 110 + Math.random() * (canvas.height - h - 220);
-        obstacles.push({ x, y, w, h });
-    }
+      shoot(target) {
+        const now = Date.now();
+        if (now - this.lastShot < 350) return; // 연사 속도
+        this.lastShot = now;
 
-    grassDetails = [];
-    for (let i = 0; i < 18; i++) {
-        grassDetails.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
-    }
-}
+        // 궤적 생성
+        const bulletGeo = new THREE.BufferGeometry().setFromPoints([
+          this.mesh.position.clone().add(new THREE.Vector3(0, 1.1, 0)),
+          target.mesh.position.clone().add(new THREE.Vector3(0, 0.9 + (Math.random()-0.5)*0.5, 0))
+        ]);
+        const bulletMat = new THREE.LineBasicMaterial({ color: this.color === 0xff3333 ? 0xffaaaa : 0xaaaaff });
+        const line = new THREE.Line(bulletGeo, bulletMat);
+        scene.add(line);
+        setTimeout(() => scene.remove(line), 40);
 
-function drawEnvironment() {
-    ctx.strokeStyle = '#8daa73';
-    ctx.lineWidth = 1;
-    for (let g of grassDetails) {
-        ctx.beginPath();
-        ctx.moveTo(g.x, g.y);
-        ctx.lineTo(g.x - 2, g.y - 4);
-        ctx.stroke();
-    }
+        // 명중 및 데미지 판정 (거리 및 명중률 계산)
+        if (Math.random() < 0.7) {
+          target.takeDamage(12, this);
+        }
+      }
 
-    for (let obs of obstacles) {
-        ctx.fillStyle = '#6d4c41';
-        ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-        ctx.strokeStyle = '#4e342e';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
-    }
-}
-
-function drawMuzzleFlashes() {
-    for (let flash of muzzleFlashes) {
-        ctx.save();
-        ctx.translate(flash.x, flash.y);
-        ctx.rotate(flash.angle);
-        ctx.fillStyle = '#f39c12';
-        ctx.beginPath();
-        ctx.arc(4, 0, 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-        flash.life--;
-    }
-    muzzleFlashes = muzzleFlashes.filter(f => f.life > 0);
-}
-
-function updateUI() {
-    creditDisplayEl.innerText = `크레딧: ${credits.toLocaleString()}원`;
-    if (allies.length > 0) {
-        gunDisplayEl.innerText = `총기: ${allies[0].gun.name}`;
-    }
-}
-
-function initRound() {
-    stageNumEl.innerText = stage;
-    updateUI();
-
-    bullets = [];
-    particles = [];
-    muzzleFlashes = [];
-    roundKills = 0;
-    cardDrawn = false;
-    deckArea.classList.remove('disabled');
-    startBtn.disabled = true;
-    cardContainer.innerHTML = '';
-    resultBanner.style.display = 'none';
-    gameState = 'PREPARE';
-
-    initMap();
-    enemyHeadshotProb = 0.10 + (stage - 1) * 0.025;
-
-    // 아군 초기 세팅
-    if (allies.length === 0) {
-        allies = [
-            new Entity(100, 520, false, GUNS.CLASSIC, 'JETT'),
-            new Entity(260, 520, false, GUNS.CLASSIC, 'PHOENIX')
-        ];
-    } else {
-        let spacing = canvas.width / (allies.length + 1);
-        allies.forEach((a, idx) => {
-            a.hp = a.maxHp;
-            a.x = spacing * (idx + 1);
-            a.y = 520;
-            a.vx = 0; a.vy = 0;
-        });
+      takeDamage(amount, attacker) {
+        this.hp -= amount;
+        if (this.hp <= 0) {
+          this.hp = 0;
+          attacker.kills++;
+          setTimeout(() => {
+            redBot.reset(-20, -20);
+            blueBot.reset(20, 20);
+          }, 1000);
+        }
+      }
     }
 
-    // 적 세팅
-    enemies = [];
-    const gunKeys = Object.keys(GUNS);
-    let enemyCount = stage;
-    let spacing = canvas.width / (enemyCount + 1);
+    const redBot = new Bot(0xff3333, -20, -20, 'RED');
+    const blueBot = new Bot(0x3388ff, 20, 20, 'BLUE');
 
-    for (let i = 0; i < enemyCount; i++) {
-        let randomGun = GUNS[gunKeys[Math.floor(Math.random() * gunKeys.length)]];
-        enemies.push(new Entity(spacing * (i + 1), 60, true, randomGun));
-    }
-}
+    // 관전 카메라 상태
+    let currentCamMode = 'top';
 
-function showDamageText(x, y, damage, isHead, isHeal = false) {
-    const el = document.createElement('div');
-    el.className = `damage-text ${isHeal ? 'heal' : (isHead ? 'headshot' : 'normal')}`;
-    el.innerText = isHeal ? `+${damage}` : (isHead ? `HEAD! -${damage}` : `-${damage}`);
-    
-    const rect = canvas.getBoundingClientRect();
-    el.style.left = `${rect.left + x}px`;
-    el.style.top = `${rect.top + y}px`;
-
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 700);
-}
-
-function explode(x, y, isEnemy) {
-    const color = isEnemy ? '#e74c3c' : '#00e5ff';
-    for (let i = 0; i < 15; i++) {
-        particles.push(new Particle(x, y, color));
-    }
-}
-
-// 요원 카드 뽑기 (제트 / 피닉스 요원 카드 레이아웃)
-function drawCards() {
-    if (cardDrawn || gameState !== 'PREPARE') return;
-    cardDrawn = true;
-    deckArea.classList.add('disabled');
-
-    cardContainer.innerHTML = '';
-
-    // 제트 카드 생성
-    const jettCard = document.createElement('div');
-    jettCard.className = 'agent-card jett';
-    jettCard.innerHTML = `
-        <div class="agent-type">요원</div>
-        <div class="agent-name">제트 +1</div>
-        <div class="agent-rarity">희귀</div>
-        <div class="card-tooltip">신속하고 은밀하게 움직이는 제트는 다른 사람이라면 엄두도 못 낼 위험한 일도 마다하지 않습니다. 교전이 벌어질 때면 어김없이 상대보다 뛰어난 능력을 통해 기습적으로 공격합니다.</div>
-    `;
-    jettCard.onclick = () => {
-        allies.push(new Entity(60 + Math.random() * 240, 520, false, GUNS.CLASSIC, 'JETT'));
-        cardContainer.innerHTML = '';
-        startBtn.disabled = false;
+    window.setCamView = function(mode) {
+      currentCamMode = mode;
     };
 
-    // 피닉스 카드 생성
-    const phoenixCard = document.createElement('div');
-    phoenixCard.className = 'agent-card phoenix';
-    phoenixCard.innerHTML = `
-        <div class="agent-type">요원</div>
-        <div class="agent-name">피닉스 +1</div>
-        <div class="agent-rarity">레어</div>
-        <div class="card-tooltip">피닉스의 탁월한 능력은 전장을 섬광탄과 불꽃으로 수놓는 전투 스타일에서 비롯됩니다. 팀의 지원이 있든 없든 피닉스는 자신만의 방식으로 전투를 이끌어갑니다.</div>
-    `;
-    phoenixCard.onclick = () => {
-        allies.push(new Entity(60 + Math.random() * 240, 520, false, GUNS.CLASSIC, 'PHOENIX'));
-        cardContainer.innerHTML = '';
-        startBtn.disabled = false;
-    };
-
-    cardContainer.appendChild(jettCard);
-    cardContainer.appendChild(phoenixCard);
-}
-
-// --- 이벤트 ---
-
-deckArea.addEventListener('click', drawCards);
-
-startBtn.addEventListener('click', () => {
-    if (gameState === 'PREPARE' && cardDrawn) {
-        gameState = 'BATTLE';
-        startBtn.disabled = true;
-    }
-});
-
-// --- 메인 루프 ---
-
-function gameLoop() {
-    ctx.save();
-
-    if (shakeTime > 0) {
-        ctx.translate((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4);
-        shakeTime--;
+    function updateCamera() {
+      if (currentCamMode === 'top') {
+        camera.position.set(0, 45, 0);
+        camera.lookAt(0, 0, 0);
+      } else if (currentCamMode === 'red') {
+        const p = redBot.mesh.position;
+        const rot = redBot.mesh.rotation.y;
+        camera.position.set(p.x + Math.sin(rot)*2, 2.2, p.z + Math.cos(rot)*2);
+        camera.lookAt(p.x - Math.sin(rot)*10, 1.5, p.z - Math.cos(rot)*10);
+      } else if (currentCamMode === 'blue') {
+        const p = blueBot.mesh.position;
+        const rot = blueBot.mesh.rotation.y;
+        camera.position.set(p.x + Math.sin(rot)*2, 2.2, p.z + Math.cos(rot)*2);
+        camera.lookAt(p.x - Math.sin(rot)*10, 1.5, p.z - Math.cos(rot)*10);
+      }
     }
 
-    ctx.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
-
-    drawEnvironment();
-
-    if (gameState === 'BATTLE') {
-        allies.forEach(a => a.update());
-        enemies.forEach(e => e.update());
-        bullets.forEach(b => b.update());
+    // UI 업데이트
+    function updateUI() {
+      document.getElementById('hp-red').innerText = `HP: ${redBot.hp}`;
+      document.getElementById('score-red').innerText = `${redBot.kills} Kills`;
+      document.getElementById('hp-blue').innerText = `HP: ${blueBot.hp}`;
+      document.getElementById('score-blue').innerText = `${blueBot.kills} Kills`;
     }
 
-    particles.forEach(p => p.update());
+    // 메인 루프
+    function animate() {
+      requestAnimationFrame(animate);
 
-    bullets = bullets.filter(b => b.active);
-    particles = particles.filter(p => p.life > 0);
+      redBot.update(blueBot);
+      blueBot.update(redBot);
 
-    allies.forEach(a => a.draw());
-    enemies.forEach(e => e.draw());
-    bullets.forEach(b => b.draw());
-    drawMuzzleFlashes();
-    particles.forEach(p => p.draw());
+      updateCamera();
+      updateUI();
 
-    ctx.restore();
-
-    if (gameState === 'BATTLE') {
-        const aliveAllies = allies.filter(a => a.hp > 0);
-        const aliveEnemies = enemies.filter(e => e.hp > 0);
-
-        if (aliveEnemies.length === 0) {
-            gameState = 'WAIT';
-            let totalReward = 2900 + (stage * 100) + (roundKills * 300);
-            credits += totalReward;
-
-            bannerTitle.innerText = "ROUND WON";
-            bannerTitle.className = "banner-title won";
-            bannerReward.innerText = `라운드 승리 +${totalReward.toLocaleString()}원`;
-            resultBanner.style.display = "flex";
-
-            stage++;
-            setTimeout(() => { initRound(); }, 2200);
-        } else if (aliveAllies.length === 0) {
-            gameState = 'WAIT';
-            let totalReward = 1900 + (roundKills * 300);
-            credits += totalReward;
-
-            bannerTitle.innerText = "ROUND LOST";
-            bannerTitle.className = "banner-title lost";
-            bannerReward.innerText = `라운드 패배 +${totalReward.toLocaleString()}원`;
-            resultBanner.style.display = "flex";
-
-            stage = Math.max(1, stage - 1);
-            allies = [];
-
-            setTimeout(() => { initRound(); }, 2200);
-        }
+      renderer.render(scene, camera);
     }
 
-    requestAnimationFrame(gameLoop);
-}
+    // 창 리사이즈
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
-initRound();
-gameLoop();
-</script>
-
+    animate();
+  </script>
 </body>
 </html>
