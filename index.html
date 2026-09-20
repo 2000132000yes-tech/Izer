@@ -2,593 +2,744 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brawl Stars Style Web Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카드 카드 FPS 슈팅 게임</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             user-select: none;
-            -webkit-user-select: none;
         }
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #111;
+        body {
+            background-color: #1a1a1a;
+            color: #fff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        /* 홈 화면 UI */
-        #home-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
-            color: white;
+            height: 100vh;
+            overflow: hidden;
         }
-        #home-screen h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 3px 3px 0px #000;
-            color: #ffcc00;
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background-color: #2b2b2b;
+            border: 4px solid #444;
+            border-radius: 8px;
+            overflow: hidden;
         }
-        #home-screen p {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            opacity: 0.8;
+        canvas {
+            display: block;
+            background-color: #222;
         }
-        .btn-match {
-            padding: 15px 50px;
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #fff;
-            background: linear-gradient(180deg, #ff9900 0%, #ff5500 100%);
-            border: 4px solid #fff;
-            border-radius: 50px;
-            box-shadow: 0 8px 0 #993300, 0 15px 20px rgba(0,0,0,0.4);
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .btn-match:active {
-            transform: translateY(4px);
-            box-shadow: 0 4px 0 #993300, 0 8px 10px rgba(0,0,0,0.4);
-        }
-
-        /* 게임 화면 HUD */
-        #game-hud {
+        /* UI 레이어 */
+        #ui-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
-            display: none;
-            z-index: 5;
         }
-        .hud-stats {
+        /* 스테이지 마름모 표시 */
+        .stage-diamond {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px 20px;
-            border-radius: 12px;
-            color: white;
-            font-size: 1.2rem;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 46px;
+            height: 46px;
+            background: #333;
+            border: 2px solid #00e5ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 10px rgba(0,229,255,0.5);
+        }
+        .stage-number {
+            transform: rotate(-45deg);
+            font-size: 20px;
             font-weight: bold;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #00e5ff;
         }
-        
-        /* 모바일 가상 조이스틱 영역 */
-        .joystick-zone {
+        /* 시작 버튼 */
+        #start-btn {
             position: absolute;
-            bottom: 30px;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background: #28a745;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
             pointer-events: auto;
-            touch-action: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: all 0.2s;
         }
-        #move-joystick-zone {
-            left: 40px;
+        #start-btn:hover {
+            background: #218838;
+            transform: translateX(-50%) scale(1.05);
         }
-        #attack-joystick-zone {
-            right: 40px;
-            background: rgba(255, 0, 0, 0.15);
-            border: 2px solid rgba(255, 100, 100, 0.3);
+        #start-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: translateX(-50%);
         }
-        .joystick-handle {
+        /* 카드 덱 영역 */
+        #deck-area {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 90px;
+            background: #444;
+            border: 2px solid #aaa;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+        #deck-area:hover {
+            transform: translateX(-50%) scale(1.05);
+        }
+        #deck-area.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* 카드 뽑기 팝업 영역 */
+        #card-container {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 60px;
-            height: 60px;
-            margin-top: -30px;
-            margin-left: -30px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.8);
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            pointer-events: none;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 20px;
+            pointer-events: auto;
         }
-        #attack-handle {
-            background: rgba(255, 80, 80, 0.8);
-        }
-
-        /* 결과 화면 */
-        #game-over-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+        .card {
+            width: 110px;
+            height: 160px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            border: 2px solid #00d2ff;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 20;
-            color: white;
-            display: none;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            animation: drawCard 0.4s ease-out forwards;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        #game-over-title {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 25px rgba(0,210,255,0.4);
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .card-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffeb3b;
+        }
+        @keyframes drawCard {
+            0% {
+                opacity: 0;
+                transform: translateY(100px) scale(0.3);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        /* 데미지 텍스트 */
+        .damage-text {
+            position: absolute;
+            font-weight: bold;
+            font-size: 16px;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+        }
+        .damage-text.normal {
+            color: #ffffff;
+        }
+        .damage-text.headshot {
+            color: #ff2a2a;
+            font-size: 22px;
+            text-shadow: 0 0 5px #000;
+        }
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -40px);
+            }
         }
     </style>
-    <!-- Three.js 3D 라이브러리 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <!-- 1. 홈 화면 (매치 메이킹) -->
-    <div id="home-screen">
-        <h1>BRAWL MINI</h1>
-        <p>가로 모드로 최적화된 3D 3v3 캐주얼 대전</p>
-        <button class="btn-match" onclick="startMatch()">매치 시작</button>
-    </div>
-
-    <!-- 2. 인게임 HUD & 컨트롤러 -->
-    <div id="game-hud">
-        <div class="hud-stats">
-            <div>체력: <span id="hp-display" style="color: #4CAF50;">1000</span></div>
-            <div>점수: <span id="score-display" style="color: #FFD700;">0</span></div>
+<div id="game-container">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div id="ui-layer">
+        <!-- 스테이지 표시 -->
+        <div class="stage-diamond">
+            <div class="stage-number" id="stage-num">1</div>
         </div>
-        
-        <!-- 이동 조이스틱 (좌측) -->
-        <div id="move-joystick-zone" class="joystick-zone">
-            <div id="move-handle" class="joystick-handle"></div>
+
+        <!-- 시작 버튼 -->
+        <button id="start-btn" disabled>시작</button>
+
+        <!-- 카드 덱 -->
+        <div id="deck-area">
+            <span>DECK</span>
         </div>
-        
-        <!-- 조준/공격 조이스틱 (우측) -->
-        <div id="attack-joystick-zone" class="joystick-zone">
-            <div id="attack-handle" class="joystick-handle"></div>
-        </div>
+
+        <!-- 카드가 뽑히는 중앙 영역 -->
+        <div id="card-container"></div>
     </div>
+</div>
 
-    <!-- 3. 게임 결과 화면 -->
-    <div id="game-over-screen">
-        <h1 id="game-over-title">VICTORY</h1>
-        <button class="btn-match" onclick="returnToHome()">홈으로 돌아가기</button>
-    </div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    <script>
-        // --- 1. 전역 변수 및 게임 상태 설정 ---
-        let scene, camera, renderer;
-        let player, playerBody;
-        const enemies = [];
-        const bullets = [];
-        const obstacles = [];
-        
-        let isGameRunning = false;
-        let score = 0;
-        let playerHp = 1000;
-        const maxHp = 1000;
-        
-        let lastAttackTime = 0;
-        const attackCooldown = 300; // ms
+// 게임 상태 변수
+let stage = 1;
+let gameState = 'PREPARE'; // 'PREPARE', 'BATTLE', 'GAMEOVER'
+let cardDrawn = false;
+let myHeadshotProb = 0.10; // 기본 헤드샷 확률 10%
+let enemyHeadshotProb = 0.10;
 
-        // 조이스틱 상태
-        const moveInput = { x: 0, y: 0, active: false };
-        const attackInput = { x: 0, y: 0, active: false };
+// 총기 데이터
+const GUNS = {
+    CLASSIC: { name: '클래식', bodyDmg: 20, headDmg: 60, speed: 12, cooldown: 45 },
+    GHOST: { name: '고스트', bodyDmg: 50, headDmg: 100, speed: 15, cooldown: 35 },
+    SHERIFF: { name: '셰리프', bodyDmg: 60, headDmg: 140, speed: 18, cooldown: 60 }
+};
 
-        // --- 2. 초기화 및 Three.js 기본 씬 설정 ---
-        function initScene() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x4a7c59); // 상큼한 잔디밭 색상
+// 지형 지물 (A* 길찾기용 격자 기반)
+const GRID_SIZE = 40;
+const COLS = canvas.width / GRID_SIZE;
+const ROWS = canvas.height / GRID_SIZE;
+let mapGrid = [];
 
-            // 가로 모드 비율 적용 카메라 (Top-Down / Quarter View)
-            const aspect = window.innerWidth / window.innerHeight;
-            camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-            camera.position.set(0, 22, 15);
-            camera.lookAt(0, 0, 0);
+// 객체 리스트
+let allies = [];
+let enemies = [];
+let bullets = [];
+let particles = [];
 
-            // 조명 설정
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-            scene.add(ambientLight);
+// UI 엘리먼트
+const stageNumEl = document.getElementById('stage-num');
+const startBtn = document.getElementById('start-btn');
+const deckArea = document.getElementById('deck-area');
+const cardContainer = document.getElementById('card-container');
 
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-            dirLight.position.set(20, 40, 20);
-            dirLight.castShadow = true;
-            scene.add(dirLight);
+// --- 클래스 정의 ---
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            document.body.appendChild(renderer.domElement);
+class Entity {
+    constructor(x, y, isEnemy, gun) {
+        this.x = x;
+        this.y = y;
+        this.radius = 16;
+        this.isEnemy = isEnemy;
+        this.maxHp = isEnemy ? 150 + (stage - 1) * 50 : 150;
+        this.hp = this.maxHp;
+        this.gun = gun;
+        this.angle = 0;
+        this.shootCooldown = 0;
+        this.speed = 1.8;
+        this.path = [];
+        this.pathTimer = 0;
+    }
 
-            window.addEventListener('resize', onWindowResize);
-        }
+    update() {
+        if (this.hp <= 0) return;
 
-        // --- 3. 절차적 3D 모델링 생성 함수 ---
-        // 플레이어 / 적 브롤러 모델링 (캐릭터 잡다한 외형 구성)
-        function createBrawlerModel(color) {
-            const group = new THREE.Group();
+        if (this.shootCooldown > 0) this.shootCooldown--;
 
-            // 몸통
-            const bodyGeo = new THREE.CylinderGeometry(0.6, 0.5, 1.2, 16);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: color });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 0.6;
-            group.add(body);
+        // 가장 가까운 적 찾기
+        const targets = this.isEnemy ? allies : enemies;
+        const aliveTargets = targets.filter(t => t.hp > 0);
 
-            // 머리
-            const headGeo = new THREE.SphereGeometry(0.45, 16, 16);
-            const headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
-            const head = new THREE.Mesh(headGeo, headMat);
-            head.position.y = 1.4;
-            group.add(head);
-
-            // 눈 (바라보는 방향 시각화)
-            const eyeGeo = new THREE.BoxGeometry(0.1, 0.1, 0.15);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            const eyeLeft = new THREE.Mesh(eyeGeo, eyeMat);
-            eyeLeft.position.set(0.18, 1.45, 0.35);
-            const eyeRight = new THREE.Mesh(eyeGeo, eyeMat);
-            eyeRight.position.set(-0.18, 1.45, 0.35);
-            group.add(eyeLeft);
-            group.add(eyeRight);
-
-            // 총기/무기
-            const gunGeo = new THREE.BoxGeometry(0.2, 0.2, 0.7);
-            const gunMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-            const gun = new THREE.Mesh(gunGeo, gunMat);
-            gun.position.set(0.4, 0.8, 0.4);
-            group.add(gun);
-
-            return group;
-        }
-
-        // 맵 요소 생성 (바닥, 장해물/상자 모델링)
-        function setupMap() {
-            // 바닥
-            const floorGeo = new THREE.PlaneGeometry(40, 40);
-            const floorMat = new THREE.MeshStandardMaterial({ color: 0x5c946e });
-            const floor = new THREE.Mesh(floorGeo, floorMat);
-            floor.rotation.x = -Math.PI / 2;
-            scene.add(floor);
-
-            // 외곽 벽
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0x2b4c3f });
-            const wallGeoH = new THREE.BoxGeometry(42, 2, 1);
-            const wallGeoV = new THREE.BoxGeometry(1, 2, 42);
-
-            const wallN = new THREE.Mesh(wallGeoH, wallMat); wallN.position.set(0, 1, -20); scene.add(wallN);
-            const wallS = new THREE.Mesh(wallGeoH, wallMat); wallS.position.set(0, 1, 20); scene.add(wallS);
-            const wallW = new THREE.Mesh(wallGeoV, wallMat); wallW.position.set(-20, 1, 0); scene.add(wallW);
-            const wallE = new THREE.Mesh(wallGeoV, wallMat); wallE.position.set(20, 1, 0); scene.add(wallE);
-
-            // 장애물 (상자 모델링 배치)
-            const boxGeo = new THREE.BoxGeometry(2, 2, 2);
-            const boxMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
-            
-            const positions = [
-                {x: -5, z: -5}, {x: 5, z: -5}, {x: -5, z: 5}, {x: 5, z: 5},
-                {x: -10, z: 0}, {x: 10, z: 0}, {x: 0, z: -10}, {x: 0, z: 10}
-            ];
-
-            positions.forEach(pos => {
-                const box = new THREE.Mesh(boxGeo, boxMat);
-                box.position.set(pos.x, 1, pos.z);
-                scene.add(box);
-                obstacles.push(box);
-            });
-        }
-
-        // --- 4. 매치 메이킹 및 게임 루프 제어 ---
-        function startMatch() {
-            document.getElementById('home-screen').style.display = 'none';
-            document.getElementById('game-hud').style.display = 'block';
-            
-            if (!scene) initScene();
-            resetGame();
-            isGameRunning = true;
-            animate();
-        }
-
-        function resetGame() {
-            // 기존 객체 청소
-            enemies.forEach(e => scene.remove(e.mesh));
-            bullets.forEach(b => scene.remove(b.mesh));
-            enemies.length = 0;
-            bullets.length = 0;
-
-            if (player) scene.remove(player);
-
-            // 플레이어 생성 (파란색 브롤러)
-            player = createBrawlerModel(0x0088ff);
-            player.position.set(0, 0, 12);
-            scene.add(player);
-
-            // 적 AI 브롤러 생성 (빨간색 브롤러 3마리)
-            for (let i = 0; i < 3; i++) {
-                spawnEnemy();
+        if (aliveTargets.length > 0) {
+            // 가장 가까운 타겟 설정
+            let nearest = aliveTargets[0];
+            let minDist = Math.hypot(nearest.x - this.x, nearest.y - this.y);
+            for (let t of aliveTargets) {
+                let d = Math.hypot(t.x - this.x, t.y - this.y);
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = t;
+                }
             }
 
-            // 장애물 구성
-            if (obstacles.length === 0) setupMap();
+            // 바라보는 각도 업데이트
+            this.angle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
 
-            // 스탯 초기화
-            playerHp = maxHp;
-            score = 0;
-            updateHud();
-        }
-
-        function spawnEnemy() {
-            const enemyMesh = createBrawlerModel(0xff3333);
-            const x = (Math.random() - 0.5) * 30;
-            const z = (Math.random() - 0.5) * 20 - 5;
-            enemyMesh.position.set(x, 0, z);
-            scene.add(enemyMesh);
-
-            enemies.push({
-                mesh: enemyMesh,
-                hp: 300,
-                lastShoot: 0
-            });
-        }
-
-        function updateHud() {
-            document.getElementById('hp-display').innerText = Math.max(0, playerHp);
-            document.getElementById('score-display').innerText = score;
-        }
-
-        // --- 5. 모바일 터치 조이스틱 시스템 ---
-        function setupJoystick(zoneId, handleId, inputObj, onReleaseCallback) {
-            const zone = document.getElementById(zoneId);
-            const handle = document.getElementById(handleId);
-            let touchId = null;
-            let center = { x: 0, y: 0 };
-            const maxRadius = 45;
-
-            zone.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (touchId !== null) return;
-                const touch = e.changedTouches[0];
-                touchId = touch.identifier;
-                const rect = zone.getBoundingClientRect();
-                center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-                updateJoystick(touch);
-            }, { passive: false });
-
-            zone.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === touchId) {
-                        updateJoystick(e.changedTouches[i]);
-                        break;
-                    }
-                }
-            }, { passive: false });
-
-            const endHandler = (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === touchId) {
-                        touchId = null;
-                        handle.style.transform = `translate(0px, 0px)`;
-                        inputObj.x = 0;
-                        inputObj.y = 0;
-                        inputObj.active = false;
-                        if (onReleaseCallback) onReleaseCallback();
-                        break;
-                    }
-                }
-            };
-
-            zone.addEventListener('touchend', endHandler);
-            zone.addEventListener('touchcancel', endHandler);
-
-            function updateJoystick(touch) {
-                let dx = touch.clientX - center.x;
-                let dy = touch.clientY - center.y;
-                let dist = Math.hypot(dx, dy);
-
-                if (dist > maxRadius) {
-                    dx = (dx / dist) * maxRadius;
-                    dy = (dy / dist) * maxRadius;
+            // 사거리 내에 없으면 이동 (길찾기)
+            if (minDist > 180) {
+                this.pathTimer--;
+                if (this.pathTimer <= 0 || this.path.length === 0) {
+                    this.path = findPath(this.x, this.y, nearest.x, nearest.y);
+                    this.pathTimer = 20; // 주기적으로 경로 갱신
                 }
 
-                handle.style.transform = `translate(${dx}px, ${dy}px)`;
-                inputObj.x = dx / maxRadius;
-                inputObj.y = dy / maxRadius;
-                inputObj.active = true;
+                if (this.path && this.path.length > 1) {
+                    let nextGrid = this.path[1];
+                    let targetX = nextGrid.x * GRID_SIZE + GRID_SIZE / 2;
+                    let targetY = nextGrid.y * GRID_SIZE + GRID_SIZE / 2;
+                    let moveAngle = Math.atan2(targetY - this.y, targetX - this.x);
+                    
+                    this.x += Math.cos(moveAngle) * this.speed;
+                    this.y += Math.sin(moveAngle) * this.speed;
+                }
+            } else {
+                // 발사
+                if (this.shootCooldown <= 0) {
+                    this.shoot();
+                    this.shootCooldown = this.gun.cooldown;
+                }
             }
         }
+    }
 
-        // 조이스틱 바인딩
-        setupJoystick('move-joystick-zone', 'move-handle', moveInput);
-        setupJoystick('attack-joystick-zone', 'attack-handle', attackInput, () => {
-            // 조이스틱에서 손을 뗐을 때 해당 방향으로 발사
-            shootBullet(player.position, attackInputLastDir, true);
+    shoot() {
+        bullets.push(new Bullet(this.x, this.y, this.angle, this.gun, this.isEnemy));
+    }
+
+    draw() {
+        if (this.hp <= 0) return;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+
+        // 캐릭터 몸체 (위에서 내려다본 모양)
+        ctx.fillStyle = this.isEnemy ? '#e74c3c' : '#3498db';
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 머리 (헤드샷 판정 시각화용 감성)
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 총기 탑다운 모델링
+        ctx.fillStyle = '#555';
+        if (this.gun === GUNS.CLASSIC) { // 글록 모양
+            ctx.fillRect(8, -3, 12, 6);
+        } else if (this.gun === GUNS.GHOST) { // 소음기 긴 권총
+            ctx.fillRect(8, -3, 10, 6);
+            ctx.fillStyle = '#111';
+            ctx.fillRect(18, -2, 12, 4); // 소음기
+        } else if (this.gun === GUNS.SHERIFF) { // 리볼버
+            ctx.fillRect(6, -4, 8, 8); // 실린더
+            ctx.fillRect(14, -2, 12, 4); // 총열
+        }
+
+        ctx.restore();
+
+        // 체력바 & 무기 이름
+        this.drawUI();
+    }
+
+    drawUI() {
+        const barW = 40;
+        const barH = 5;
+        const barX = this.x - barW / 2;
+        const barY = this.y - this.radius - 15;
+
+        // 체력바 배경
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(barX, barY, barW, barH);
+
+        // 체력바 채우기
+        const hpPercent = Math.max(0, this.hp / this.maxHp);
+        ctx.fillStyle = this.isEnemy ? '#e74c3c' : '#2ecc71';
+        ctx.fillRect(barX, barY, barW * hpPercent, barH);
+
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barW, barH);
+
+        // 적 전용: 체력바 위에 보유 총기 표시
+        if (this.isEnemy) {
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.gun.name, this.x, barY - 3);
+        }
+    }
+}
+
+class Bullet {
+    constructor(x, y, angle, gun, isEnemy) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.gun = gun;
+        this.isEnemy = isEnemy;
+        this.speed = gun.speed;
+        this.active = true;
+    }
+
+    update() {
+        if (!this.active) return;
+
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+
+        // 벽 충돌
+        let gx = Math.floor(this.x / GRID_SIZE);
+        let gy = Math.floor(this.y / GRID_SIZE);
+        if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS || mapGrid[gy][gx] === 1) {
+            this.active = false;
+            return;
+        }
+
+        // 캐릭터 충돌
+        const targets = this.isEnemy ? allies : enemies;
+        for (let target of targets) {
+            if (target.hp > 0 && Math.hypot(target.x - this.x, target.y - this.y) < target.radius) {
+                this.hit(target);
+                this.active = false;
+                break;
+            }
+        }
+    }
+
+    hit(target) {
+        // 헤드샷 확률 계산
+        let prob = this.isEnemy ? enemyHeadshotProb : myHeadshotProb;
+        let isHead = Math.random() < prob;
+        let damage = isHead ? this.gun.headDmg : this.gun.bodyDmg;
+
+        target.hp -= damage;
+        showDamageText(target.x, target.y - 20, damage, isHead);
+
+        if (target.hp <= 0) {
+            explode(target.x, target.y, target.isEnemy);
+        }
+    }
+
+    draw() {
+        if (!this.active) return;
+        ctx.save();
+        ctx.strokeStyle = '#ffeb3b';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x - Math.cos(this.angle) * 12, this.y - Math.sin(this.angle) * 12);
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = (Math.random() - 0.5) * 8;
+        this.life = 30;
+        this.maxLife = 30;
+        this.size = Math.random() * 4 + 2;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life--;
+    }
+
+    draw() {
+        ctx.save();
+        ctx.globalAlpha = this.life / this.maxLife;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+// --- 게임 시스템 함수 ---
+
+function initMap() {
+    mapGrid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+    
+    // 무작위 장애물 생성 (라운드별 지형지물)
+    const obstacleCount = 8 + Math.floor(Math.random() * 5);
+    let placed = 0;
+    while (placed < obstacleCount) {
+        let rx = Math.floor(Math.random() * (COLS - 2)) + 1;
+        let ry = Math.floor(Math.random() * (ROWS - 4)) + 2; // 스폰 구역 제외
+        if (mapGrid[ry][rx] === 0) {
+            mapGrid[ry][rx] = 1;
+            placed++;
+        }
+    }
+}
+
+function drawMap() {
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            if (mapGrid[r][c] === 1) {
+                ctx.fillStyle = '#445566';
+                ctx.fillRect(c * GRID_SIZE, r * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+                ctx.strokeStyle = '#223344';
+                ctx.strokeRect(c * GRID_SIZE, r * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+            }
+        }
+    }
+}
+
+// A* 길찾기 알고리즘
+function findPath(startX, startY, targetX, targetY) {
+    let startNode = { x: Math.floor(startX / GRID_SIZE), y: Math.floor(startY / GRID_SIZE) };
+    let targetNode = { x: Math.floor(targetX / GRID_SIZE), y: Math.floor(targetY / GRID_SIZE) };
+
+    // 범위를 벗어난 경우 방어 코드
+    startNode.x = Math.max(0, Math.min(COLS - 1, startNode.x));
+    startNode.y = Math.max(0, Math.min(ROWS - 1, startNode.y));
+    targetNode.x = Math.max(0, Math.min(COLS - 1, targetNode.x));
+    targetNode.y = Math.max(0, Math.min(ROWS - 1, targetNode.y));
+
+    let openSet = [ { ...startNode, g: 0, h: 0, f: 0, parent: null } ];
+    let closedSet = [];
+
+    while (openSet.length > 0) {
+        openSet.sort((a, b) => a.f - b.f);
+        let current = openSet.shift();
+        closedSet.push(current);
+
+        if (current.x === targetNode.x && current.y === targetNode.y) {
+            let path = [];
+            let curr = current;
+            while (curr) {
+                path.push({ x: curr.x, y: curr.y });
+                curr = curr.parent;
+            }
+            return path.reverse();
+        }
+
+        const neighbors = [
+            { x: current.x + 1, y: current.y },
+            { x: current.x - 1, y: current.y },
+            { x: current.x, y: current.y + 1 },
+            { x: current.x, y: current.y - 1 }
+        ];
+
+        for (let n of neighbors) {
+            if (n.x < 0 || n.x >= COLS || n.y < 0 || n.y >= ROWS) continue;
+            if (mapGrid[n.y][n.x] === 1) continue;
+            if (closedSet.some(c => c.x === n.x && c.y === n.y)) continue;
+
+            let g = current.g + 1;
+            let h = Math.abs(n.x - targetNode.x) + Math.abs(n.y - targetNode.y);
+            let f = g + h;
+
+            let existing = openSet.find(o => o.x === n.x && o.y === n.y);
+            if (!existing) {
+                openSet.push({ ...n, g, h, f, parent: current });
+            } else if (g < existing.g) {
+                existing.g = g;
+                existing.f = f;
+                existing.parent = current;
+            }
+        }
+    }
+    return [];
+}
+
+function initRound() {
+    stageNumEl.innerText = stage;
+    bullets = [];
+    particles = [];
+    cardDrawn = false;
+    deckArea.classList.remove('disabled');
+    startBtn.disabled = true;
+    cardContainer.innerHTML = '';
+    gameState = 'PREPARE';
+
+    // 지형지물 재생성
+    initMap();
+
+    // 적의 헤드샷 확률 (라운드 비례 증가)
+    enemyHeadshotProb = 0.10 + (stage - 1) * 0.05;
+
+    // 아군 체력 완충 및 위치 재배치 (기물 전부 클래식)
+    if (allies.length === 0) {
+        allies = [
+            new Entity(300, 520, false, GUNS.CLASSIC),
+            new Entity(500, 520, false, GUNS.CLASSIC)
+        ];
+    } else {
+        allies.forEach((a, idx) => {
+            a.hp = a.maxHp; // 체력 완전 회복
+            a.x = 300 + idx * 200;
+            a.y = 520;
         });
+    }
 
-        let attackInputLastDir = { x: 0, z: -1 };
+    // 적 무작위 총기 및 생성
+    const gunKeys = Object.keys(GUNS);
+    const randomGun = GUNS[gunKeys[Math.floor(Math.random() * gunKeys.length)]];
+    
+    enemies = [
+        new Entity(400, 80, true, randomGun)
+    ];
+}
 
-        // --- 6. 슈팅 및 전투 시스템 ---
-        function shootBullet(fromPos, direction, isPlayer) {
-            const bulletGeo = new THREE.SphereGeometry(0.25, 8, 8);
-            const bulletMat = new THREE.MeshBasicMaterial({ color: isPlayer ? 0xffff00 : 0xff0000 });
-            const bullet = new THREE.Mesh(bulletGeo, bulletMat);
-            
-            bullet.position.set(fromPos.x, 0.8, fromPos.z);
-            scene.add(bullet);
+function showDamageText(x, y, damage, isHead) {
+    const el = document.createElement('div');
+    el.className = `damage-text ${isHead ? 'headshot' : 'normal'}`;
+    el.innerText = isHead ? `HEAD! -${damage}` : `-${damage}`;
+    
+    // Canvas 좌표를 DOM 좌표로 전환
+    const rect = canvas.getBoundingClientRect();
+    el.style.left = `${rect.left + x}px`;
+    el.style.top = `${rect.top + y}px`;
 
-            const speed = 0.6;
-            bullets.push({
-                mesh: bullet,
-                dir: { x: direction.x * speed, z: direction.z * speed },
-                isPlayer: isPlayer,
-                life: 40 // 수명
-            });
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 800);
+}
+
+function explode(x, y, isEnemy) {
+    // 적: 빨간색, 아군: 하늘색 터지는 이펙트
+    const color = isEnemy ? '#ff3333' : '#00e5ff';
+    for (let i = 0; i < 30; i++) {
+        particles.push(new Particle(x, y, color));
+    }
+}
+
+function drawCards() {
+    if (cardDrawn || gameState !== 'PREPARE') return;
+    cardDrawn = true;
+    deckArea.classList.add('disabled');
+
+    cardContainer.innerHTML = '';
+
+    for (let i = 0; i < 3; i++) {
+        // 1~10% 헤드샷 확률 증가 카드
+        let boost = Math.floor(Math.random() * 10) + 1;
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="card-title">헤드샷 확률 증가</div>
+            <div class="card-value">+${boost}%</div>
+        `;
+
+        card.onclick = () => {
+            myHeadshotProb += boost / 100;
+            cardContainer.innerHTML = ''; // 카드 닫기
+            startBtn.disabled = false; // 시작 버튼 활성화
+        };
+
+        cardContainer.appendChild(card);
+    }
+}
+
+// --- 이벤트 리스너 ---
+
+deckArea.addEventListener('click', drawCards);
+
+startBtn.addEventListener('click', () => {
+    if (gameState === 'PREPARE' && cardDrawn) {
+        gameState = 'BATTLE';
+        startBtn.disabled = true;
+    }
+});
+
+// --- 메인 게임 루프 ---
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 지형지물 그리기
+    drawMap();
+
+    // 업데이트 & 그려주기
+    if (gameState === 'BATTLE') {
+        allies.forEach(a => a.update());
+        enemies.forEach(e => e.update());
+        bullets.forEach(b => b.update());
+    }
+
+    particles.forEach(p => p.update());
+
+    // 사망 처리된 파티클/총알 제거
+    bullets = bullets.filter(b => b.active);
+    particles = particles.filter(p => p.life > 0);
+
+    // 그리기
+    allies.forEach(a => a.draw());
+    enemies.forEach(e => e.draw());
+    bullets.forEach(b => b.draw());
+    particles.forEach(p => p.draw());
+
+    // 승패 체크
+    if (gameState === 'BATTLE') {
+        const aliveAllies = allies.filter(a => a.hp > 0);
+        const aliveEnemies = enemies.filter(e => e.hp > 0);
+
+        if (aliveEnemies.length === 0) {
+            // 라운드 클리어 -> 다음 라운드로
+            stage++;
+            setTimeout(() => {
+                initRound();
+            }, 1000);
+            gameState = 'WAIT';
+        } else if (aliveAllies.length === 0) {
+            // 기물 다 죽으면 게임 오버
+            gameState = 'GAMEOVER';
+            setTimeout(() => {
+                alert('모든 아군 기물이 전멸했습니다. 게임 오버!');
+                stage = 1;
+                myHeadshotProb = 0.10;
+                allies = [];
+                initRound();
+            }, 500);
         }
+    }
 
-        // --- 7. 메인 게임 프레임 업데이트 (Animate) ---
-        function animate() {
-            if (!isGameRunning) return;
-            requestAnimationFrame(animate);
+    requestAnimationFrame(gameLoop);
+}
 
-            // 1) 플레이어 이동 처리
-            if (moveInput.active) {
-                const moveSpeed = 0.15;
-                const nextX = player.position.x + moveInput.x * moveSpeed;
-                const nextZ = player.position.z + moveInput.y * moveSpeed;
+// 게임 시작
+initRound();
+gameLoop();
+</script>
 
-                // 맵 범위 제한
-                if (Math.abs(nextX) < 18.5) player.position.x = nextX;
-                if (Math.abs(nextZ) < 18.5) player.position.z = nextZ;
-
-                // 조준하지 않을 때는 이동 방향을 바라봄
-                if (!attackInput.active) {
-                    player.rotation.y = Math.atan2(moveInput.x, moveInput.y);
-                }
-            }
-
-            // 2) 플레이어 조준 방향 업데이트
-            if (attackInput.active) {
-                const angle = Math.atan2(attackInput.x, attackInput.y);
-                player.rotation.y = angle;
-                
-                // 조준 방향 기록 (손 뗄 때 발사용)
-                const len = Math.hypot(attackInput.x, attackInput.y);
-                if (len > 0.2) {
-                    attackInputLastDir = { x: attackInput.x / len, z: attackInput.y / len };
-                }
-            }
-
-            // 카메라가 플레이어를 부드럽게 추적
-            camera.position.x = player.position.x;
-            camera.position.z = player.position.z + 15;
-
-            // 3) 총알 이동 및 충돌
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                const b = bullets[i];
-                b.mesh.position.x += b.dir.x;
-                b.mesh.position.z += b.dir.z;
-                b.life--;
-
-                // 적 충돌 확인 (플레이어 총알)
-                if (b.isPlayer) {
-                    for (let j = enemies.length - 1; j >= 0; j--) {
-                        const enemy = enemies[j];
-                        if (b.mesh.position.distanceTo(enemy.mesh.position) < 0.8) {
-                            enemy.hp -= 100;
-                            scene.remove(b.mesh);
-                            bullets.splice(i, 1);
-
-                            if (enemy.hp <= 0) {
-                                scene.remove(enemy.mesh);
-                                enemies.splice(j, 1);
-                                score += 100;
-                                updateHud();
-                                setTimeout(spawnEnemy, 2000); // 2초 후 재소환
-                            }
-                            break;
-                        }
-                    }
-                } else { // 플레이어 충돌 확인 (적 총알)
-                    if (b.mesh.position.distanceTo(player.position) < 0.8) {
-                        playerHp -= 50;
-                        updateHud();
-                        scene.remove(b.mesh);
-                        bullets.splice(i, 1);
-
-                        if (playerHp <= 0) {
-                            gameOver(false);
-                        }
-                        continue;
-                    }
-                }
-
-                // 총알 수명 종료시 제거
-                if (b && b.life <= 0) {
-                    scene.remove(b.mesh);
-                    bullets.splice(i, 1);
-                }
-            }
-
-            // 4) 적 AI 로직 (간단한 추적 및 사격)
-            const now = Date.now();
-            enemies.forEach(enemy => {
-                const distToPlayer = enemy.mesh.position.distanceTo(player.position);
-                
-                // 적 플레이어 추적
-                if (distToPlayer > 4 && distToPlayer < 15) {
-                    const dirX = (player.position.x - enemy.mesh.position.x) / distToPlayer;
-                    const dirZ = (player.position.z - enemy.mesh.position.z) / distToPlayer;
-                    enemy.mesh.position.x += dirX * 0.05;
-                    enemy.mesh.position.z += dirZ * 0.05;
-                    enemy.mesh.rotation.y = Math.atan2(dirX, dirZ);
-                }
-
-                // 사거리 안으로 들어오면 공격
-                if (distToPlayer <= 10 && now - enemy.lastShoot > 1500) {
-                    const dirX = (player.position.x - enemy.mesh.position.x) / distToPlayer;
-                    const dirZ = (player.position.z - enemy.mesh.position.z) / distToPlayer;
-                    shootBullet(enemy.mesh.position, { x: dirX, z: dirZ }, false);
-                    enemy.lastShoot = now;
-                }
-            });
-
-            // 승리 조건 검사
-            if (score >= 500) {
-                gameOver(true);
-            }
-
-            renderer.render(scene, camera);
-        }
-
-        // --- 8. 게임 종료 및 리셋 ---
-        function gameOver(isWin) {
-            isGameRunning = false;
-            const overScreen = document.getElementById('game-over-screen');
-            const title = document.getElementById('game-over-title');
-            
-            title.innerText = isWin ? "VICTORY!" : "DEFEAT";
-            title.style.color = isWin ? "#FFD700" : "#FF3333";
-            overScreen.style.display = 'flex';
-        }
-
-        function returnToHome() {
-            document.getElementById('game-over-screen').style.display = 'none';
-            document.getElementById('game-hud').style.display = 'none';
-            document.getElementById('home-screen').style.display = 'flex';
-        }
-
-        function onWindowResize() {
-            if (!camera || !renderer) return;
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-    </script>
 </body>
 </html>
