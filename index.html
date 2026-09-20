@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Smart AI FPS Match Spectator</title>
+  <title>Smart Tactical AI FPS Spectator</title>
   <style>
     body {
       margin: 0;
@@ -21,7 +21,7 @@
       gap: 12px;
       z-index: 10;
       width: 90%;
-      max-width: 400px;
+      max-width: 420px;
     }
     .score-card {
       flex: 1;
@@ -35,7 +35,8 @@
     }
     .red { background: rgba(220, 53, 69, 0.85); }
     .blue { background: rgba(13, 110, 253, 0.85); }
-    .score { font-size: 20px; margin-top: 4px; }
+    .status { font-size: 11px; margin-top: 2px; opacity: 0.9; }
+    .score { font-size: 18px; margin-top: 4px; }
     #controls {
       position: absolute;
       bottom: 20px;
@@ -64,11 +65,13 @@
     <div class="score-card red">
       <div>AI RED</div>
       <div id="hp-red">HP: 100</div>
+      <div id="state-red" class="status">상태: 탐색 중</div>
       <div id="score-red" class="score">0 Kills</div>
     </div>
     <div class="score-card blue">
       <div>AI BLUE</div>
       <div id="hp-blue">HP: 100</div>
+      <div id="state-blue" class="status">상태: 탐색 중</div>
       <div id="score-blue" class="score">0 Kills</div>
     </div>
   </div>
@@ -81,8 +84,8 @@
 
   <script>
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a24);
-    scene.fog = new THREE.FogExp2(0x1a1a24, 0.015);
+    scene.background = new THREE.Color(0x111118);
+    scene.fog = new THREE.FogExp2(0x111118, 0.015);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -95,22 +98,19 @@
     light.position.set(20, 40, 20);
     light.castShadow = true;
     scene.add(light);
-    scene.add(new THREE.AmbientLight(0x666666));
+    scene.add(new THREE.AmbientLight(0x555566));
 
-    // 바닥
     const MAP_SIZE = 60;
-    const GRID_SIZE = 30; // 30x30 내비게이션 그리드
+    const GRID_SIZE = 30;
     const CELL_SIZE = MAP_SIZE / GRID_SIZE;
 
+    // 바닥
     const floorGeo = new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.8 });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
-
-    // 그리드 맵 데이터 초기화 (0: 이동가능, 1: 장애물)
-    const gridMap = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
 
     function worldToGrid(x, z) {
       const gx = Math.floor((x + MAP_SIZE / 2) / CELL_SIZE);
@@ -128,36 +128,30 @@
       };
     }
 
-    // 지형지물 배치 및 그리드 맵 마킹
+    // 실제 환경 장애물
     const obstacles = [];
     function createObstacle(x, z, w, h, d) {
       const geo = new THREE.BoxGeometry(w, h, d);
-      const mat = new THREE.MeshStandardMaterial({ color: 0x444455, roughness: 0.5 });
+      const mat = new THREE.MeshStandardMaterial({ color: 0x3a3a4a, roughness: 0.6 });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(x, h / 2, z);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       scene.add(mesh);
       obstacles.push(mesh);
-
-      // 장애물 부근 그리드 셀 차단 (여유공간 포함)
-      const min = worldToGrid(x - w / 2 - 1, z - d / 2 - 1);
-      const max = worldToGrid(x + w / 2 + 1, z + d / 2 + 1);
-      for (let gx = min.x; gx <= max.x; gx++) {
-        for (let gz = min.z; gz <= max.z; gz++) {
-          gridMap[gx][gz] = 1;
-        }
-      }
     }
 
+    // 지형 배치
     createObstacle(0, 0, 10, 4, 10);
-    createObstacle(-12, -10, 6, 3, 6);
-    createObstacle(12, 10, 6, 3, 6);
-    createObstacle(-10, 12, 4, 3, 10);
-    createObstacle(10, -12, 4, 3, 10);
+    createObstacle(-12, -10, 8, 3, 6);
+    createObstacle(12, 10, 8, 3, 6);
+    createObstacle(-10, 12, 6, 3, 10);
+    createObstacle(10, -12, 6, 3, 10);
+    createObstacle(0, -20, 12, 3, 4);
+    createObstacle(0, 20, 12, 3, 4);
 
-    // A* 길찾기 알고리즘
-    function findPath(startPos, targetPos) {
+    // AI 메모리 기반 A* 길찾기
+    function findPath(startPos, targetPos, memoryGrid) {
       const start = worldToGrid(startPos.x, startPos.z);
       const target = worldToGrid(targetPos.x, targetPos.z);
 
@@ -174,7 +168,6 @@
       openList.push(start);
 
       while (openList.length > 0) {
-        // fScore가 가장 작은 노드 선택
         openList.sort((a, b) => fScore[a.x][a.z] - fScore[b.x][b.z]);
         const current = openList.shift();
 
@@ -197,7 +190,8 @@
 
         for (const n of neighbors) {
           if (n.x < 0 || n.x >= GRID_SIZE || n.z < 0 || n.z >= GRID_SIZE) continue;
-          if (gridMap[n.x][n.z] === 1 || closedList[n.x][n.z]) continue;
+          // AI가 직접 인식한 벽(1)만 피함
+          if (memoryGrid[n.x][n.z] === 1 || closedList[n.x][n.z]) continue;
 
           const tentativeG = gScore[current.x][current.z] + 1;
           if (tentativeG < gScore[n.x][n.z]) {
@@ -211,20 +205,25 @@
           }
         }
       }
-      return null; // 경로가 없을 때
+      return null;
     }
 
-    // AI 봇 클래스
-    class Bot {
+    class TacticalBot {
       constructor(color, startX, startZ, name) {
         this.name = name;
         this.color = color;
         this.hp = 100;
         this.kills = 0;
-        this.speed = 0.14;
+        this.speed = 0.13;
         this.lastShot = 0;
+
+        // FSM 상태: EXPLORE, COMBAT, RETREAT, HEAL
+        this.state = 'EXPLORE'; 
+        this.targetWaypoint = null;
         this.path = [];
-        this.lastPathCalc = 0;
+
+        // 지형 기억 그리드 (-1: 미탐색, 0: 빈 공간, 1: 벽)
+        this.memoryGrid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(-1));
 
         const group = new THREE.Group();
         const bodyGeo = new THREE.CylinderGeometry(0.6, 0.6, 1.8, 16);
@@ -247,89 +246,173 @@
 
       reset(x, z) {
         this.hp = 100;
+        this.state = 'EXPLORE';
         this.mesh.position.set(x, 0, z);
         this.path = [];
+        this.targetWaypoint = null;
       }
 
-      update(target) {
-        if (this.hp <= 0) return;
-
+      // 주위 지형을 레이캐스트로 탐색하여 메모리에 기록
+      scanEnvironment() {
         const myPos = this.mesh.position;
-        const targetPos = target.mesh.position;
+        const rays = 16;
+        for (let i = 0; i < rays; i++) {
+          const angle = (i / rays) * Math.PI * 2;
+          const dir = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+          const raycaster = new THREE.Raycaster(new THREE.Vector3(myPos.x, 1, myPos.z), dir, 0, 15);
+          const hits = raycaster.intersectObjects(obstacles);
 
-        const dirToTarget = new THREE.Vector3().subVectors(targetPos, myPos);
-        const distToTarget = dirToTarget.length();
-        dirToTarget.y = 0;
-        dirToTarget.normalize();
-
-        // 시야 확보 여부 레이캐스팅
-        const raycaster = new THREE.Raycaster(
-          new THREE.Vector3(myPos.x, 1, myPos.z),
-          dirToTarget, 0, distToTarget
-        );
-        const hits = raycaster.intersectObjects(obstacles);
-        const hasLineOfSight = (hits.length === 0);
-
-        if (hasLineOfSight) {
-          // 시야 확보 시: 정면 주시 및 거리 조절하며 교전
-          const angle = Math.atan2(dirToTarget.x, dirToTarget.z);
-          this.mesh.rotation.y = angle + Math.PI;
-
-          if (distToTarget > 12) {
-            this.mesh.position.addScaledVector(dirToTarget, this.speed);
-          } else if (distToTarget < 5) {
-            this.mesh.position.addScaledVector(dirToTarget, -this.speed);
+          if (hits.length > 0) {
+            const hitPoint = hits[0].point;
+            const g = worldToGrid(hitPoint.x, hitPoint.z);
+            this.memoryGrid[g.x][g.z] = 1; // 벽 기록
           }
-          this.shoot(target);
-        } else {
-          // 시야 가림 시: A* 알고리즘으로 경로 계산하여 상대방 추적
-          const now = Date.now();
-          if (now - this.lastPathCalc > 500 || this.path.length === 0) {
-            this.path = findPath(myPos, targetPos) || [];
-            this.lastPathCalc = now;
-          }
+        }
+        // 현재 위치 및 주변은 안전 공간으로 기록
+        const currentG = worldToGrid(myPos.x, myPos.z);
+        this.memoryGrid[currentG.x][currentG.z] = 0;
+      }
 
-          if (this.path.length > 1) {
-            const nextWaypoint = this.path[1];
-            const moveDir = new THREE.Vector3(
-              nextWaypoint.x - myPos.x,
-              0,
-              nextWaypoint.z - myPos.z
-            );
-            const distToWaypoint = moveDir.length();
+      // 적 시야에서 완전히 차단된 안전 엄폐 장소 탐색
+      findSafeCoverPoint(enemyPos) {
+        let bestPoint = null;
+        let maxCoverScore = -Infinity;
 
-            if (distToWaypoint < 0.8) {
-              this.path.shift();
-            } else {
-              moveDir.normalize();
-              const angle = Math.atan2(moveDir.x, moveDir.z);
-              this.mesh.rotation.y = angle + Math.PI;
-              this.mesh.position.addScaledVector(moveDir, this.speed);
+        for (let gx = 1; gx < GRID_SIZE - 1; gx += 2) {
+          for (let gz = 1; gz < GRID_SIZE - 1; gz += 2) {
+            if (this.memoryGrid[gx][gz] === 0) {
+              const worldP = gridToWorld(gx, gz);
+              const dirFromEnemy = new THREE.Vector3().subVectors(worldP, enemyPos);
+              const distFromEnemy = dirFromEnemy.length();
+              dirFromEnemy.y = 0;
+              dirFromEnemy.normalize();
+
+              // 적 시선 레이캐스트
+              const ray = new THREE.Raycaster(new THREE.Vector3(enemyPos.x, 1, enemyPos.z), dirFromEnemy, 0, distFromEnemy);
+              const hits = ray.intersectObjects(obstacles);
+
+              // 적 시야가 가려지는 곳(시선 차단 엄폐물 존재)
+              if (hits.length > 0) {
+                const distFromMe = new THREE.Vector3(worldP.x, 0, worldP.z).distanceTo(this.mesh.position);
+                const score = distFromEnemy * 2 - distFromMe; // 적과의 거리는 멀고, 나와는 가까운 곳
+                if (score > maxCoverScore) {
+                  maxCoverScore = score;
+                  bestPoint = worldP;
+                }
+              }
             }
           }
         }
+        return bestPoint;
+      }
 
-        // 맵 경계 제약
+      update(enemy) {
+        if (this.hp <= 0) return;
+
+        this.scanEnvironment();
+
+        const myPos = this.mesh.position;
+        const enemyPos = enemy.mesh.position;
+
+        // 적 시야 확보 레이캐스팅
+        const dirToEnemy = new THREE.Vector3().subVectors(enemyPos, myPos);
+        const distToEnemy = dirToEnemy.length();
+        dirToEnemy.y = 0;
+        dirToEnemy.normalize();
+
+        const raycaster = new THREE.Raycaster(new THREE.Vector3(myPos.x, 1, myPos.z), dirToEnemy, 0, distToEnemy);
+        const hits = raycaster.intersectObjects(obstacles);
+        const canSeeEnemy = (hits.length === 0);
+
+        // 상태 전환 (FSM)
+        if (this.hp < 40) {
+          this.state = (canSeeEnemy || this.hp < 30) ? 'RETREAT' : 'HEAL';
+        } else if (canSeeEnemy) {
+          this.state = 'COMBAT';
+        } else if (this.state === 'COMBAT' && !canSeeEnemy) {
+          this.state = 'EXPLORE';
+        }
+
+        // 상태별 로직 수행
+        if (this.state === 'COMBAT') {
+          // 교전
+          const angle = Math.atan2(dirToEnemy.x, dirToEnemy.z);
+          this.mesh.rotation.y = angle + Math.PI;
+
+          if (distToEnemy > 12) {
+            this.mesh.position.addScaledVector(dirToEnemy, this.speed);
+          } else if (distToEnemy < 5) {
+            this.mesh.position.addScaledVector(dirToEnemy, -this.speed);
+          }
+          this.shoot(enemy);
+
+        } else if (this.state === 'RETREAT') {
+          // 적을 등지고 안전 엄폐 장소로 후퇴
+          if (!this.targetWaypoint || Math.random() < 0.05) {
+            this.targetWaypoint = this.findSafeCoverPoint(enemyPos);
+          }
+
+          if (this.targetWaypoint) {
+            this.path = findPath(myPos, this.targetWaypoint, this.memoryGrid) || [];
+            this.moveAlongPath();
+          } else {
+            // 엄폐 장소를 미처 기억 못했다면 일단 적의 반대 방향으로 후퇴
+            this.mesh.position.addScaledVector(dirToEnemy, -this.speed);
+          }
+
+        } else if (this.state === 'HEAL') {
+          // 적에게 안 보이는 곳에서 엄폐 체력 회복
+          this.hp = Math.min(100, this.hp + 0.15); 
+          if (this.hp >= 80) this.state = 'EXPLORE';
+
+        } else if (this.state === 'EXPLORE') {
+          // 지형 무작위 탐색
+          if (!this.targetWaypoint || new THREE.Vector3(this.targetWaypoint.x, 0, this.targetWaypoint.z).distanceTo(myPos) < 2) {
+            // 랜덤 탐색 지점 선정
+            const rx = (Math.random() - 0.5) * (MAP_SIZE - 10);
+            const rz = (Math.random() - 0.5) * (MAP_SIZE - 10);
+            this.targetWaypoint = { x: rx, z: rz };
+            this.path = findPath(myPos, this.targetWaypoint, this.memoryGrid) || [];
+          }
+          this.moveAlongPath();
+        }
+
+        // 맵 경계 제한
         this.mesh.position.x = Math.max(-27, Math.min(27, this.mesh.position.x));
         this.mesh.position.z = Math.max(-27, Math.min(27, this.mesh.position.z));
       }
 
+      moveAlongPath() {
+        if (this.path && this.path.length > 1) {
+          const next = this.path[1];
+          const dir = new THREE.Vector3(next.x - this.mesh.position.x, 0, next.z - this.mesh.position.z);
+          if (dir.length() < 0.8) {
+            this.path.shift();
+          } else {
+            dir.normalize();
+            const angle = Math.atan2(dir.x, dir.z);
+            this.mesh.rotation.y = angle + Math.PI;
+            this.mesh.position.addScaledVector(dir, this.speed);
+          }
+        }
+      }
+
       shoot(target) {
         const now = Date.now();
-        if (now - this.lastShot < 300) return;
+        if (now - this.lastShot < 320) return;
         this.lastShot = now;
 
         const bulletGeo = new THREE.BufferGeometry().setFromPoints([
           this.mesh.position.clone().add(new THREE.Vector3(0, 1.1, 0)),
           target.mesh.position.clone().add(new THREE.Vector3(0, 0.9 + (Math.random() - 0.5) * 0.4, 0))
         ]);
-        const bulletMat = new THREE.LineBasicMaterial({ color: this.color === 0xff3333 ? 0xffaaaa : 0xaaaaff });
+        const bulletMat = new THREE.LineBasicMaterial({ color: this.color === 0xff3333 ? 0xff8888 : 0x8888ff });
         const line = new THREE.Line(bulletGeo, bulletMat);
         scene.add(line);
         setTimeout(() => scene.remove(line), 40);
 
-        if (Math.random() < 0.75) {
-          target.takeDamage(10, this);
+        if (Math.random() < 0.7) {
+          target.takeDamage(12, this);
         }
       }
 
@@ -346,8 +429,8 @@
       }
     }
 
-    const redBot = new Bot(0xff3333, -20, -20, 'RED');
-    const blueBot = new Bot(0x3388ff, 20, 20, 'BLUE');
+    const redBot = new TacticalBot(0xff3333, -20, -20, 'RED');
+    const blueBot = new TacticalBot(0x3388ff, 20, 20, 'BLUE');
 
     let currentCamMode = 'top';
     window.setCamView = function(mode) {
@@ -356,25 +439,35 @@
 
     function updateCamera() {
       if (currentCamMode === 'top') {
-        camera.position.set(0, 48, 0);
+        camera.position.set(0, 50, 0);
         camera.lookAt(0, 0, 0);
       } else if (currentCamMode === 'red') {
         const p = redBot.mesh.position;
         const rot = redBot.mesh.rotation.y;
-        camera.position.set(p.x + Math.sin(rot) * 2, 2.2, p.z + Math.cos(rot) * 2);
+        camera.position.set(p.x + Math.sin(rot) * 2.5, 2.3, p.z + Math.cos(rot) * 2.5);
         camera.lookAt(p.x - Math.sin(rot) * 10, 1.5, p.z - Math.cos(rot) * 10);
       } else if (currentCamMode === 'blue') {
         const p = blueBot.mesh.position;
         const rot = blueBot.mesh.rotation.y;
-        camera.position.set(p.x + Math.sin(rot) * 2, 2.2, p.z + Math.cos(rot) * 2);
+        camera.position.set(p.x + Math.sin(rot) * 2.5, 2.3, p.z + Math.cos(rot) * 2.5);
         camera.lookAt(p.x - Math.sin(rot) * 10, 1.5, p.z - Math.cos(rot) * 10);
       }
     }
 
+    const stateTexts = {
+      'EXPLORE': '상태: 지형 탐색 중',
+      'COMBAT': '상태: 교전 중!',
+      'RETREAT': '상태: 엄폐물로 후퇴 중',
+      'HEAL': '상태: 은신 및 회복 중...'
+    };
+
     function updateUI() {
-      document.getElementById('hp-red').innerText = `HP: ${redBot.hp}`;
+      document.getElementById('hp-red').innerText = `HP: ${Math.ceil(redBot.hp)}`;
+      document.getElementById('state-red').innerText = stateTexts[redBot.state];
       document.getElementById('score-red').innerText = `${redBot.kills} Kills`;
-      document.getElementById('hp-blue').innerText = `HP: ${blueBot.hp}`;
+
+      document.getElementById('hp-blue').innerText = `HP: ${Math.ceil(blueBot.hp)}`;
+      document.getElementById('state-blue').innerText = stateTexts[blueBot.state];
       document.getElementById('score-blue').innerText = `${blueBot.kills} Kills`;
     }
 
