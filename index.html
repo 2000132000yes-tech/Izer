@@ -2,14 +2,15 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>세로형 탑다운 카드 슈팅 게임</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>모바일 카드 FPS 슈팅 게임</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-user-select: none;
         }
         body {
             background-color: #111;
@@ -23,13 +24,13 @@
         }
         #game-container {
             position: relative;
-            width: 450px;
-            height: 700px;
+            width: 360px;
+            height: 600px;
             background-color: #c2a178;
-            border: 4px solid #333;
+            border: 3px solid #333;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
         }
         canvas {
             display: block;
@@ -43,35 +44,35 @@
             height: 100%;
             pointer-events: none;
         }
-        /* 스테이지 마름모 표시 */
+        /* 스테이지 표시 */
         .stage-diamond {
             position: absolute;
-            top: 15px;
+            top: 12px;
             left: 50%;
             transform: translateX(-50%) rotate(45deg);
-            width: 42px;
-            height: 42px;
+            width: 36px;
+            height: 36px;
             background: #fff;
             border: 2px solid #222;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
         .stage-number {
             transform: rotate(-45deg);
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #222;
         }
         /* 시작 버튼 */
         #start-btn {
             position: absolute;
-            bottom: 110px;
+            bottom: 95px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 10px 28px;
-            font-size: 15px;
+            padding: 8px 22px;
+            font-size: 14px;
             font-weight: bold;
             color: #fff;
             background: #27ae60;
@@ -80,25 +81,19 @@
             cursor: pointer;
             pointer-events: auto;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: all 0.2s;
-        }
-        #start-btn:hover {
-            background: #219150;
-            transform: translateX(-50%) scale(1.05);
         }
         #start-btn:disabled {
             background: #7f8c8d;
             cursor: not-allowed;
-            transform: translateX(-50%);
         }
         /* 카드 덱 영역 */
         #deck-area {
             position: absolute;
-            bottom: 15px;
+            bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
-            width: 70px;
-            height: 80px;
+            width: 65px;
+            height: 72px;
             background: #fff;
             border: 2px solid #333;
             border-radius: 8px;
@@ -108,30 +103,27 @@
             cursor: pointer;
             pointer-events: auto;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
             font-weight: bold;
+            font-size: 13px;
             color: #333;
-        }
-        #deck-area:hover {
-            transform: translateX(-50%) scale(1.05);
         }
         #deck-area.disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        /* 카드 뽑기 팝업 영역 */
+        /* 카드 뽑기 팝업 영역 (위치 조정) */
         #card-container {
             position: absolute;
-            top: 45%;
+            top: 38%;
             left: 50%;
             transform: translate(-50%, -50%);
             display: flex;
-            gap: 10px;
+            gap: 8px;
             pointer-events: auto;
         }
         .card {
-            width: 105px;
-            height: 150px;
+            width: 95px;
+            height: 135px;
             background: linear-gradient(135deg, #ffffff, #f0f0f0);
             border: 2px solid #333;
             border-radius: 8px;
@@ -139,50 +131,48 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 8px;
+            padding: 6px;
             text-align: center;
             cursor: pointer;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            animation: drawCard 0.3s ease-out forwards;
-        }
-        .card:hover {
-            transform: translateY(-8px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            animation: drawCard 0.25s ease-out forwards;
         }
         .card-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #222;
         }
         .card-value {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             color: #e67e22;
         }
         @keyframes drawCard {
-            0% { opacity: 0; transform: translateY(60px) scale(0.5); }
+            0% { opacity: 0; transform: translateY(40px) scale(0.6); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         /* 데미지 텍스트 */
         .damage-text {
             position: absolute;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
             pointer-events: none;
             animation: floatUp 0.8s ease-out forwards;
         }
         .damage-text.normal { color: #ffffff; text-shadow: 0 0 3px #000; }
-        .damage-text.headshot { color: #ff2a2a; font-size: 20px; text-shadow: 0 0 5px #000; }
+        .damage-text.headshot { color: #ff2a2a; font-size: 18px; text-shadow: 0 0 5px #000; }
+        .damage-text.heal { color: #2ecc71; font-size: 13px; text-shadow: 0 0 3px #000; }
         @keyframes floatUp {
             0% { opacity: 1; transform: translate(-50%, 0); }
-            100% { opacity: 0; transform: translate(-50%, -35px); }
+            100% { opacity: 0; transform: translate(-50%, -30px); }
         }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <canvas id="gameCanvas" width="450" height="700"></canvas>
+    <canvas id="gameCanvas" width="360" height="600"></canvas>
     
     <div id="ui-layer">
         <div class="stage-diamond">
@@ -198,7 +188,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// 오디오 합성 시스템 (외부 파일 없이 총소리 생성)
+// 사운드 합성 오디오
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
@@ -212,38 +202,31 @@ function playGunSound(gunType) {
 
     if (gunType === 'SHERIFF') {
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.25);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.25);
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.2);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
     } else if (gunType === 'GHOST') {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.12);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.12);
-    } else { // CLASSIC
+        osc.frequency.setValueAtTime(280, now);
+        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.1);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    } else {
         osc.type = 'square';
-        osc.frequency.setValueAtTime(200, now);
-        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.18);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.18);
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.15);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
     }
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.2);
 }
 
-// 게임 상태
+// 게임 제어 변수
 let stage = 1;
 let gameState = 'PREPARE';
 let cardDrawn = false;
@@ -251,60 +234,79 @@ let myHeadshotProb = 0.10;
 let enemyHeadshotProb = 0.10;
 let shakeTime = 0;
 
-// 총기 정보
+// 총기 설정
 const GUNS = {
-    CLASSIC: { name: '클래식', bodyDmg: 20, headDmg: 60, speed: 13, cooldown: 40, type: 'CLASSIC' },
-    GHOST: { name: '고스트', bodyDmg: 50, headDmg: 100, speed: 16, cooldown: 30, type: 'GHOST' },
-    SHERIFF: { name: '셰리프', bodyDmg: 60, headDmg: 140, speed: 18, cooldown: 55, type: 'SHERIFF' }
+    CLASSIC: { name: '클래식', bodyDmg: 20, headDmg: 60, speed: 12, cooldown: 42, type: 'CLASSIC' },
+    GHOST: { name: '고스트', bodyDmg: 50, headDmg: 100, speed: 15, cooldown: 32, type: 'GHOST' },
+    SHERIFF: { name: '셰리프', bodyDmg: 60, headDmg: 140, speed: 17, cooldown: 55, type: 'SHERIFF' }
 };
 
-// 지형 및 데코레이션
+// 요소 리스트
 let obstacles = [];
 let grassDetails = [];
 let rockDetails = [];
-
-// 개체 리스트
 let allies = [];
 let enemies = [];
 let bullets = [];
 let particles = [];
 
-// UI 요소
+// AI 맵 기억 전역 격자
+const MEMORY_GRID_SIZE = 40;
+let mapCols = Math.ceil(360 / MEMORY_GRID_SIZE);
+let mapRows = Math.ceil(600 / MEMORY_GRID_SIZE);
+
+// UI
 const stageNumEl = document.getElementById('stage-num');
 const startBtn = document.getElementById('start-btn');
 const deckArea = document.getElementById('deck-area');
 const cardContainer = document.getElementById('card-container');
 
-// --- 클래스 정의 ---
+// --- Entity 클래스 ---
 
 class Entity {
     constructor(x, y, isEnemy, gun) {
         this.x = x;
         this.y = y;
-        this.radius = 13;
+        this.radius = 12;
         this.isEnemy = isEnemy;
         this.maxHp = isEnemy ? 150 + (stage - 1) * 30 : 150;
         this.hp = this.maxHp;
         this.gun = gun;
         this.angle = 0;
         this.shootCooldown = 0;
-        this.speed = 1.4;
-        
-        // 탐색/AI 제어
+        this.speed = 1.3;
+
+        // AI 행동 상태: 'EXPLORE', 'ENGAGE', 'COVER', 'CHASE'
+        this.aiState = 'EXPLORE';
         this.target = null;
-        this.patrolAngle = Math.random() * Math.PI * 2;
-        this.patrolTimer = 0;
-        this.sightRange = 220; // 시야 범위
+        this.lastTargetPos = null; // 추격용 기억 좌표
+        this.sightRange = 210;
+
+        // 지능형 탐색 기억 맵
+        this.visitedMap = Array.from({ length: mapRows }, () => Array(mapCols).fill(0));
+        this.exploreAngle = Math.random() * Math.PI * 2;
+        this.exploreTimer = 0;
+
+        // 엄폐 및 회복 시스템
+        this.coverTarget = null;
+        this.healTimer = 0;
     }
 
     update() {
         if (this.hp <= 0) return;
         if (this.shootCooldown > 0) this.shootCooldown--;
 
+        // 현재 서있는 지도 셀 기억
+        let gx = Math.floor(this.x / MEMORY_GRID_SIZE);
+        let gy = Math.floor(this.y / MEMORY_GRID_SIZE);
+        if (gx >= 0 && gx < mapCols && gy >= 0 && gy < mapRows) {
+            this.visitedMap[gy][gx] += 1;
+        }
+
         const targets = this.isEnemy ? allies : enemies;
         const aliveTargets = targets.filter(t => t.hp > 0);
 
-        // 시야 내 적 탐색 (Raycast 시야 검사)
+        // 시야 내 적 감지
         let visibleTarget = null;
         let minDist = Infinity;
 
@@ -318,57 +320,153 @@ class Entity {
             }
         }
 
-        this.target = visibleTarget;
+        // 상태 전환 알고리즘
+        if (this.hp < this.maxHp * 0.45) {
+            // 체력이 45% 이하로 떨어지면 엄폐 모드 진입
+            this.aiState = 'COVER';
+        } else if (visibleTarget) {
+            this.aiState = 'ENGAGE';
+            this.target = visibleTarget;
+            this.lastTargetPos = { x: visibleTarget.x, y: visibleTarget.y };
 
-        if (this.target) {
-            // 적 발견 시 시선 고정
+            // 주변 아군에게 지원 신호(핑) 공유
+            const myAllies = this.isEnemy ? enemies : allies;
+            myAllies.forEach(ally => {
+                if (ally !== this && ally.aiState === 'EXPLORE') {
+                    ally.aiState = 'CHASE';
+                    ally.lastTargetPos = { x: visibleTarget.x, y: visibleTarget.y };
+                }
+            });
+        } else if (this.lastTargetPos) {
+            this.aiState = 'CHASE';
+        } else {
+            this.aiState = 'EXPLORE';
+        }
+
+        // AI 행동 실행
+        if (this.aiState === 'COVER') {
+            this.executeCover();
+        } else if (this.aiState === 'ENGAGE' && this.target) {
             this.angle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
-
-            // 거리 및 엄폐 판단
-            if (minDist > 120) {
-                // 사거리 내부로 연속 이동 (각도 제한 없음)
-                let moveX = Math.cos(this.angle) * this.speed;
-                let moveY = Math.sin(this.angle) * this.speed;
-                this.move(moveX, moveY);
+            
+            if (minDist > 110) {
+                this.moveInDirection(this.angle);
             } else {
-                // 적절한 사거리 확보 시 엄폐/약간의 좌우 움직임
-                let strafeAngle = this.angle + Math.PI / 2 * (Math.sin(Date.now() / 300) > 0 ? 1 : -1);
-                this.move(Math.cos(strafeAngle) * this.speed * 0.5, Math.sin(strafeAngle) * this.speed * 0.5);
+                // 엄폐 가능한 공격 위치 잡기
+                let strafe = this.angle + (Math.sin(Date.now() / 250) > 0 ? 1 : -1) * 1.2;
+                this.moveInDirection(strafe);
 
                 if (this.shootCooldown <= 0) {
                     this.shoot();
                     this.shootCooldown = this.gun.cooldown;
                 }
             }
-        } else {
-            // 적을 못 찾았을 때는 자유 탐색 (배회)
-            this.patrolTimer--;
-            if (this.patrolTimer <= 0) {
-                this.patrolAngle += (Math.random() - 0.5) * 1.5;
-                this.patrolTimer = 40 + Math.floor(Math.random() * 40);
-            }
+        } else if (this.aiState === 'CHASE' && this.lastTargetPos) {
+            // 적의 마지막 목격 위치로 추격
+            let chaseAngle = Math.atan2(this.lastTargetPos.y - this.y, this.lastTargetPos.x - this.x);
+            this.angle = chaseAngle;
+            this.moveInDirection(chaseAngle);
 
-            this.angle = this.patrolAngle;
-            let moveX = Math.cos(this.patrolAngle) * this.speed * 0.7;
-            let moveY = Math.sin(this.patrolAngle) * this.speed * 0.7;
-            this.move(moveX, moveY);
+            if (Math.hypot(this.lastTargetPos.x - this.x, this.lastTargetPos.y - this.y) < 20) {
+                this.lastTargetPos = null; // 해당 위치 수색 완료
+            }
+        } else {
+            // 맵을 기억하며 정밀 탐색 (EXPLORE)
+            this.executeSmartExplore();
         }
 
-        // 벽 및 타 개체와의 충돌 밀려나기 (기물 겹침 방지)
         this.resolveCollisions();
     }
 
-    move(dx, dy) {
-        let nextX = this.x + dx;
-        let nextY = this.y + dy;
+    executeSmartExplore() {
+        this.exploreTimer--;
+        if (this.exploreTimer <= 0) {
+            // 벽 및 안 가본 곳(방문 횟수가 적은 구역) 방향 탐색
+            let bestAngle = this.exploreAngle;
+            let minVisit = Infinity;
 
-        // 장애물 충돌 검사
-        if (!checkObstacleCollision(nextX, this.y, this.radius)) this.x = nextX;
-        if (!checkObstacleCollision(this.x, nextY, this.radius)) this.y = nextY;
+            for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+                let testX = this.x + Math.cos(a) * 50;
+                let testY = this.y + Math.sin(a) * 50;
+                
+                if (!checkObstacleCollision(testX, testY, this.radius)) {
+                    let tgx = Math.floor(testX / MEMORY_GRID_SIZE);
+                    let tgy = Math.floor(testY / MEMORY_GRID_SIZE);
+                    let visits = (tgx >= 0 && tgx < mapCols && tgy >= 0 && tgy < mapRows) ? this.visitedMap[tgy][tgx] : 99;
+                    
+                    if (visits < minVisit) {
+                        minVisit = visits;
+                        bestAngle = a;
+                    }
+                }
+            }
+            this.exploreAngle = bestAngle;
+            this.exploreTimer = 35 + Math.floor(Math.random() * 25);
+        }
 
-        // 맵 경계 제한
-        this.x = Math.max(this.radius + 5, Math.min(canvas.width - this.radius - 5, this.x));
-        this.y = Math.max(this.radius + 5, Math.min(canvas.height - this.radius - 5, this.y));
+        this.angle = this.exploreAngle;
+        this.moveInDirection(this.exploreAngle);
+    }
+
+    executeCover() {
+        // 장애물 뒤로 숨기
+        if (!this.coverTarget) {
+            let bestObs = null;
+            let maxDist = 0;
+            for (let obs of obstacles) {
+                let d = Math.hypot((obs.x + obs.w / 2) - this.x, (obs.y + obs.h / 2) - this.y);
+                if (d > maxDist) {
+                    maxDist = d;
+                    bestObs = obs;
+                }
+            }
+            this.coverTarget = bestObs;
+        }
+
+        if (this.coverTarget) {
+            let coverX = this.coverTarget.x + this.coverTarget.w / 2;
+            let coverY = this.coverTarget.y + this.coverTarget.h / 2;
+            let coverAngle = Math.atan2(coverY - this.y, coverX - this.x);
+            
+            this.angle = coverAngle;
+            this.moveInDirection(coverAngle);
+
+            // 엄폐 중 체력 회복
+            this.healTimer++;
+            if (this.healTimer % 40 === 0 && this.hp < this.maxHp) {
+                this.hp = Math.min(this.maxHp, this.hp + 12);
+                showDamageText(this.x, this.y - 12, 12, false, true);
+                if (this.hp >= this.maxHp * 0.9) {
+                    this.aiState = 'EXPLORE';
+                    this.coverTarget = null;
+                }
+            }
+        }
+    }
+
+    moveInDirection(ang) {
+        let vx = Math.cos(ang) * this.speed;
+        let vy = Math.sin(ang) * this.speed;
+
+        // 전방 벽 감지 우회
+        if (checkObstacleCollision(this.x + vx * 12, this.y + vy * 12, this.radius)) {
+            // 벽 인식 후 좌/우 우회 선택
+            if (!checkObstacleCollision(this.x + Math.cos(ang + Math.PI/2)*15, this.y + Math.sin(ang + Math.PI/2)*15, this.radius)) {
+                ang += Math.PI / 2;
+            } else {
+                ang -= Math.PI / 2;
+            }
+            vx = Math.cos(ang) * this.speed;
+            vy = Math.sin(ang) * this.speed;
+            this.exploreAngle = ang;
+        }
+
+        if (!checkObstacleCollision(this.x + vx, this.y, this.radius)) this.x += vx;
+        if (!checkObstacleCollision(this.x, this.y + vy, this.radius)) this.y += vy;
+
+        // 맵 탈출 완벽 방지 (Strict Bound Clamp)
+        this.x = Math.max(this.radius + 2, Math.min(canvas.width - this.radius - 2, this.x));
+        this.y = Math.max(this.radius + 2, Math.min(canvas.height - this.radius - 2, this.y));
     }
 
     resolveCollisions() {
@@ -377,13 +475,12 @@ class Entity {
             let dx = this.x - other.x;
             let dy = this.y - other.y;
             let dist = Math.hypot(dx, dy);
-            let minDist = this.radius + other.radius;
+            let minDist = this.radius + other.radius + 2;
 
             if (dist < minDist && dist > 0) {
                 let overlap = minDist - dist;
                 let nx = dx / dist;
                 let ny = dy / dist;
-
                 this.x += nx * overlap * 0.5;
                 this.y += ny * overlap * 0.5;
             }
@@ -391,15 +488,11 @@ class Entity {
     }
 
     shoot() {
-        // 캐릭터 오른쪽 손 위치에서 총알 발사
-        let rightHandOffsetX = 8;
-        let rightHandOffsetY = 12;
-
-        let handX = this.x + Math.cos(this.angle) * rightHandOffsetY + Math.cos(this.angle + Math.PI/2) * rightHandOffsetX;
-        let handY = this.y + Math.sin(this.angle) * rightHandOffsetY + Math.sin(this.angle + Math.PI/2) * rightHandOffsetX;
+        let handX = this.x + Math.cos(this.angle + 0.5) * 12;
+        let handY = this.y + Math.sin(this.angle + 0.5) * 12;
 
         bullets.push(new Bullet(handX, handY, this.angle, this.gun, this.isEnemy));
-        shakeTime = 4; // 화면 흔들림 효과
+        shakeTime = 3;
         playGunSound(this.gun.type);
     }
 
@@ -411,7 +504,6 @@ class Entity {
         ctx.rotate(this.angle);
 
         if (this.isEnemy) {
-            // 적: 빨간 원
             ctx.fillStyle = '#e74c3c';
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
@@ -420,8 +512,7 @@ class Entity {
             ctx.lineWidth = 2;
             ctx.stroke();
         } else {
-            // 아군: 발로란트 제트 (탑다운 모델링)
-            // 파란 어깨/의상
+            // 아군: 발로란트 제트 모델링 강화
             ctx.fillStyle = '#2980b9';
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
@@ -430,44 +521,38 @@ class Entity {
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // 백발 (제트 머리 스타일)
+            // 커진 제트의 백발 머리카락
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(-2, 0, this.radius * 0.6, 0, Math.PI * 2);
+            ctx.arc(-1, 0, this.radius * 0.8, 0, Math.PI * 2);
             ctx.fill();
 
-            // 바람 꽁지머리
-            ctx.fillStyle = '#d5f5e3';
+            // 민트 꽁지머리 연출
+            ctx.fillStyle = '#a3e4d7';
             ctx.beginPath();
-            ctx.moveTo(-this.radius * 0.8, -3);
-            ctx.lineTo(-this.radius * 1.5, 0);
-            ctx.lineTo(-this.radius * 0.8, 3);
+            ctx.moveTo(-this.radius * 0.9, -4);
+            ctx.lineTo(-this.radius * 1.7, 0);
+            ctx.lineTo(-this.radius * 0.9, 4);
             ctx.closePath();
             ctx.fill();
         }
 
-        // 오른손 및 디테일 총기 모델링
+        // 총기 착용 위치 (우측 손)
         ctx.save();
-        ctx.translate(8, 8); // 캐릭터 우측 손 위치
-
+        ctx.translate(6, 6);
         ctx.fillStyle = '#2c3e50';
-        if (this.gun === GUNS.CLASSIC) { 
-            // 클래식 (글록 느낌)
-            ctx.fillRect(0, -2, 10, 4);
-            ctx.fillStyle = '#111';
-            ctx.fillRect(-2, -1, 4, 2);
-        } else if (this.gun === GUNS.GHOST) { 
-            // 고스트 (긴 소음기 권총)
-            ctx.fillRect(0, -2, 10, 4);
-            ctx.fillStyle = '#1a252f';
-            ctx.fillRect(10, -2.5, 12, 5); // 사각형 소음기
-        } else if (this.gun === GUNS.SHERIFF) { 
-            // 셰리프 (대형 리볼버)
+        if (this.gun === GUNS.CLASSIC) {
+            ctx.fillRect(0, -2, 9, 4);
+        } else if (this.gun === GUNS.GHOST) {
             ctx.fillRect(0, -2, 8, 4);
+            ctx.fillStyle = '#111';
+            ctx.fillRect(8, -2, 10, 4);
+        } else if (this.gun === GUNS.SHERIFF) {
+            ctx.fillRect(0, -2, 6, 4);
             ctx.fillStyle = '#7f8c8d';
-            ctx.fillRect(3, -3, 6, 6); // 회전 실린더
+            ctx.fillRect(2, -3, 5, 6);
             ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(9, -2, 11, 4); // 총열
+            ctx.fillRect(7, -2, 9, 4);
         }
         ctx.restore();
 
@@ -477,10 +562,10 @@ class Entity {
     }
 
     drawUI() {
-        const barW = 32;
+        const barW = 30;
         const barH = 4;
         const barX = this.x - barW / 2;
-        const barY = this.y - this.radius - 14;
+        const barY = this.y - this.radius - 12;
 
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(barX, barY, barW, barH);
@@ -493,11 +578,10 @@ class Entity {
         ctx.lineWidth = 1;
         ctx.strokeRect(barX, barY, barW, barH);
 
-        // 총기 이름 표시
-        ctx.fillStyle = '#222';
-        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#111';
+        ctx.font = 'bold 8px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(this.gun.name, this.x, barY - 3);
+        ctx.fillText(this.gun.name, this.x, barY - 2);
     }
 }
 
@@ -518,7 +602,6 @@ class Bullet {
         let nextX = this.x + Math.cos(this.angle) * this.speed;
         let nextY = this.y + Math.sin(this.angle) * this.speed;
 
-        // 벽 충돌 (총알 통과 불가)
         if (checkObstacleCollision(nextX, nextY, 2)) {
             this.active = false;
             return;
@@ -527,7 +610,6 @@ class Bullet {
         this.x = nextX;
         this.y = nextY;
 
-        // 캐릭터 충돌
         const targets = this.isEnemy ? allies : enemies;
         for (let target of targets) {
             if (target.hp > 0 && Math.hypot(target.x - this.x, target.y - this.y) < target.radius) {
@@ -537,7 +619,6 @@ class Bullet {
             }
         }
 
-        // 화면 밖으로 나갈 때
         if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
             this.active = false;
         }
@@ -549,7 +630,7 @@ class Bullet {
         let damage = isHead ? this.gun.headDmg : this.gun.bodyDmg;
 
         target.hp -= damage;
-        showDamageText(target.x, target.y - 15, damage, isHead);
+        showDamageText(target.x, target.y - 12, damage, isHead);
 
         if (target.hp <= 0) {
             explode(target.x, target.y, target.isEnemy);
@@ -560,10 +641,10 @@ class Bullet {
         if (!this.active) return;
         ctx.save();
         ctx.strokeStyle = '#f39c12';
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.x - Math.cos(this.angle) * 8, this.y - Math.sin(this.angle) * 8);
+        ctx.lineTo(this.x - Math.cos(this.angle) * 7, this.y - Math.sin(this.angle) * 7);
         ctx.stroke();
         ctx.restore();
     }
@@ -574,11 +655,11 @@ class Particle {
         this.x = x;
         this.y = y;
         this.color = color;
-        this.vx = (Math.random() - 0.5) * 6;
-        this.vy = (Math.random() - 0.5) * 6;
-        this.life = 25;
-        this.maxLife = 25;
-        this.size = Math.random() * 3 + 2;
+        this.vx = (Math.random() - 0.5) * 5;
+        this.vy = (Math.random() - 0.5) * 5;
+        this.life = 20;
+        this.maxLife = 20;
+        this.size = Math.random() * 3 + 1.5;
     }
 
     update() {
@@ -598,7 +679,7 @@ class Particle {
     }
 }
 
-// --- 보조 검사 함수 ---
+// --- 보조 함수 ---
 
 function checkObstacleCollision(x, y, r) {
     for (let obs of obstacles) {
@@ -611,7 +692,7 @@ function checkObstacleCollision(x, y, r) {
 }
 
 function hasLineOfSight(x1, y1, x2, y2) {
-    let steps = 15;
+    let steps = 12;
     for (let i = 0; i <= steps; i++) {
         let px = x1 + (x2 - x1) * (i / steps);
         let py = y1 + (y2 - y1) * (i / steps);
@@ -621,51 +702,37 @@ function hasLineOfSight(x1, y1, x2, y2) {
 }
 
 function initMap() {
-    // 장애물 생성
     obstacles = [];
-    const count = 5 + Math.floor(Math.random() * 3);
+    const count = 4 + Math.floor(Math.random() * 3);
     for (let i = 0; i < count; i++) {
-        let w = 40 + Math.random() * 40;
-        let h = 40 + Math.random() * 40;
-        let x = 30 + Math.random() * (canvas.width - w - 60);
-        let y = 120 + Math.random() * (canvas.height - h - 240);
+        let w = 35 + Math.random() * 35;
+        let h = 35 + Math.random() * 35;
+        let x = 25 + Math.random() * (canvas.width - w - 50);
+        let y = 100 + Math.random() * (canvas.height - h - 200);
         obstacles.push({ x, y, w, h });
     }
 
-    // 잔디 디테일 생성
     grassDetails = [];
-    for (let i = 0; i < 35; i++) {
-        grassDetails.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height
-        });
+    for (let i = 0; i < 25; i++) {
+        grassDetails.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
     }
 
-    // 돌멩이 생성
     rockDetails = [];
-    for (let i = 0; i < 20; i++) {
-        rockDetails.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            r: 2 + Math.random() * 3
-        });
+    for (let i = 0; i < 15; i++) {
+        rockDetails.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: 2 + Math.random() * 2 });
     }
 }
 
 function drawEnvironment() {
-    // 잔디 세부 표현
     ctx.strokeStyle = '#8daa73';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     for (let g of grassDetails) {
         ctx.beginPath();
         ctx.moveTo(g.x, g.y);
-        ctx.lineTo(g.x - 2, g.y - 5);
-        ctx.moveTo(g.x, g.y);
-        ctx.lineTo(g.x + 3, g.y - 6);
+        ctx.lineTo(g.x - 2, g.y - 4);
         ctx.stroke();
     }
 
-    // 돌멩이 표현
     ctx.fillStyle = '#a1887f';
     for (let r of rockDetails) {
         ctx.beginPath();
@@ -673,12 +740,11 @@ function drawEnvironment() {
         ctx.fill();
     }
 
-    // 지형 장애물 (돌 벽)
     for (let obs of obstacles) {
         ctx.fillStyle = '#6d4c41';
         ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
         ctx.strokeStyle = '#4e342e';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
     }
 }
@@ -694,25 +760,22 @@ function initRound() {
     gameState = 'PREPARE';
 
     initMap();
-
     enemyHeadshotProb = 0.10 + (stage - 1) * 0.03;
 
-    // 아군 세팅
     if (allies.length === 0) {
         allies = [
-            new Entity(120, 620, false, GUNS.CLASSIC),
-            new Entity(330, 620, false, GUNS.CLASSIC)
+            new Entity(100, 520, false, GUNS.CLASSIC),
+            new Entity(260, 520, false, GUNS.CLASSIC)
         ];
     } else {
         let spacing = canvas.width / (allies.length + 1);
         allies.forEach((a, idx) => {
             a.hp = a.maxHp;
             a.x = spacing * (idx + 1);
-            a.y = 620;
+            a.y = 520;
         });
     }
 
-    // 적 생성 (라운드 비례)
     enemies = [];
     const gunKeys = Object.keys(GUNS);
     let enemyCount = stage;
@@ -720,14 +783,14 @@ function initRound() {
 
     for (let i = 0; i < enemyCount; i++) {
         let randomGun = GUNS[gunKeys[Math.floor(Math.random() * gunKeys.length)]];
-        enemies.push(new Entity(spacing * (i + 1), 70, true, randomGun));
+        enemies.push(new Entity(spacing * (i + 1), 60, true, randomGun));
     }
 }
 
-function showDamageText(x, y, damage, isHead) {
+function showDamageText(x, y, damage, isHead, isHeal = false) {
     const el = document.createElement('div');
-    el.className = `damage-text ${isHead ? 'headshot' : 'normal'}`;
-    el.innerText = isHead ? `HEAD! -${damage}` : `-${damage}`;
+    el.className = `damage-text ${isHeal ? 'heal' : (isHead ? 'headshot' : 'normal')}`;
+    el.innerText = isHeal ? `+${damage}` : (isHead ? `HEAD! -${damage}` : `-${damage}`);
     
     const rect = canvas.getBoundingClientRect();
     el.style.left = `${rect.left + x}px`;
@@ -739,7 +802,7 @@ function showDamageText(x, y, damage, isHead) {
 
 function explode(x, y, isEnemy) {
     const color = isEnemy ? '#e74c3c' : '#00e5ff';
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 20; i++) {
         particles.push(new Particle(x, y, color));
     }
 }
@@ -763,8 +826,8 @@ function drawCards() {
                 <div class="card-value" style="color: #2980b9;">+아군 1명</div>
             `;
             card.onclick = () => {
-                let spawnX = 80 + Math.random() * 290;
-                allies.push(new Entity(spawnX, 620, false, GUNS.CLASSIC));
+                let spawnX = 60 + Math.random() * 240;
+                allies.push(new Entity(spawnX, 520, false, GUNS.CLASSIC));
                 cardContainer.innerHTML = '';
                 startBtn.disabled = false;
             };
@@ -785,7 +848,7 @@ function drawCards() {
     }
 }
 
-// --- 이벤트 리스너 ---
+// --- 이벤트 ---
 
 deckArea.addEventListener('click', drawCards);
 
@@ -796,22 +859,20 @@ startBtn.addEventListener('click', () => {
     }
 });
 
-// --- 메인 루프 ---
+// --- 루프 ---
 
 function gameLoop() {
     ctx.save();
 
-    // 화면 흔들림 오프셋
     if (shakeTime > 0) {
-        let dx = (Math.random() - 0.5) * 6;
-        let dy = (Math.random() - 0.5) * 6;
+        let dx = (Math.random() - 0.5) * 4;
+        let dy = (Math.random() - 0.5) * 4;
         ctx.translate(dx, dy);
         shakeTime--;
     }
 
     ctx.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
 
-    // 환경 배경
     drawEnvironment();
 
     if (gameState === 'BATTLE') {
@@ -857,7 +918,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// 게임 구동
+// 구동
 initRound();
 gameLoop();
 </script>
