@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Dungeon Survivor Mobile</title>
+  <title>Dungeon Action Mobile</title>
   <style>
     * {
       box-sizing: border-box;
@@ -17,7 +17,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #050508;
+      background-color: #000;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #fff;
       touch-action: none;
@@ -66,9 +66,9 @@
     }
     .bar-container {
       width: 100%;
-      height: 10px;
+      height: 8px;
       background: #222;
-      border-radius: 5px;
+      border-radius: 4px;
       margin: 3px 0 6px 0;
       overflow: hidden;
     }
@@ -99,18 +99,6 @@
       font-size: 13px;
       font-weight: bold;
     }
-    .inv-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .inv-icon {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-    .icon-coin { background: #ffd700; }
-    .icon-key { background: #00e5ff; }
 
     /* Controls Overlay */
     #touch-controls {
@@ -122,10 +110,11 @@
       pointer-events: none;
       z-index: 10;
     }
+    /* 조이스틱 위치를 기존보다 위로 올림 (bottom: 90px) */
     .joystick-zone {
       position: absolute;
-      bottom: 25px;
-      left: 25px;
+      bottom: 90px;
+      left: 30px;
       width: 120px;
       height: 120px;
       background: rgba(255, 255, 255, 0.1);
@@ -148,40 +137,31 @@
     }
     .action-btn-zone {
       position: absolute;
-      bottom: 25px;
-      right: 25px;
+      bottom: 90px;
+      right: 30px;
       display: flex;
       gap: 12px;
       align-items: flex-end;
       pointer-events: auto;
     }
     .btn-action {
-      width: 65px;
-      height: 65px;
+      width: 75px;
+      height: 75px;
       border-radius: 50%;
-      background: rgba(255, 60, 60, 0.5);
+      background: rgba(255, 60, 60, 0.6);
       border: 2px solid rgba(255, 120, 120, 0.9);
       color: white;
       font-weight: bold;
-      font-size: 14px;
+      font-size: 16px;
       display: flex;
       justify-content: center;
       align-items: center;
       touch-action: none;
+      box-shadow: 0 0 10px rgba(255,0,0,0.3);
     }
     .btn-action:active {
-      background: rgba(255, 60, 60, 0.8);
+      background: rgba(255, 60, 60, 0.9);
       transform: scale(0.92);
-    }
-    .btn-dash {
-      width: 52px;
-      height: 52px;
-      background: rgba(60, 160, 255, 0.5);
-      border-color: rgba(120, 200, 255, 0.9);
-      font-size: 12px;
-    }
-    .btn-dash:active {
-      background: rgba(60, 160, 255, 0.8);
     }
 
     /* Modals */
@@ -191,7 +171,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(5, 5, 10, 0.9);
+      background: rgba(5, 5, 10, 0.92);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -225,29 +205,6 @@
       color: white;
       cursor: pointer;
     }
-    .cards-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 100%;
-      max-width: 280px;
-    }
-    .upgrade-card {
-      background: #181824;
-      border: 1px solid #33334d;
-      border-radius: 10px;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .upgrade-card:active {
-      border-color: #ff416c;
-      background: #252538;
-    }
-    .card-icon { font-size: 24px; }
-    .card-title { font-weight: bold; font-size: 14px; }
-    .card-desc { font-size: 11px; color: #aaa; }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -276,16 +233,8 @@
         </div>
 
         <div class="inventory-panel">
-          <div class="inv-item">
-            <span class="inv-icon icon-coin"></span>
-            <span id="coin-text">0</span>
-          </div>
-          <div class="inv-item">
-            <span class="inv-icon icon-key"></span>
-            <span id="key-text">0</span>
-          </div>
-          <div class="inv-item" style="color: #ff8800; margin-left: 4px;">
-            <span><span id="floor-text">1</span>F</span>
+          <div style="color: #ff8800;">
+            <span id="floor-text">1</span>F 던전
           </div>
         </div>
       </div>
@@ -296,24 +245,18 @@
         <div id="joystick-knob" class="joystick-knob"></div>
       </div>
       <div class="action-btn-zone">
-        <div id="btn-dash" class="btn-action btn-dash">대시</div>
         <div id="btn-attack" class="btn-action">공격</div>
       </div>
     </div>
 
     <div id="start-modal" class="modal">
-      <div class="modal-title">DUNGEON SURVIVOR</div>
+      <div class="modal-title">DUNGEON SLASH</div>
       <div class="modal-sub">
-        조이스틱으로 이동하고 버튼으로 공격하세요.<br>
-        상자를 열어 열쇠와 코인을 얻고 던전을 탈출하세요!
+        • 조이스틱으로 이동하고 공격 버튼으로 순간이동 베기를 사용하세요.<br>
+        • 조준된 적을 향해 대시하며 공격합니다.<br>
+        • 방에 진입하면 문이 열리고 적들이 탄환을 발사합니다!
       </div>
       <button id="btn-start-game" class="btn-start">게임 시작</button>
-    </div>
-
-    <div id="upgrade-modal" class="modal hidden">
-      <div class="modal-title" style="font-size: 24px;">LEVEL UP!</div>
-      <div class="modal-sub">강화할 능력을 선택하세요.</div>
-      <div class="cards-container" id="cards-container"></div>
     </div>
 
     <div id="gameover-modal" class="modal hidden">
@@ -324,12 +267,12 @@
   </div>
 
   <script>
-    // Global Mobile Scroll Block
+    // Global Mobile Touch Scroll Lock
     document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
     const TILE_SIZE = 48;
-    const MAP_COLS = 30;
-    const MAP_ROWS = 30;
+    const MAP_COLS = 50; // 확장된 맵 크기
+    const MAP_ROWS = 50;
 
     class SoundEngine {
       constructor() { this.ctx = null; }
@@ -356,11 +299,11 @@
           osc.stop(this.ctx.currentTime + duration);
         } catch(e) {}
       }
-      playSwing() { this.playTone(350, 'sine', 0.08, 0.1); }
-      playHit() { this.playTone(120, 'sawtooth', 0.12, 0.15); }
-      playCoin() { this.playTone(987, 'sine', 0.08, 0.08); }
-      playDash() { this.playTone(180, 'triangle', 0.1, 0.1); }
-      playLevelUp() { this.playTone(523, 'sine', 0.2, 0.12); }
+      playSlash() { this.playTone(600, 'sawtooth', 0.08, 0.12); }
+      playHit() { this.playTone(150, 'square', 0.1, 0.15); }
+      playShoot() { this.playTone(280, 'sine', 0.08, 0.08); }
+      playItem() { this.playTone(880, 'sine', 0.1, 0.1); }
+      playDoor() { this.playTone(200, 'triangle', 0.15, 0.1); }
     }
     const soundEngine = new SoundEngine();
 
@@ -383,6 +326,155 @@
 
     function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
+    class DamageText {
+      constructor(x, y, text, isCrit) {
+        this.pos = new Vector2(x, y);
+        this.text = text;
+        this.isCrit = isCrit;
+        this.life = 1.0;
+        this.velY = -1.5;
+      }
+      update() {
+        this.pos.y += this.velY;
+        this.life -= 0.025;
+      }
+      draw(ctx, camera) {
+        let rPos = camera.getRenderPos(this.pos);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.life);
+        if (this.isCrit) {
+          ctx.font = 'bold 22px sans-serif';
+          ctx.fillStyle = '#ff2222';
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 3;
+          ctx.strokeText(this.text, rPos.x, rPos.y);
+          ctx.fillText(this.text, rPos.x, rPos.y);
+        } else {
+          ctx.font = 'bold 15px sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 2;
+          ctx.strokeText(this.text, rPos.x, rPos.y);
+          ctx.fillText(this.text, rPos.x, rPos.y);
+        }
+        ctx.restore();
+      }
+    }
+
+    class TrailEffect {
+      constructor(start, end) {
+        this.start = start.clone();
+        this.end = end.clone();
+        this.life = 1.0;
+      }
+      update() { this.life -= 0.08; }
+      draw(ctx, camera) {
+        let sPos = camera.getRenderPos(this.start);
+        let ePos = camera.getRenderPos(this.end);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.strokeStyle = 'rgba(255, 60, 60, 0.8)';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(sPos.x, sPos.y);
+        ctx.lineTo(ePos.x, ePos.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    class Door {
+      constructor(x, y) {
+        this.pos = new Vector2(x, y);
+        this.width = TILE_SIZE;
+        this.height = TILE_SIZE;
+        this.isOpen = false;
+        this.openProgress = 0; // 0 ~ 1 Animation
+      }
+      update(player) {
+        let dist = this.pos.dist(player.pos);
+        if (dist < 80 && !this.isOpen) {
+          this.isOpen = true;
+          soundEngine.playDoor();
+        }
+        if (this.isOpen && this.openProgress < 1) {
+          this.openProgress += 0.08;
+          if (this.openProgress > 1) this.openProgress = 1;
+        }
+      }
+      draw(ctx, camera) {
+        let rPos = camera.getRenderPos(this.pos);
+        ctx.save();
+        ctx.fillStyle = "#8B4513"; // 갈색 뭉툭한 문
+        let offset = (TILE_SIZE / 2) * this.openProgress;
+        
+        // 상하 분할 열림 애니메이션
+        ctx.fillRect(rPos.x - TILE_SIZE/2, rPos.y - TILE_SIZE/2 - offset, TILE_SIZE, TILE_SIZE/2);
+        ctx.fillRect(rPos.x - TILE_SIZE/2, rPos.y + offset, TILE_SIZE, TILE_SIZE/2);
+        
+        ctx.strokeStyle = "#401F0A";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(rPos.x - TILE_SIZE/2, rPos.y - TILE_SIZE/2 - offset, TILE_SIZE, TILE_SIZE/2);
+        ctx.strokeRect(rPos.x - TILE_SIZE/2, rPos.y + offset, TILE_SIZE, TILE_SIZE/2);
+        ctx.restore();
+      }
+    }
+
+    class Bullet {
+      constructor(x, y, dir, damage, isCrit) {
+        this.pos = new Vector2(x, y);
+        this.dir = dir.normalize();
+        this.speed = 4.5;
+        this.damage = damage;
+        this.isCrit = isCrit;
+        this.radius = 5;
+        this.active = true;
+      }
+      update(map, player) {
+        this.pos.add(this.dir.clone().mult(this.speed));
+        if (map.isWall(this.pos.x, this.pos.y)) {
+          this.active = false;
+        }
+        if (this.pos.dist(player.pos) < player.size / 2 + this.radius) {
+          player.takeDamage(this.damage, this.isCrit);
+          this.active = false;
+        }
+      }
+      draw(ctx, camera) {
+        let rPos = camera.getRenderPos(this.pos);
+        ctx.fillStyle = this.isCrit ? "#ff0000" : "#ffaa00";
+        ctx.beginPath();
+        ctx.arc(rPos.x, rPos.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    class Item {
+      constructor(x, y, type) {
+        this.pos = new Vector2(x, y);
+        this.type = type; // 'hp', 'exp'
+        this.active = true;
+      }
+      update(player) {
+        if (this.pos.dist(player.pos) < 30) {
+          if (this.type === 'hp') {
+            player.hp = Math.min(player.maxHp, player.hp + 25);
+          } else if (this.type === 'exp') {
+            player.exp += 15;
+          }
+          soundEngine.playItem();
+          this.active = false;
+        }
+      }
+      draw(ctx, camera) {
+        let rPos = camera.getRenderPos(this.pos);
+        ctx.fillStyle = this.type === 'hp' ? '#ff3366' : '#33aaff';
+        ctx.beginPath();
+        ctx.arc(rPos.x, rPos.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     class Camera {
       constructor() {
         this.pos = new Vector2(0, 0);
@@ -403,52 +495,112 @@
         this.cols = cols;
         this.rows = rows;
         this.grid = [];
+        this.rooms = [];
+        this.doors = [];
         this.spawnPos = new Vector2();
         this.exitPos = new Vector2();
       }
       generate() {
         this.grid = Array(this.rows).fill(0).map(() => Array(this.cols).fill(1));
-        let rooms = [];
-        for (let i = 0; i < 8; i++) {
-          let w = randomInt(5, 8);
-          let h = randomInt(5, 8);
-          let x = randomInt(1, this.cols - w - 1);
-          let y = randomInt(1, this.rows - h - 1);
-          rooms.push({ x, y, w, h, cx: Math.floor(x + w / 2), cy: Math.floor(y + h / 2) });
+        this.rooms = [];
+        this.doors = [];
+
+        let numRooms = randomInt(8, 12);
+        for (let i = 0; i < numRooms; i++) {
+          let w = randomInt(6, 10);
+          let h = randomInt(6, 10);
+          let x = randomInt(2, this.cols - w - 2);
+          let y = randomInt(2, this.rows - h - 2);
+          
+          let room = { x, y, w, h, cx: Math.floor(x + w / 2), cy: Math.floor(y + h / 2), visited: false };
+          this.rooms.push(room);
+
           for (let ry = y; ry < y + h; ry++) {
             for (let rx = x; rx < x + w; rx++) {
               this.grid[ry][rx] = 0;
             }
           }
         }
-        for (let i = 0; i < rooms.length - 1; i++) {
-          let r1 = rooms[i], r2 = rooms[i + 1];
+
+        for (let i = 0; i < this.rooms.length - 1; i++) {
+          let r1 = this.rooms[i], r2 = this.rooms[i + 1];
           let cx = r1.cx, cy = r1.cy;
-          while (cx !== r2.cx) { this.grid[cy][cx] = 0; cx += (r2.cx > cx) ? 1 : -1; }
-          while (cy !== r2.cy) { this.grid[cy][cx] = 0; cy += (r2.cy > cy) ? 1 : -1; }
+          while (cx !== r2.cx) {
+            this.grid[cy][cx] = 0;
+            cx += (r2.cx > cx) ? 1 : -1;
+          }
+          while (cy !== r2.cy) {
+            this.grid[cy][cx] = 0;
+            cy += (r2.cy > cy) ? 1 : -1;
+          }
+          // 방 경계에 문 설치
+          this.doors.push(new Door(r1.cx * TILE_SIZE, r1.y * TILE_SIZE));
         }
-        this.spawnPos.set(rooms[0].cx * TILE_SIZE, rooms[0].cy * TILE_SIZE);
-        this.exitPos.set(rooms[rooms.length - 1].cx * TILE_SIZE, rooms[rooms.length - 1].cy * TILE_SIZE);
+
+        this.spawnPos.set(this.rooms[0].cx * TILE_SIZE, this.rooms[0].cy * TILE_SIZE);
+        this.rooms[0].visited = true; // 시작방 밝힘
+        this.exitPos.set(this.rooms[this.rooms.length - 1].cx * TILE_SIZE, this.rooms[this.rooms.length - 1].cy * TILE_SIZE);
       }
+
       isWall(x, y) {
         let c = Math.floor(x / TILE_SIZE);
         let r = Math.floor(y / TILE_SIZE);
         if (c < 0 || c >= this.cols || r < 0 || r >= this.rows) return true;
         return this.grid[r][c] === 1;
       }
+
+      checkRoomVisit(playerPos) {
+        for (let r of this.rooms) {
+          let rx = r.x * TILE_SIZE;
+          let ry = r.y * TILE_SIZE;
+          let rw = r.w * TILE_SIZE;
+          let rh = r.h * TILE_SIZE;
+          if (playerPos.x >= rx && playerPos.x <= rx + rw && playerPos.y >= ry && playerPos.y <= ry + rh) {
+            r.visited = true;
+          }
+        }
+      }
+
       draw(ctx, camera) {
         for (let r = 0; r < this.rows; r++) {
           for (let c = 0; c < this.cols; c++) {
-            let rPos = camera.getRenderPos(new Vector2(c * TILE_SIZE, r * TILE_SIZE));
+            let tileX = c * TILE_SIZE;
+            let tileY = r * TILE_SIZE;
+
+            // 방 진입 전까지 안개(Fog of War) 처리
+            let inVisitedRoom = false;
+            for (let room of this.rooms) {
+              if (room.visited && c >= room.x - 1 && c <= room.x + room.w && r >= room.y - 1 && r <= room.y + room.h) {
+                inVisitedRoom = true;
+                break;
+              }
+            }
+
+            let rPos = camera.getRenderPos(new Vector2(tileX, tileY));
+            if (!inVisitedRoom) {
+              ctx.fillStyle = "#000000"; // 암전
+              ctx.fillRect(rPos.x, rPos.y, TILE_SIZE, TILE_SIZE);
+              continue;
+            }
+
             if (this.grid[r][c] === 1) {
-              ctx.fillStyle = "#1e1e2f";
+              ctx.fillStyle = "#222233";
               ctx.fillRect(rPos.x, rPos.y, TILE_SIZE, TILE_SIZE);
             } else {
-              ctx.fillStyle = "#151520";
+              ctx.fillStyle = "#11111a";
               ctx.fillRect(rPos.x, rPos.y, TILE_SIZE, TILE_SIZE);
+              ctx.strokeStyle = "#1a1a28";
+              ctx.strokeRect(rPos.x, rPos.y, TILE_SIZE, TILE_SIZE);
             }
           }
         }
+
+        // 문 그리기
+        for (let door of this.doors) {
+          door.draw(ctx, camera);
+        }
+
+        // 출구 포탈
         let exitR = camera.getRenderPos(this.exitPos);
         ctx.fillStyle = "#00e5ff";
         ctx.beginPath();
@@ -460,16 +612,15 @@
     class Player {
       constructor(x, y) {
         this.pos = new Vector2(x, y);
-        this.radius = 16;
-        this.speed = 3.8;
+        this.size = 28; // 뭉툭한 네모
+        this.speed = 4.0;
         this.maxHp = 100;
         this.hp = 100;
         this.level = 1;
         this.exp = 0;
         this.nextExp = 50;
-        this.coins = 0;
-        this.keys = 1;
-        this.damage = 25;
+        this.baseDamage = 10;
+        this.critChance = 0.40; // 40% 크리티컬
         this.facingAngle = 0;
       }
       move(dir, map) {
@@ -478,55 +629,118 @@
           this.facingAngle = Math.atan2(dir.y, dir.x);
           let nx = this.pos.x + dir.x * this.speed;
           let ny = this.pos.y + dir.y * this.speed;
-          if (!map.isWall(nx, this.pos.y)) this.pos.x = nx;
-          if (!map.isWall(this.pos.x, ny)) this.pos.y = ny;
+
+          // 문 통과 제어 (열려있지 않으면 대기)
+          let canMoveX = !map.isWall(nx, this.pos.y);
+          let canMoveY = !map.isWall(this.pos.x, ny);
+          for (let door of map.doors) {
+            if (!door.isOpen && door.pos.dist(new Vector2(nx, ny)) < 24) {
+              canMoveX = false;
+              canMoveY = false;
+            }
+          }
+
+          if (canMoveX) this.pos.x = nx;
+          if (canMoveY) this.pos.y = ny;
         }
       }
-      attack(enemies) {
-        soundEngine.playSwing();
-        for (let e of enemies) {
-          if (this.pos.dist(e.pos) < 60) {
-            e.hp -= this.damage;
-            soundEngine.playHit();
-          }
-        }
+      takeDamage(dmg, isCrit) {
+        this.hp -= dmg;
+        soundEngine.playHit();
+        game.addDamageText(this.pos.x, this.pos.y - 10, Math.round(dmg), isCrit);
       }
       draw(ctx, camera) {
         let rPos = camera.getRenderPos(this.pos);
-        ctx.fillStyle = "#ff416c";
-        ctx.beginPath();
-        ctx.arc(rPos.x, rPos.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.save();
+        ctx.translate(rPos.x, rPos.y);
+        
+        // 뭉툭한 네모 캐릭터
+        ctx.fillStyle = "#4a90e2";
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        ctx.strokeRect(-this.size/2, -this.size/2, this.size, this.size);
+
+        // 검 무기 연출
+        ctx.rotate(this.facingAngle);
+        ctx.fillStyle = "#cccccc";
+        ctx.fillRect(10, -3, 18, 6);
+        ctx.fillStyle = "#ffffaa";
+        ctx.fillRect(8, -5, 3, 10);
+
+        ctx.restore();
       }
     }
 
     class Enemy {
-      constructor(x, y) {
+      constructor(x, y, floor) {
         this.pos = new Vector2(x, y);
-        this.radius = 14;
-        this.speed = 1.8;
-        this.hp = 40;
-        this.maxHp = 40;
+        this.size = 26;
+        this.speed = 1.4;
+        this.hp = 30 + floor * 10;
+        this.maxHp = this.hp;
+        this.baseDamage = 5 + (floor - 1) * 2; // 층수 비례 데미지 증가
+        this.critChance = 0.20; // 20% 크리티컬
+        this.shootTimer = 0;
+        this.shootInterval = randomInt(80, 130);
       }
-      update(player, map) {
+      update(player, map, bullets) {
         let d = this.pos.dist(player.pos);
-        if (d < 300) {
+        if (d < 350) {
           let dir = player.pos.clone().sub(this.pos).normalize();
           let nx = this.pos.x + dir.x * this.speed;
           let ny = this.pos.y + dir.y * this.speed;
           if (!map.isWall(nx, this.pos.y)) this.pos.x = nx;
           if (!map.isWall(this.pos.x, ny)) this.pos.y = ny;
-          if (d < this.radius + player.radius) {
-            player.hp -= 0.3;
+
+          // 원거리 탄환 공격
+          this.shootTimer++;
+          if (this.shootTimer >= this.shootInterval) {
+            this.shootTimer = 0;
+            let isCrit = Math.random() < this.critChance;
+            let dmg = this.baseDamage * (isCrit ? 1.5 : 1.0);
+            bullets.push(new Bullet(this.pos.x, this.pos.y, dir, dmg, isCrit));
+            soundEngine.playShoot();
           }
         }
       }
-      draw(ctx, camera) {
+      takeDamage(dmg, isCrit) {
+        this.hp -= dmg;
+        soundEngine.playHit();
+        game.addDamageText(this.pos.x, this.pos.y - 15, Math.round(dmg), isCrit);
+      }
+      draw(ctx, camera, isTargeted) {
         let rPos = camera.getRenderPos(this.pos);
-        ctx.fillStyle = "#33ff77";
-        ctx.beginPath();
-        ctx.arc(rPos.x, rPos.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.save();
+        
+        // 적 본체
+        ctx.fillStyle = "#e74c3c";
+        ctx.fillRect(rPos.x - this.size/2, rPos.y - this.size/2, this.size, this.size);
+
+        // 머리 위 체력바
+        let barW = 32, barH = 5;
+        ctx.fillStyle = "#333";
+        ctx.fillRect(rPos.x - barW/2, rPos.y - this.size/2 - 12, barW, barH);
+        ctx.fillStyle = "#ff2222";
+        ctx.fillRect(rPos.x - barW/2, rPos.y - this.size/2 - 12, (Math.max(0, this.hp) / this.maxHp) * barW, barH);
+
+        // 조준 표시 (가장 가까운 적)
+        if (isTargeted) {
+          ctx.strokeStyle = "#ff0000";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(rPos.x, rPos.y, 22, 0, Math.PI * 2);
+          ctx.stroke();
+          // 십자가 선
+          ctx.beginPath();
+          ctx.moveTo(rPos.x - 26, rPos.y); ctx.lineTo(rPos.x - 16, rPos.y);
+          ctx.moveTo(rPos.x + 16, rPos.y); ctx.lineTo(rPos.x + 26, rPos.y);
+          ctx.moveTo(rPos.x, rPos.y - 26); ctx.lineTo(rPos.x, rPos.y - 16);
+          ctx.moveTo(rPos.x, rPos.y + 16); ctx.lineTo(rPos.x, rPos.y + 26);
+          ctx.stroke();
+        }
+
+        ctx.restore();
       }
     }
 
@@ -540,8 +754,13 @@
         this.map = new DungeonMap(MAP_COLS, MAP_ROWS);
         this.player = null;
         this.enemies = [];
+        this.bullets = [];
+        this.items = [];
+        this.damageTexts = [];
+        this.trails = [];
         this.floor = 1;
         this.joystickVector = new Vector2(0, 0);
+        this.targetedEnemy = null;
 
         this.setupEvents();
       }
@@ -557,6 +776,7 @@
 
       start() {
         this.player = new Player(0, 0);
+        this.floor = 1;
         this.loadFloor();
         document.getElementById('start-modal').classList.add('hidden');
         document.getElementById('gameover-modal').classList.add('hidden');
@@ -566,9 +786,51 @@
         this.map.generate();
         this.player.pos = this.map.spawnPos.clone();
         this.enemies = [];
-        for (let i = 0; i < 6; i++) {
-          this.enemies.push(new Enemy(this.player.pos.x + randomInt(-150, 150), this.player.pos.y + randomInt(-150, 150)));
+        this.bullets = [];
+        this.items = [];
+        this.damageTexts = [];
+        this.trails = [];
+
+        // 방마다 최소 1마리 이상 스폰 (층수 비례 증가)
+        for (let i = 1; i < this.map.rooms.length; i++) {
+          let room = this.map.rooms[i];
+          let enemyCount = randomInt(1, 1 + Math.floor(this.floor / 2));
+          for (let e = 0; e < enemyCount; e++) {
+            let ex = (room.x + randomInt(1, room.w - 2)) * TILE_SIZE;
+            let ey = (room.y + randomInt(1, room.h - 2)) * TILE_SIZE;
+            this.enemies.push(new Enemy(ex, ey, this.floor));
+          }
         }
+      }
+
+      addDamageText(x, y, text, isCrit) {
+        this.damageTexts.push(new DamageText(x, y, text, isCrit));
+      }
+
+      attackTeleport() {
+        if (!this.player || !this.targetedEnemy) return;
+        let startPos = this.player.pos.clone();
+        let targetPos = this.targetedEnemy.pos.clone();
+        
+        // 타겟 적 바로 앞으로 대시/순간이동
+        let dir = targetPos.clone().sub(startPos).normalize();
+        let dest = targetPos.clone().sub(dir.mult(30));
+
+        if (!this.map.isWall(dest.x, dest.y)) {
+          this.player.pos = dest;
+        } else {
+          this.player.pos = targetPos.clone();
+        }
+
+        // 잔상 이펙트
+        this.trails.push(new TrailEffect(startPos, this.player.pos));
+
+        // 공격 데미지 계산 (크리티컬 40%)
+        let isCrit = Math.random() < this.player.critChance;
+        let dmg = this.player.baseDamage * (isCrit ? 1.5 : 1.0);
+        this.targetedEnemy.takeDamage(dmg, isCrit);
+        
+        soundEngine.playSlash();
       }
 
       setupEvents() {
@@ -583,7 +845,7 @@
           this.start();
         });
 
-        // Touch Joystick
+        // Touch Joystick (위치 상단으로 조정됨)
         const zone = document.getElementById('joystick-zone');
         const knob = document.getElementById('joystick-knob');
         let touchId = null;
@@ -614,20 +876,11 @@
         zone.addEventListener('touchend', endJoystick);
         zone.addEventListener('touchcancel', endJoystick);
 
-        // Buttons
+        // 공격 버튼 (대시 순간이동)
         document.getElementById('btn-attack').addEventListener('touchstart', (e) => {
           e.preventDefault();
           soundEngine.init();
-          if (this.player) this.player.attack(this.enemies);
-        }, { passive: false });
-
-        document.getElementById('btn-dash').addEventListener('touchstart', (e) => {
-          e.preventDefault();
-          soundEngine.init();
-          if (this.player) {
-            this.player.pos.add(new Vector2(Math.cos(this.player.facingAngle)*40, Math.sin(this.player.facingAngle)*40));
-            soundEngine.playDash();
-          }
+          this.attackTeleport();
         }, { passive: false });
       }
 
@@ -650,35 +903,88 @@
 
       update() {
         if (!this.player) return;
+
         this.player.move(this.joystickVector, this.map);
         this.camera.follow(this.player);
+        this.map.checkRoomVisit(this.player.pos);
 
+        // 문 업데이트
+        for (let door of this.map.doors) {
+          door.update(this.player);
+        }
+
+        // 가장 가까운 적 타겟팅
+        let minDist = 350;
+        this.targetedEnemy = null;
+        for (let e of this.enemies) {
+          let d = this.player.pos.dist(e.pos);
+          if (d < minDist) {
+            minDist = d;
+            this.targetedEnemy = e;
+          }
+        }
+
+        // 적 업데이트
         for (let i = this.enemies.length - 1; i >= 0; i--) {
           let e = this.enemies[i];
-          e.update(this.player, this.map);
+          e.update(this.player, this.map, this.bullets);
           if (e.hp <= 0) {
+            // 아이템 드롭
+            if (Math.random() < 0.4) {
+              this.items.push(new Item(e.pos.x, e.pos.y, Math.random() < 0.5 ? 'hp' : 'exp'));
+            }
             this.player.exp += 20;
             if (this.player.exp >= this.player.nextExp) {
               this.player.level++;
               this.player.exp = 0;
-              soundEngine.playLevelUp();
+              this.player.maxHp += 10;
+              this.player.hp = this.player.maxHp;
+              this.player.baseDamage += 3;
             }
             this.enemies.splice(i, 1);
           }
         }
 
-        if (this.player.pos.dist(this.map.exitPos) < 20) {
+        // 탄환 업데이트
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+          let b = this.bullets[i];
+          b.update(this.map, this.player);
+          if (!b.active) this.bullets.splice(i, 1);
+        }
+
+        // 아이템 업데이트
+        for (let i = this.items.length - 1; i >= 0; i--) {
+          let item = this.items[i];
+          item.update(this.player);
+          if (!item.active) this.items.splice(i, 1);
+        }
+
+        // 데미지 텍스트 & 잔상 업데이트
+        for (let i = this.damageTexts.length - 1; i >= 0; i--) {
+          let dt = this.damageTexts[i];
+          dt.update();
+          if (dt.life <= 0) this.damageTexts.splice(i, 1);
+        }
+        for (let i = this.trails.length - 1; i >= 0; i--) {
+          let tr = this.trails[i];
+          tr.update();
+          if (tr.life <= 0) this.trails.splice(i, 1);
+        }
+
+        // 층 이동
+        if (this.player.pos.dist(this.map.exitPos) < 24) {
           this.floor++;
           this.loadFloor();
         }
 
+        // 게임 오버
         if (this.player.hp <= 0) {
           document.getElementById('gameover-stats').innerText = `도달 층수: ${this.floor}층`;
           document.getElementById('gameover-modal').classList.remove('hidden');
           this.player = null;
         }
 
-        // UI
+        // HUD 업데이트
         if (this.player) {
           document.getElementById('hp-text').innerText = `${Math.max(0, Math.ceil(this.player.hp))} / ${this.player.maxHp}`;
           document.getElementById('hp-bar').style.width = `${Math.max(0, (this.player.hp / this.player.maxHp) * 100)}%`;
@@ -693,8 +999,15 @@
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (this.player) {
           this.map.draw(this.ctx, this.camera);
-          for (let e of this.enemies) e.draw(this.ctx, this.camera);
+          
+          for (let item of this.items) item.draw(this.ctx, this.camera);
+          for (let tr of this.trails) tr.draw(this.ctx, this.camera);
+          for (let e of this.enemies) e.draw(this.ctx, this.camera, e === this.targetedEnemy);
+          for (let b of this.bullets) b.draw(this.ctx, this.camera);
+          
           this.player.draw(this.ctx, this.camera);
+
+          for (let dt of this.damageTexts) dt.draw(this.ctx, this.camera);
         }
       }
 
@@ -705,9 +1018,10 @@
       }
     }
 
+    let game;
     window.onload = () => {
-      const g = new Game();
-      g.loop();
+      game = new Game();
+      game.loop();
     };
   </script>
 </body>
