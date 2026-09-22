@@ -35,7 +35,7 @@
       position: absolute;
       top: 15px; left: 15px;
       width: 180px;
-      background: rgba(10, 10, 15, 0.8);
+      background: rgba(10, 10, 15, 0.85);
       padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -59,7 +59,7 @@
       font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
     }
 
-    /* 우측 상단 퀘스트 & 아이템 UI */
+    /* 우측 상단 퀘스트 패널 */
     #right-ui-container {
       position: absolute;
       top: 15px; right: 15px;
@@ -80,20 +80,34 @@
     }
     .panel-box h4 { margin: 0 0 6px 0; color: #ffd700; font-size: 12px; }
 
-    #inventory-list {
+    /* 자연스럽게 사라지는 획득 아이템 알림 컨테이너 */
+    #item-toast-container {
+      position: absolute;
+      top: 90px;
+      right: 15px;
       display: flex;
       flex-direction: column;
-      gap: 3px;
-      max-height: 120px;
-      overflow-y: auto;
+      gap: 6px;
+      align-items: flex-end;
+      pointer-events: none;
     }
-    .item-tag {
+    .item-toast-bar {
+      background: rgba(20, 20, 25, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-left: 4px solid #95a5a6;
+      padding: 6px 12px;
+      border-radius: 4px;
+      color: #ffffff;
+      font-size: 12px;
       font-weight: bold;
-      padding: 3px 6px;
-      border-radius: 3px;
-      background: rgba(255,255,255,0.08);
-      display: flex;
-      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .item-toast-bar.fade-out {
+      opacity: 0;
+      transform: translateY(-8px);
     }
 
     /* 대화창 & NPC 초상화 */
@@ -190,19 +204,16 @@
       </div>
     </div>
 
-    <!-- 우측 상단 UI (퀘스트 & 인벤토리) -->
+    <!-- 우측 상단 UI (퀘스트) -->
     <div id="right-ui-container">
       <div class="panel-box" id="quest-ui">
         <h4>📜 [ 메인 퀘스트 ]</h4>
         <div id="quest-text">아리엘과 대화하기</div>
       </div>
-      <div class="panel-box" id="inventory-ui">
-        <h4>🎒 [획득한 아이템]</h4>
-        <div id="inventory-list">
-          <span style="color:#888; font-style:italic;">획득한 아이템 없음</span>
-        </div>
-      </div>
     </div>
+
+    <!-- 획득 아이템 알림 토스트 영역 -->
+    <div id="item-toast-container"></div>
 
     <!-- 대화창 -->
     <div id="dialogue-box">
@@ -255,9 +266,6 @@
     const viewWidth = () => window.innerWidth;
     const viewHeight = () => window.innerHeight;
 
-    // 아이템 일반(회색) 등급
-    const COLOR_COMMON = '#95a5a6';
-
     // 게임 상태
     let gameState = {
       currentZone: "루니마이아 성",
@@ -268,11 +276,13 @@
       zoneTitleTimer: 120,
       storyStage: 0,
       questProgress: 0,
-      questGoal: 3,
-      inventory: {}
+      questGoal: 3
     };
 
-    const MAP_SIZE = 1600;
+    // 맵 크기 (초원 맵 크기를 2400으로 확장)
+    const CASTLE_MAP_SIZE = 1600;
+    const MEADOW_MAP_SIZE = 2400;
+    const getMapSize = () => gameState.currentZone === "루니마이아 성" ? CASTLE_MAP_SIZE : MEADOW_MAP_SIZE;
 
     // 플레이어
     const player = {
@@ -283,7 +293,7 @@
       skill1Cooldown: 0, maxSkill1Cd: 5.0
     };
 
-    // 충돌체 (집, 성벽, 나무)
+    // 충돌체 (건물 및 나무)
     const buildings = [
       { x: 550, y: 700, w: 90, h: 80 },
       { x: 960, y: 700, w: 90, h: 80 },
@@ -291,30 +301,37 @@
       { x: 960, y: 1000, w: 90, h: 80 }
     ];
 
-    const trees = [
+    const treesCastle = [
       { x: 400, y: 400, r: 22 }, { x: 1200, y: 400, r: 22 },
       { x: 400, y: 1200, r: 22 }, { x: 1200, y: 1200, r: 22 },
       { x: 300, y: 800, r: 22 }, { x: 1300, y: 800, r: 22 }
     ];
 
-    // 성벽 충돌 박스 (성문 통로 제외)
+    const treesMeadow = [
+      { x: 500, y: 500, r: 25 }, { x: 1800, y: 500, r: 25 },
+      { x: 400, y: 1800, r: 25 }, { x: 1900, y: 1900, r: 25 },
+      { x: 1200, y: 800, r: 25 }, { x: 900, y: 1600, r: 25 },
+      { x: 1500, y: 1400, r: 25 }, { x: 700, y: 1100, r: 25 }
+    ];
+
+    // 성벽 충돌 박스
     const castleWalls = [
       { x: 100, y: 100, w: 650, h: 20 },
       { x: 850, y: 100, w: 650, h: 20 },
-      { x: 100, y: MAP_SIZE - 120, w: 1400, h: 20 },
-      { x: 100, y: 100, w: 20, h: MAP_SIZE - 220 },
-      { x: MAP_SIZE - 120, y: 100, w: 20, h: MAP_SIZE - 220 }
+      { x: 100, y: CASTLE_MAP_SIZE - 120, w: 1400, h: 20 },
+      { x: 100, y: 100, w: 20, h: CASTLE_MAP_SIZE - 220 },
+      { x: CASTLE_MAP_SIZE - 120, y: 100, w: 20, h: CASTLE_MAP_SIZE - 220 }
     ];
 
     const meadowWalls = [
-      { x: 100, y: 1480, w: 650, h: 20 },
-      { x: 850, y: 1480, w: 650, h: 20 }
+      { x: 100, y: MEADOW_MAP_SIZE - 120, w: 1050, h: 20 },
+      { x: 1250, y: MEADOW_MAP_SIZE - 120, w: 1050, h: 20 }
     ];
 
-    // 성문 (Door) 위치
+    // 성문 위치
     const gates = {
       castleNorth: { x: 750, y: 90, w: 100, h: 30 },
-      meadowSouth: { x: 750, y: 1475, w: 100, h: 30 }
+      meadowSouth: { x: 1150, y: MEADOW_MAP_SIZE - 125, w: 100, h: 30 }
     };
 
     // NPC
@@ -328,22 +345,21 @@
       }
     ];
 
-    // 드롭 아이템, 이펙트, Floating UI 텍스트
+    // 이펙트 및 필드 객체
     let droppedItems = [];
     let smashEffects = [];
     let damageTexts = [];
-    let pickupTexts = [];
 
-    // 움직이는 적 (슬라임)
+    // 넓어진 초원의 몬스터들 (14마리로 증원)
     let enemies = [];
     function spawnEnemies() {
       enemies = [];
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < 14; i++) {
         enemies.push({
           id: i, zone: "푸른 초원",
-          x: 300 + Math.random() * 1000, y: 300 + Math.random() * 1000,
+          x: 400 + Math.random() * 1600, y: 300 + Math.random() * 1600,
           radius: 14, color: '#2ecc71', hp: 30, maxHp: 30, isDead: false,
-          attackTimer: 0, vx: 0, vy: 0, moveTimer: 0, targetAngle: 0
+          attackTimer: 0, moveTimer: 0, targetAngle: 0
         });
       }
     }
@@ -352,8 +368,7 @@
     function drawIcons() {
       const fCanvas = document.getElementById('fistIconCanvas');
       const fCtx = fCanvas.getContext('2d');
-      fCtx.fillStyle = '#bbb';
-      fCtx.beginPath(); fCtx.arc(20, 20, 15, 0, Math.PI*2); fCtx.fill();
+      fCtx.fillStyle = '#bbb'; fCtx.beginPath(); fCtx.arc(20, 20, 15, 0, Math.PI*2); fCtx.fill();
       fCtx.fillStyle = '#333'; fCtx.fillRect(14, 14, 12, 12);
 
       const pCanvas = document.getElementById('portraitCanvas');
@@ -417,7 +432,7 @@
       } else { player.vx = 0; player.vy = 0; }
     }
 
-    // 충돌 처리
+    // 충돌 판정
     function applyCollisions(newX, newY) {
       let resX = newX, resY = newY;
       const r = player.size / 2;
@@ -433,24 +448,28 @@
             resX = player.x; resY = player.y;
           }
         });
+        treesCastle.forEach(t => {
+          if (Math.hypot(resX - t.x, resY - t.y) < r + t.r - 5) {
+            resX = player.x; resY = player.y;
+          }
+        });
       } else if (gameState.currentZone === "푸른 초원") {
         meadowWalls.forEach(w => {
           if (resX + r > w.x && resX - r < w.x + w.w && resY + r > w.y && resY - r < w.y + w.h) {
             resX = player.x; resY = player.y;
           }
         });
+        treesMeadow.forEach(t => {
+          if (Math.hypot(resX - t.x, resY - t.y) < r + t.r - 5) {
+            resX = player.x; resY = player.y;
+          }
+        });
       }
-
-      trees.forEach(t => {
-        if (Math.hypot(resX - t.x, resY - t.y) < r + t.r - 5) {
-          resX = player.x; resY = player.y;
-        }
-      });
 
       return { x: resX, y: resY };
     }
 
-    // 공격 및 스킬
+    // 공격 및 강화된 스매시 이펙트 연출
     document.getElementById('attack-btn').addEventListener('touchstart', (e) => {
       e.preventDefault(); triggerAttack('normal');
     });
@@ -472,13 +491,28 @@
       player.attackProgress = 0;
       player.attackSide = (player.attackSide === 0) ? 1 : 0;
 
-      const hitDist = type === 'smash' ? 50 : 32;
-      const hitRadius = type === 'smash' ? 45 : 25;
+      const hitDist = type === 'smash' ? 55 : 32;
+      const hitRadius = type === 'smash' ? 50 : 25;
       const hitX = player.x + Math.cos(player.angle) * hitDist;
       const hitY = player.y + Math.sin(player.angle) * hitDist;
 
+      // 이미지 참고: 스매시 화염 균열, 회전 서클, 파티클 이펙트
       if (type === 'smash') {
-        smashEffects.push({ x: hitX, y: hitY, radius: 10, alpha: 1.0, life: 25 });
+        const particles = [];
+        for (let p = 0; p < 18; p++) {
+          const pAngle = Math.random() * Math.PI * 2;
+          const pSpeed = 2 + Math.random() * 4;
+          particles.push({
+            x: hitX, y: hitY,
+            vx: Math.cos(pAngle) * pSpeed, vy: Math.sin(pAngle) * pSpeed,
+            size: 2 + Math.random() * 3, life: 20 + Math.random() * 10
+          });
+        }
+
+        smashEffects.push({
+          x: hitX, y: hitY, radius: 15, maxRadius: 65, alpha: 1.0, life: 30,
+          rotation: Math.random() * Math.PI, particles: particles
+        });
       }
 
       npcs.forEach(npc => {
@@ -493,7 +527,7 @@
 
         if (dist < enemy.radius + hitRadius) {
           const isCrit = Math.random() < 0.3 || type === 'smash';
-          let dmg = type === 'smash' ? 35 : 3; // 평타 데미지 3
+          let dmg = type === 'smash' ? 35 : 3;
           if (isCrit) dmg = Math.floor(dmg * 1.5);
 
           enemy.hp -= dmg;
@@ -509,14 +543,17 @@
               updateQuestUI();
             }
 
-            // 무조건 슬라임 결정 (일반) 1~3개 드롭
+            // 아이템 드롭: 50% 확률, 1~3개 사방으로 튕겨 나감
             if (Math.random() < 0.5) {
               const count = Math.floor(Math.random() * 3) + 1;
               for (let c = 0; c < count; c++) {
+                const dropAngle = Math.random() * Math.PI * 2;
+                const dropSpeed = 3 + Math.random() * 4;
                 droppedItems.push({
-                  x: enemy.x + (Math.random() * 24 - 12),
-                  y: enemy.y + (Math.random() * 24 - 12),
-                  name: "슬라임 결정 (일반)",
+                  x: enemy.x, y: enemy.y,
+                  vx: Math.cos(dropAngle) * dropSpeed,
+                  vy: Math.sin(dropAngle) * dropSpeed,
+                  name: "슬라임 결정",
                   zone: enemy.zone
                 });
               }
@@ -564,48 +601,33 @@
       }
     }
 
-    // 아이템 습득 시 "따따닥" 텍스트 연출
+    // 아이템 습득 처리 & 자연스럽게 사라지는 직사각형 알림
     function checkItemPickup() {
       droppedItems.forEach((item, index) => {
         if (item.zone === gameState.currentZone) {
           if (Math.hypot(player.x - item.x, player.y - item.y) < 22) {
-            const key = item.name;
-            if (!gameState.inventory[key]) {
-              gameState.inventory[key] = { name: item.name, count: 0 };
-            }
-            gameState.inventory[key].count++;
-
-            // 먹는 순간 텍스트 상승 연출
-            pickupTexts.push({
-              x: player.x + (Math.random() * 20 - 10),
-              y: player.y - 20 - (pickupTexts.length * 8),
-              text: `+ ${item.name}`,
-              alpha: 1.0, life: 40
-            });
-
+            showToastMessage(item.name);
             droppedItems.splice(index, 1);
-            renderInventoryUI();
           }
         }
       });
     }
 
-    function renderInventoryUI() {
-      const listEl = document.getElementById('inventory-list');
-      listEl.innerHTML = '';
-      const keys = Object.keys(gameState.inventory);
-      if (keys.length === 0) {
-        listEl.innerHTML = '<span style="color:#888; font-style:italic;">획득한 아이템 없음</span>';
-        return;
-      }
-      keys.forEach(k => {
-        const item = gameState.inventory[k];
-        const div = document.createElement('div');
-        div.className = 'item-tag';
-        div.style.color = COLOR_COMMON;
-        div.innerHTML = `<span>${item.name}</span> <span>x${item.count}</span>`;
-        listEl.appendChild(div);
-      });
+    function showToastMessage(itemName) {
+      const container = document.getElementById('item-toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'item-toast-bar';
+      toast.innerText = itemName;
+
+      container.appendChild(toast);
+
+      // 1초 뒤 자연스럽게 페이드아웃 후 제거
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => {
+          if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 300);
+      }, 1000);
     }
 
     // 성문 통과 및 맵 전환
@@ -613,8 +635,8 @@
       if (gameState.isTransitioning) return;
 
       if (gameState.currentZone === "루니마이아 성" && player.y < 110 && Math.abs(player.x - 800) < 40) {
-        startZoneTransition("푸른 초원", 800, 1430);
-      } else if (gameState.currentZone === "푸른 초원" && player.y > 1450 && Math.abs(player.x - 800) < 40) {
+        startZoneTransition("푸른 초원", 1200, MEADOW_MAP_SIZE - 170);
+      } else if (gameState.currentZone === "푸른 초원" && player.y > MEADOW_MAP_SIZE - 140 && Math.abs(player.x - 1200) < 40) {
         startZoneTransition("루니마이아 성", 800, 140);
       }
     }
@@ -641,20 +663,18 @@
       }, 30);
     }
 
-    // 적 배회 & 추적 AI 업데이트
+    // 적 배회 & 추적 AI
     function updateEnemies(dt) {
       enemies.forEach(enemy => {
         if (enemy.isDead || enemy.zone !== gameState.currentZone) return;
 
         const distToPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
 
-        if (distToPlayer < 200) {
-          // 플레이어 추적
+        if (distToPlayer < 220) {
           const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-          enemy.x += Math.cos(angle) * 1.2;
-          enemy.y += Math.sin(angle) * 1.2;
+          enemy.x += Math.cos(angle) * 1.3;
+          enemy.y += Math.sin(angle) * 1.3;
 
-          // 근접 시 공격 (10 데미지)
           if (distToPlayer < enemy.radius + player.size/2 + 4) {
             enemy.attackTimer += dt;
             if (enemy.attackTimer >= 1.0) {
@@ -665,7 +685,6 @@
             }
           }
         } else {
-          // 자연스러운 임의 배회
           enemy.moveTimer -= dt;
           if (enemy.moveTimer <= 0) {
             enemy.moveTimer = 2 + Math.random() * 3;
@@ -677,7 +696,7 @@
       });
     }
 
-    // 메인 루프
+    // 메인 업데이트
     let lastTime = Date.now();
     function update() {
       const now = Date.now();
@@ -699,7 +718,7 @@
         } else { cdOverlay.style.display = 'none'; }
       }
 
-      // HP/MP 자연회복
+      // 회복
       if (now - player.lastMpUseTime >= 2000 && player.mp < player.maxMp) {
         player.mp = Math.min(player.maxMp, player.mp + 0.2);
       }
@@ -712,9 +731,18 @@
       document.getElementById('mp-bar').style.width = `${(player.mp / player.maxMp) * 100}%`;
       document.getElementById('mp-text').innerText = `${Math.floor(player.mp)} / ${player.maxMp}`;
 
+      const currentMapSize = getMapSize();
       const nextPos = applyCollisions(player.x + player.vx, player.y + player.vy);
-      player.x = Math.max(player.size, Math.min(MAP_SIZE - player.size, nextPos.x));
-      player.y = Math.max(player.size, Math.min(MAP_SIZE - player.size, nextPos.y));
+      player.x = Math.max(player.size, Math.min(currentMapSize - player.size, nextPos.x));
+      player.y = Math.max(player.size, Math.min(currentMapSize - player.size, nextPos.y));
+
+      // 흩어지는 드롭 아이템 물리 처리
+      droppedItems.forEach(item => {
+        if (Math.abs(item.vx) > 0.1 || Math.abs(item.vy) > 0.1) {
+          item.x += item.vx; item.y += item.vy;
+          item.vx *= 0.88; item.vy *= 0.88; // 감속
+        }
+      });
 
       checkGateTransition();
       checkItemPickup();
@@ -725,17 +753,21 @@
         if (player.attackProgress >= 1) player.isAttacking = false;
       }
 
+      // 스매시 이펙트 파티클 물리
       smashEffects.forEach((se, i) => {
-        se.radius += 2; se.alpha -= 0.04; se.life--;
+        se.radius += 2.5; se.alpha -= 0.035; se.life--;
+        se.rotation += 0.1;
+        if (se.particles) {
+          se.particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.life--;
+          });
+        }
         if (se.life <= 0) smashEffects.splice(i, 1);
       });
+
       damageTexts.forEach((dt, i) => {
         dt.y -= 0.5; dt.alpha -= 0.03; dt.life--;
         if (dt.life <= 0) damageTexts.splice(i, 1);
-      });
-      pickupTexts.forEach((pt, i) => {
-        pt.y -= 0.8; pt.alpha -= 0.025; pt.life--;
-        if (pt.life <= 0) pickupTexts.splice(i, 1);
       });
     }
 
@@ -748,36 +780,38 @@
       ctx.save();
       ctx.translate(-camX, -camY);
 
-      // 필드 배경
+      const currentMapSize = getMapSize();
+
+      // 배경
       ctx.fillStyle = gameState.currentZone === "루니마이아 성" ? '#275822' : '#1c451b';
-      ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+      ctx.fillRect(0, 0, currentMapSize, currentMapSize);
 
       if (gameState.currentZone === "루니마이아 성") {
         ctx.fillStyle = '#636e72';
-        ctx.fillRect(750, 0, 100, MAP_SIZE); ctx.fillRect(0, 750, MAP_SIZE, 100);
+        ctx.fillRect(750, 0, 100, CASTLE_MAP_SIZE); ctx.fillRect(0, 750, CASTLE_MAP_SIZE, 100);
 
-        // 건물 & 그림자
         buildings.forEach(b => {
-          ctx.fillStyle = 'rgba(0,0,0,0.3)';
-          ctx.fillRect(b.x + 8, b.y + 8, b.w, b.h);
-          ctx.fillStyle = '#c0392b';
-          ctx.fillRect(b.x, b.y, b.w, b.h);
-          ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2;
-          ctx.strokeRect(b.x, b.y, b.w, b.h);
+          ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(b.x + 8, b.y + 8, b.w, b.h);
+          ctx.fillStyle = '#c0392b'; ctx.fillRect(b.x, b.y, b.w, b.h);
+          ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2; ctx.strokeRect(b.x, b.y, b.w, b.h);
         });
 
-        // 성벽
         ctx.fillStyle = '#4a5568';
         castleWalls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
 
-        // 성문 복구 (나무문)
-        ctx.fillStyle = '#8e44ad';
         ctx.fillStyle = '#795548';
         ctx.fillRect(gates.castleNorth.x, gates.castleNorth.y, gates.castleNorth.w, gates.castleNorth.h);
         ctx.strokeStyle = '#3e2723'; ctx.lineWidth = 2;
         ctx.strokeRect(gates.castleNorth.x, gates.castleNorth.y, gates.castleNorth.w, gates.castleNorth.h);
+
+        treesCastle.forEach(t => {
+          ctx.fillStyle = 'rgba(0,0,0,0.25)';
+          ctx.beginPath(); ctx.arc(t.x + 4, t.y + 4, t.r, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#2e7d32';
+          ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI*2); ctx.fill();
+        });
       } else {
-        // 초원 남쪽 성벽 및 성문 복구
+        // 푸른 초원 성벽 및 성문
         ctx.fillStyle = '#4a5568';
         meadowWalls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
 
@@ -785,22 +819,21 @@
         ctx.fillRect(gates.meadowSouth.x, gates.meadowSouth.y, gates.meadowSouth.w, gates.meadowSouth.h);
         ctx.strokeStyle = '#3e2723'; ctx.lineWidth = 2;
         ctx.strokeRect(gates.meadowSouth.x, gates.meadowSouth.y, gates.meadowSouth.w, gates.meadowSouth.h);
+
+        treesMeadow.forEach(t => {
+          ctx.fillStyle = 'rgba(0,0,0,0.25)';
+          ctx.beginPath(); ctx.arc(t.x + 4, t.y + 4, t.r, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#1b5e20';
+          ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI*2); ctx.fill();
+        });
       }
 
-      // 나무
-      trees.forEach(t => {
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.beginPath(); ctx.arc(t.x + 4, t.y + 4, t.r, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#2e7d32';
-        ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI*2); ctx.fill();
-      });
-
-      // 바닥 드롭 아이템 (텍스트 없이 구체 아이콘 형태)
+      // 사방으로 흩어진 드롭 아이템
       droppedItems.forEach(item => {
         if (item.zone !== gameState.currentZone) return;
-        ctx.fillStyle = COLOR_COMMON;
+        ctx.fillStyle = '#95a5a6';
         ctx.beginPath(); ctx.arc(item.x, item.y, 5, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
       });
 
       // NPC
@@ -813,26 +846,21 @@
         }
       });
 
-      // 적 (체력바 포함)
+      // 적
       enemies.forEach(enemy => {
         if (enemy.isDead || enemy.zone !== gameState.currentZone) return;
 
-        // 슬라임 몸체
         ctx.beginPath(); ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI*2);
         ctx.fillStyle = enemy.color; ctx.fill();
 
-        // 적 체력바 (HP Bar)
         const barW = 24, barH = 4;
         const barX = enemy.x - barW / 2;
         const barY = enemy.y - enemy.radius - 8;
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillRect(barX, barY, barW, barH);
-        ctx.fillStyle = '#e74c3c';
-        ctx.fillRect(barX, barY, (barW * Math.max(0, enemy.hp)) / enemy.maxHp, barH);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; ctx.fillRect(barX, barY, barW, barH);
+        ctx.fillStyle = '#e74c3c'; ctx.fillRect(barX, barY, (barW * Math.max(0, enemy.hp)) / enemy.maxHp, barH);
       });
 
-      // 플레이어 및 쨉
+      // 플레이어
       ctx.save();
       ctx.translate(player.x, player.y); ctx.rotate(player.angle);
       ctx.fillStyle = player.color;
@@ -846,12 +874,36 @@
       }
       ctx.restore();
 
-      // 스매시 스킬 화염 연출
+      // 스매시 스킬 2중 화염 궤적 및 화염 균열 연출
       smashEffects.forEach(se => {
         ctx.save();
         ctx.globalAlpha = Math.max(0, se.alpha);
-        ctx.strokeStyle = '#ff3300'; ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.arc(se.x, se.y, se.radius, 0, Math.PI*2); ctx.stroke();
+
+        // 지면 균열 크랙
+        ctx.strokeStyle = '#d35400'; ctx.lineWidth = 3;
+        for (let c = 0; c < 5; c++) {
+          const cAngle = (Math.PI * 2 / 5) * c + se.rotation;
+          ctx.beginPath(); ctx.moveTo(se.x, se.y);
+          ctx.lineTo(se.x + Math.cos(cAngle) * (se.radius * 0.8), se.y + Math.sin(cAngle) * (se.radius * 0.8));
+          ctx.stroke();
+        }
+
+        // 회전하는 2중 화염 서클 (이미지 스타일)
+        ctx.strokeStyle = '#f39c12'; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(se.x, se.y, se.radius, se.rotation, se.rotation + Math.PI * 1.5); ctx.stroke();
+
+        ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(se.x, se.y, se.radius * 0.6, -se.rotation, -se.rotation + Math.PI * 1.5); ctx.stroke();
+
+        // 튀는 불꽃 파티클
+        if (se.particles) {
+          ctx.fillStyle = '#ffeb3b';
+          se.particles.forEach(p => {
+            if (p.life > 0) {
+              ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            }
+          });
+        }
         ctx.restore();
       });
 
@@ -865,26 +917,18 @@
         ctx.restore();
       });
 
-      // 아이템 먹었을 때 뜨는 "따따닥" 텍스트 연출
-      pickupTexts.forEach(pt => {
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, pt.alpha);
-        ctx.fillStyle = '#f1c40f';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(pt.text, pt.x, pt.y);
-        ctx.restore();
-      });
-
       ctx.restore();
 
-      // 화면 타이틀
+      // 지역명 입장 타이틀 (상단 배치 및 32px 대형 크기)
       if (gameState.zoneTitleAlpha > 0) {
         ctx.save();
         ctx.globalAlpha = gameState.zoneTitleAlpha;
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
-        ctx.shadowColor = 'black'; ctx.shadowBlur = 6;
-        ctx.fillText(gameState.currentZone, viewWidth() / 2, viewHeight() / 3);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'black';
+        ctx.shadowBlur = 8;
+        ctx.fillText(gameState.currentZone, viewWidth() / 2, 100);
         ctx.restore();
       }
 
