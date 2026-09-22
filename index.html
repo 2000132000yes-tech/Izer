@@ -12,44 +12,37 @@
       touch-action: none;
     }
     body, html {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
       overflow: hidden;
       background-color: #000;
       font-family: 'Apple SD Gothic Neo', sans-serif;
     }
     #gameCanvas {
       display: block;
-      width: 100vw;
-      height: 100vh;
+      width: 100vw; height: 100vh;
     }
 
     .ui-layer {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       pointer-events: none;
     }
 
     /* 좌측 상단 체력 / 마나 바 */
     #stat-bars {
       position: absolute;
-      top: 15px;
-      left: 15px;
+      top: 15px; left: 15px;
       width: 180px;
-      background: rgba(10, 10, 15, 0.75);
+      background: rgba(10, 10, 15, 0.8);
       padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
     .bar-wrapper {
       position: relative;
-      width: 100%;
-      height: 14px;
+      width: 100%; height: 14px;
       background: #222;
       border-radius: 7px;
       overflow: hidden;
@@ -69,15 +62,14 @@
     /* 우측 상단 퀘스트 & 아이템 UI */
     #right-ui-container {
       position: absolute;
-      top: 15px;
-      right: 15px;
+      top: 15px; right: 15px;
       display: flex;
       flex-direction: column;
       gap: 10px;
       align-items: flex-end;
     }
     .panel-box {
-      background: rgba(10, 10, 15, 0.8);
+      background: rgba(10, 10, 15, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.25);
       padding: 10px;
       border-radius: 8px;
@@ -88,7 +80,6 @@
     }
     .panel-box h4 { margin: 0 0 6px 0; color: #ffd700; font-size: 12px; }
 
-    /* 아이템 획득 리스트 */
     #inventory-list {
       display: flex;
       flex-direction: column;
@@ -98,9 +89,9 @@
     }
     .item-tag {
       font-weight: bold;
-      padding: 2px 5px;
+      padding: 3px 6px;
       border-radius: 3px;
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.08);
       display: flex;
       justify-content: space-between;
     }
@@ -108,11 +99,9 @@
     /* 대화창 & NPC 초상화 */
     #dialogue-box {
       position: absolute;
-      bottom: 135px;
-      left: 50%;
+      bottom: 135px; left: 50%;
       transform: translateX(-50%);
-      width: 90%;
-      max-width: 500px;
+      width: 90%; max-width: 500px;
       background: rgba(15, 15, 25, 0.95);
       border: 2px solid #5577aa;
       border-radius: 10px;
@@ -122,36 +111,27 @@
       pointer-events: auto;
       z-index: 10;
     }
-    .dialogue-content-wrapper {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
+    .dialogue-content-wrapper { display: flex; gap: 12px; align-items: center; }
     #npc-portrait {
-      width: 48px;
-      height: 48px;
+      width: 48px; height: 48px;
       background: #445577;
       border: 2px solid #88aaff;
       border-radius: 6px;
       flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      display: flex; justify-content: center; align-items: center;
     }
     .dialogue-body { flex-grow: 1; }
     #dialogue-speaker { font-weight: bold; color: #88ccff; font-size: 13px; margin-bottom: 4px; }
     #dialogue-text { font-size: 12px; line-height: 1.4; margin-bottom: 8px; }
     .dialogue-btns { display: flex; justify-content: flex-end; gap: 6px; }
-    .dialogue-btn { background: #335588; border: none; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; }
+    .dialogue-btn { background: #335588; border: none; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; }
     .skip-btn { background: #555; }
 
     /* 조이스틱 */
     #joystick-zone {
       position: absolute;
-      bottom: 25px;
-      left: 25px;
-      width: 100px;
-      height: 100px;
+      bottom: 25px; left: 25px;
+      width: 100px; height: 100px;
       background: rgba(255, 255, 255, 0.12);
       border: 2px solid rgba(255, 255, 255, 0.25);
       border-radius: 50%;
@@ -168,40 +148,25 @@
     /* 액션 버튼 & 스킬 아이콘 */
     .btn-container {
       position: absolute;
-      bottom: 25px;
-      right: 20px;
-      display: flex;
-      gap: 10px;
+      bottom: 25px; right: 20px;
+      display: flex; gap: 10px;
       align-items: flex-end;
       pointer-events: auto;
     }
     .action-btn {
       border-radius: 50%;
-      color: white;
-      font-weight: bold;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      color: white; font-weight: bold;
+      display: flex; justify-content: center; align-items: center;
       border: 2px solid rgba(255, 255, 255, 0.4);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
-    #attack-btn {
-      width: 65px; height: 65px;
-      background: #444;
-      font-size: 14px;
-    }
-    .skill-btn {
-      width: 48px; height: 48px;
-      background: #2980b9;
-      font-size: 11px;
-      flex-direction: column;
-    }
+    #attack-btn { width: 65px; height: 65px; background: #444; font-size: 14px; }
+    .skill-btn { width: 48px; height: 48px; background: #2980b9; font-size: 11px; flex-direction: column; }
     .skill-btn.locked { background: #333; color: #888; }
     .skill-btn.locked::after { content: '🔒'; font-size: 12px; }
     .cooldown-overlay {
       position: absolute;
-      top:0; left:0; width:100%; height:100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.65);
       display: flex; justify-content: center; align-items: center;
       font-size: 10px; color: #ffeb3b; font-weight: bold;
@@ -290,18 +255,8 @@
     const viewWidth = () => window.innerWidth;
     const viewHeight = () => window.innerHeight;
 
-    // 아이템 등급 색상 정의
-    const RARITY_COLORS = {
-      common: '#95a5a6',      // 일반 (회)
-      rare: '#2ecc71',        // 레어 (연두)
-      rare_blue: '#3498db',   // 희귀 (파랑)
-      epic: '#9b59b6',        // 에픽 (옅은 보라)
-      legendary: '#f1c40f',   // 전설 (노랑)
-      mythic: '#e74c3c',      // 신화 (빨강)
-      divine: '#fffdd0',      // 신성 (밝은 노랑)
-      transcendent: '#8e44ad',// 초월 (검보라)
-      immortal: '#e67e22'     // 불멸 (주황/노랑/빨강)
-    };
+    // 아이템 일반(회색) 등급
+    const COLOR_COMMON = '#95a5a6';
 
     // 게임 상태
     let gameState = {
@@ -324,7 +279,7 @@
       x: 800, y: 900, size: 16, color: '#3498db', speed: 3.6, angle: -Math.PI / 2,
       vx: 0, vy: 0, hp: 100, maxHp: 100, mp: 100, maxMp: 100,
       lastHitTime: Date.now(), lastMpUseTime: Date.now(),
-      isAttacking: false, attackProgress: 0, attackSide: 0, // 0: 오른손, 1: 왼손 쨉
+      isAttacking: false, attackProgress: 0, attackSide: 0,
       skill1Cooldown: 0, maxSkill1Cd: 5.0
     };
 
@@ -342,20 +297,25 @@
       { x: 300, y: 800, r: 22 }, { x: 1300, y: 800, r: 22 }
     ];
 
-    // 성벽 충돌 박스 (루니마이아 성)
+    // 성벽 충돌 박스 (성문 통로 제외)
     const castleWalls = [
-      { x: 100, y: 100, w: 650, h: 20 }, // 북 좌측
-      { x: 850, y: 100, w: 650, h: 20 }, // 북 우측 (가운데 성문 뚫림)
-      { x: 100, y: MAP_SIZE - 120, w: 1400, h: 20 }, // 남
-      { x: 100, y: 100, w: 20, h: MAP_SIZE - 220 },  // 서
-      { x: MAP_SIZE - 120, y: 100, w: 20, h: MAP_SIZE - 220 } // 동
+      { x: 100, y: 100, w: 650, h: 20 },
+      { x: 850, y: 100, w: 650, h: 20 },
+      { x: 100, y: MAP_SIZE - 120, w: 1400, h: 20 },
+      { x: 100, y: 100, w: 20, h: MAP_SIZE - 220 },
+      { x: MAP_SIZE - 120, y: 100, w: 20, h: MAP_SIZE - 220 }
     ];
 
-    // 성벽 충돌 박스 (푸른 초원 입구)
     const meadowWalls = [
       { x: 100, y: 1480, w: 650, h: 20 },
       { x: 850, y: 1480, w: 650, h: 20 }
     ];
+
+    // 성문 (Door) 위치
+    const gates = {
+      castleNorth: { x: 750, y: 90, w: 100, h: 30 },
+      meadowSouth: { x: 750, y: 1475, w: 100, h: 30 }
+    };
 
     // NPC
     const npcs = [
@@ -368,47 +328,42 @@
       }
     ];
 
-    // 필드 드롭 아이템 & 이펙트 배열
+    // 드롭 아이템, 이펙트, Floating UI 텍스트
     let droppedItems = [];
     let smashEffects = [];
     let damageTexts = [];
+    let pickupTexts = [];
 
-    // 적 몬스터
+    // 움직이는 적 (슬라임)
     let enemies = [];
     function spawnEnemies() {
       enemies = [];
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 7; i++) {
         enemies.push({
           id: i, zone: "푸른 초원",
           x: 300 + Math.random() * 1000, y: 300 + Math.random() * 1000,
-          radius: 12, color: '#2ecc71', hp: 60, maxHp: 60, isDead: false,
-          attackTimer: 0
+          radius: 14, color: '#2ecc71', hp: 30, maxHp: 30, isDead: false,
+          attackTimer: 0, vx: 0, vy: 0, moveTimer: 0, targetAngle: 0
         });
       }
     }
     spawnEnemies();
 
-    // UI 아이콘 및 픽셀 아오
     function drawIcons() {
-      // 주먹 아이콘 렌더링
       const fCanvas = document.getElementById('fistIconCanvas');
       const fCtx = fCanvas.getContext('2d');
       fCtx.fillStyle = '#bbb';
       fCtx.beginPath(); fCtx.arc(20, 20, 15, 0, Math.PI*2); fCtx.fill();
-      fCtx.fillStyle = '#333';
-      fCtx.fillRect(14, 14, 12, 12);
+      fCtx.fillStyle = '#333'; fCtx.fillRect(14, 14, 12, 12);
 
-      // NPC 초상화 렌더링
       const pCanvas = document.getElementById('portraitCanvas');
       const pCtx = pCanvas.getContext('2d');
-      pCtx.fillStyle = '#f1c40f';
-      pCtx.fillRect(10, 10, 20, 20);
-      pCtx.fillStyle = '#fff';
-      pCtx.fillRect(14, 14, 4, 4); pCtx.fillRect(22, 14, 4, 4);
+      pCtx.fillStyle = '#f1c40f'; pCtx.fillRect(10, 10, 20, 20);
+      pCtx.fillStyle = '#fff'; pCtx.fillRect(14, 14, 4, 4); pCtx.fillRect(22, 14, 4, 4);
     }
     drawIcons();
 
-    // --- 조이스틱 로직 ---
+    // 조이스틱
     const joystickZone = document.getElementById('joystick-zone');
     const joystickKnob = document.getElementById('joystick-knob');
     let joystickActive = false, joystickTouchId = null;
@@ -462,20 +417,17 @@
       } else { player.vx = 0; player.vy = 0; }
     }
 
-    // --- 충돌 물리엔진 ---
+    // 충돌 처리
     function applyCollisions(newX, newY) {
       let resX = newX, resY = newY;
       const r = player.size / 2;
 
-      // 건물 충돌 (AABB)
       if (gameState.currentZone === "루니마이아 성") {
         buildings.forEach(b => {
           if (resX + r > b.x && resX - r < b.x + b.w && resY + r > b.y && resY - r < b.y + b.h) {
             resX = player.x; resY = player.y;
           }
         });
-
-        // 성벽 충돌
         castleWalls.forEach(w => {
           if (resX + r > w.x && resX - r < w.x + w.w && resY + r > w.y && resY - r < w.y + w.h) {
             resX = player.x; resY = player.y;
@@ -489,10 +441,8 @@
         });
       }
 
-      // 나무 충돌 (Circle)
       trees.forEach(t => {
-        const dist = Math.hypot(resX - t.x, resY - t.y);
-        if (dist < r + t.r - 5) {
+        if (Math.hypot(resX - t.x, resY - t.y) < r + t.r - 5) {
           resX = player.x; resY = player.y;
         }
       });
@@ -500,10 +450,9 @@
       return { x: resX, y: resY };
     }
 
-    // --- 공격 & 스킬 ---
+    // 공격 및 스킬
     document.getElementById('attack-btn').addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      triggerAttack('normal');
+      e.preventDefault(); triggerAttack('normal');
     });
 
     document.getElementById('skill-btn-1').addEventListener('touchstart', (e) => {
@@ -521,40 +470,35 @@
 
       player.isAttacking = true;
       player.attackProgress = 0;
-      player.attackSide = (player.attackSide === 0) ? 1 : 0; // 쨉 번갈아 가기
+      player.attackSide = (player.attackSide === 0) ? 1 : 0;
 
       const hitDist = type === 'smash' ? 50 : 32;
       const hitRadius = type === 'smash' ? 45 : 25;
       const hitX = player.x + Math.cos(player.angle) * hitDist;
       const hitY = player.y + Math.sin(player.angle) * hitDist;
 
-      // 스매시 스킬 화염 이펙트 생성 (첨부 이미지 참고)
       if (type === 'smash') {
-        smashEffects.push({
-          x: hitX, y: hitY, radius: 10, maxRadius: 50, alpha: 1.0, life: 25
-        });
+        smashEffects.push({ x: hitX, y: hitY, radius: 10, alpha: 1.0, life: 25 });
       }
 
-      // NPC 대화
       npcs.forEach(npc => {
-        if (npc.zone === gameState.currentZone) {
-          if (Math.hypot(player.x - npc.x, player.y - npc.y) < 45) openDialogue(npc);
+        if (npc.zone === gameState.currentZone && Math.hypot(player.x - npc.x, player.y - npc.y) < 45) {
+          openDialogue(npc);
         }
       });
 
-      // 적 판정
       enemies.forEach(enemy => {
         if (enemy.isDead || enemy.zone !== gameState.currentZone) return;
         const dist = Math.hypot(hitX - enemy.x, hitY - enemy.y);
 
         if (dist < enemy.radius + hitRadius) {
           const isCrit = Math.random() < 0.3 || type === 'smash';
-          let dmg = type === 'smash' ? 45 : 18;
-          if (isCrit) dmg = Math.floor(dmg * 1.5); // 크리티컬 1.5배
+          let dmg = type === 'smash' ? 35 : 3; // 평타 데미지 3
+          if (isCrit) dmg = Math.floor(dmg * 1.5);
 
           enemy.hp -= dmg;
           damageTexts.push({
-            x: enemy.x + (Math.random() * 10 - 5), y: enemy.y - 12,
+            x: enemy.x + (Math.random() * 10 - 5), y: enemy.y - 15,
             text: dmg, isCrit: isCrit, alpha: 1.0, life: 35
           });
 
@@ -565,18 +509,14 @@
               updateQuestUI();
             }
 
-            // 아이템 50% 확률 드롭 (1~3개)
+            // 무조건 슬라임 결정 (일반) 1~3개 드롭
             if (Math.random() < 0.5) {
               const count = Math.floor(Math.random() * 3) + 1;
-              const rarities = ['common', 'rare', 'rare_blue', 'epic', 'legendary', 'mythic', 'divine', 'transcendent', 'immortal'];
-              const chosenRarity = rarities[Math.floor(Math.random() * rarities.length)];
-
               for (let c = 0; c < count; c++) {
                 droppedItems.push({
-                  x: enemy.x + (Math.random() * 20 - 10),
-                  y: enemy.y + (Math.random() * 20 - 10),
-                  name: "슬라임 결정",
-                  rarity: chosenRarity,
+                  x: enemy.x + (Math.random() * 24 - 12),
+                  y: enemy.y + (Math.random() * 24 - 12),
+                  name: "슬라임 결정 (일반)",
                   zone: enemy.zone
                 });
               }
@@ -586,7 +526,7 @@
       });
     }
 
-    // --- 대화 시스템 ---
+    // 대화
     let currentDialogueIdx = 0, activeNpc = null;
     function openDialogue(npc) {
       activeNpc = npc; currentDialogueIdx = 0;
@@ -624,17 +564,25 @@
       }
     }
 
-    // --- 아이템 수집 및 인벤토리 ---
+    // 아이템 습득 시 "따따닥" 텍스트 연출
     function checkItemPickup() {
       droppedItems.forEach((item, index) => {
         if (item.zone === gameState.currentZone) {
-          if (Math.hypot(player.x - item.x, player.y - item.y) < 25) {
-            // 아이템 획득
-            const key = `${item.name} (${item.rarity})`;
+          if (Math.hypot(player.x - item.x, player.y - item.y) < 22) {
+            const key = item.name;
             if (!gameState.inventory[key]) {
-              gameState.inventory[key] = { name: item.name, rarity: item.rarity, count: 0 };
+              gameState.inventory[key] = { name: item.name, count: 0 };
             }
             gameState.inventory[key].count++;
+
+            // 먹는 순간 텍스트 상승 연출
+            pickupTexts.push({
+              x: player.x + (Math.random() * 20 - 10),
+              y: player.y - 20 - (pickupTexts.length * 8),
+              text: `+ ${item.name}`,
+              alpha: 1.0, life: 40
+            });
+
             droppedItems.splice(index, 1);
             renderInventoryUI();
           }
@@ -652,23 +600,22 @@
       }
       keys.forEach(k => {
         const item = gameState.inventory[k];
-        const color = RARITY_COLORS[item.rarity] || '#fff';
         const div = document.createElement('div');
         div.className = 'item-tag';
-        div.style.color = color;
+        div.style.color = COLOR_COMMON;
         div.innerHTML = `<span>${item.name}</span> <span>x${item.count}</span>`;
         listEl.appendChild(div);
       });
     }
 
-    // --- 지역 이동 및 암전 ---
+    // 성문 통과 및 맵 전환
     function checkGateTransition() {
       if (gameState.isTransitioning) return;
 
-      if (gameState.currentZone === "루니마이아 성" && player.y < 120 && Math.abs(player.x - 800) < 50) {
-        startZoneTransition("푸른 초원", 800, 1440);
-      } else if (gameState.currentZone === "푸른 초원" && player.y > 1460 && Math.abs(player.x - 800) < 50) {
-        startZoneTransition("루니마이아 성", 800, 150);
+      if (gameState.currentZone === "루니마이아 성" && player.y < 110 && Math.abs(player.x - 800) < 40) {
+        startZoneTransition("푸른 초원", 800, 1430);
+      } else if (gameState.currentZone === "푸른 초원" && player.y > 1450 && Math.abs(player.x - 800) < 40) {
+        startZoneTransition("루니마이아 성", 800, 140);
       }
     }
 
@@ -694,7 +641,43 @@
       }, 30);
     }
 
-    // --- 메인 루프 업데이트 ---
+    // 적 배회 & 추적 AI 업데이트
+    function updateEnemies(dt) {
+      enemies.forEach(enemy => {
+        if (enemy.isDead || enemy.zone !== gameState.currentZone) return;
+
+        const distToPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+
+        if (distToPlayer < 200) {
+          // 플레이어 추적
+          const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+          enemy.x += Math.cos(angle) * 1.2;
+          enemy.y += Math.sin(angle) * 1.2;
+
+          // 근접 시 공격 (10 데미지)
+          if (distToPlayer < enemy.radius + player.size/2 + 4) {
+            enemy.attackTimer += dt;
+            if (enemy.attackTimer >= 1.0) {
+              enemy.attackTimer = 0;
+              player.hp -= 10;
+              player.lastHitTime = Date.now();
+              damageTexts.push({ x: player.x, y: player.y - 12, text: 10, isCrit: true, alpha: 1.0, life: 30 });
+            }
+          }
+        } else {
+          // 자연스러운 임의 배회
+          enemy.moveTimer -= dt;
+          if (enemy.moveTimer <= 0) {
+            enemy.moveTimer = 2 + Math.random() * 3;
+            enemy.targetAngle = Math.random() * Math.PI * 2;
+          }
+          enemy.x += Math.cos(enemy.targetAngle) * 0.5;
+          enemy.y += Math.sin(enemy.targetAngle) * 0.5;
+        }
+      });
+    }
+
+    // 메인 루프
     let lastTime = Date.now();
     function update() {
       const now = Date.now();
@@ -705,7 +688,7 @@
       if (gameState.zoneTitleTimer > 0) gameState.zoneTitleTimer--;
       else if (gameState.zoneTitleAlpha > 0) gameState.zoneTitleAlpha -= 0.02;
 
-      // 스킬 쿨타임 소수점 감소
+      // 스킬 쿨타임
       if (player.skill1Cooldown > 0) {
         player.skill1Cooldown -= dt;
         if (player.skill1Cooldown < 0) player.skill1Cooldown = 0;
@@ -716,50 +699,32 @@
         } else { cdOverlay.style.display = 'none'; }
       }
 
-      // 자연 회복 (체력 5초 / 마나 2초)
+      // HP/MP 자연회복
       if (now - player.lastMpUseTime >= 2000 && player.mp < player.maxMp) {
-        player.mp = Math.min(player.maxMp, player.mp + 0.15);
+        player.mp = Math.min(player.maxMp, player.mp + 0.2);
       }
       if (now - player.lastHitTime >= 5000 && player.hp < player.maxHp) {
         player.hp = Math.min(player.maxHp, player.hp + 0.1);
       }
 
-      // UI 숫자 업데이트
       document.getElementById('hp-bar').style.width = `${(player.hp / player.maxHp) * 100}%`;
-      document.getElementById('hp-text').innerText = `${Math.floor(player.hp)} / ${player.maxHp}`;
+      document.getElementById('hp-text').innerText = `${Math.max(0, Math.floor(player.hp))} / ${player.maxHp}`;
       document.getElementById('mp-bar').style.width = `${(player.mp / player.maxMp) * 100}%`;
       document.getElementById('mp-text').innerText = `${Math.floor(player.mp)} / ${player.maxMp}`;
 
-      // 이동 및 충돌
       const nextPos = applyCollisions(player.x + player.vx, player.y + player.vy);
       player.x = Math.max(player.size, Math.min(MAP_SIZE - player.size, nextPos.x));
       player.y = Math.max(player.size, Math.min(MAP_SIZE - player.size, nextPos.y));
 
       checkGateTransition();
       checkItemPickup();
+      updateEnemies(dt);
 
-      // 적 공격 AI
-      enemies.forEach(enemy => {
-        if (enemy.isDead || enemy.zone !== gameState.currentZone) return;
-        const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
-        if (dist < enemy.radius + player.size / 2 + 5) {
-          enemy.attackTimer += dt;
-          if (enemy.attackTimer >= 1.2) { // 1.2초마다 데미지 10
-            enemy.attackTimer = 0;
-            player.hp -= 10;
-            player.lastHitTime = Date.now();
-            damageTexts.push({ x: player.x, y: player.y - 10, text: 10, isCrit: true, alpha: 1.0, life: 30 });
-          }
-        }
-      });
-
-      // 주먹 공격 애니메이션
       if (player.isAttacking) {
         player.attackProgress += 0.2;
         if (player.attackProgress >= 1) player.isAttacking = false;
       }
 
-      // 이펙트 및 텍스트 라이프타임
       smashEffects.forEach((se, i) => {
         se.radius += 2; se.alpha -= 0.04; se.life--;
         if (se.life <= 0) smashEffects.splice(i, 1);
@@ -768,9 +733,13 @@
         dt.y -= 0.5; dt.alpha -= 0.03; dt.life--;
         if (dt.life <= 0) damageTexts.splice(i, 1);
       });
+      pickupTexts.forEach((pt, i) => {
+        pt.y -= 0.8; pt.alpha -= 0.025; pt.life--;
+        if (pt.life <= 0) pickupTexts.splice(i, 1);
+      });
     }
 
-    // --- 렌더링 ---
+    // 렌더링
     function render() {
       ctx.clearRect(0, 0, viewWidth(), viewHeight());
       const camX = player.x - viewWidth() / 2;
@@ -779,35 +748,46 @@
       ctx.save();
       ctx.translate(-camX, -camY);
 
-      // 초록 배경
+      // 필드 배경
       ctx.fillStyle = gameState.currentZone === "루니마이아 성" ? '#275822' : '#1c451b';
       ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
 
-      // 성 구조물 (도로, 집, 그림자)
       if (gameState.currentZone === "루니마이아 성") {
         ctx.fillStyle = '#636e72';
         ctx.fillRect(750, 0, 100, MAP_SIZE); ctx.fillRect(0, 750, MAP_SIZE, 100);
 
-        // 건물 및 그림자
+        // 건물 & 그림자
         buildings.forEach(b => {
           ctx.fillStyle = 'rgba(0,0,0,0.3)';
-          ctx.fillRect(b.x + 8, b.y + 8, b.w, b.h); // 그림자
-          ctx.fillStyle = '#c0392b'; // 빨간 지붕
+          ctx.fillRect(b.x + 8, b.y + 8, b.w, b.h);
+          ctx.fillStyle = '#c0392b';
           ctx.fillRect(b.x, b.y, b.w, b.h);
           ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2;
           ctx.strokeRect(b.x, b.y, b.w, b.h);
         });
 
-        // 성벽 (상하좌우)
+        // 성벽
         ctx.fillStyle = '#4a5568';
         castleWalls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
+
+        // 성문 복구 (나무문)
+        ctx.fillStyle = '#8e44ad';
+        ctx.fillStyle = '#795548';
+        ctx.fillRect(gates.castleNorth.x, gates.castleNorth.y, gates.castleNorth.w, gates.castleNorth.h);
+        ctx.strokeStyle = '#3e2723'; ctx.lineWidth = 2;
+        ctx.strokeRect(gates.castleNorth.x, gates.castleNorth.y, gates.castleNorth.w, gates.castleNorth.h);
       } else {
-        // 초원 입구 성벽
+        // 초원 남쪽 성벽 및 성문 복구
         ctx.fillStyle = '#4a5568';
         meadowWalls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
+
+        ctx.fillStyle = '#795548';
+        ctx.fillRect(gates.meadowSouth.x, gates.meadowSouth.y, gates.meadowSouth.w, gates.meadowSouth.h);
+        ctx.strokeStyle = '#3e2723'; ctx.lineWidth = 2;
+        ctx.strokeRect(gates.meadowSouth.x, gates.meadowSouth.y, gates.meadowSouth.w, gates.meadowSouth.h);
       }
 
-      // 나무 그림자 및 렌더링
+      // 나무
       trees.forEach(t => {
         ctx.fillStyle = 'rgba(0,0,0,0.25)';
         ctx.beginPath(); ctx.arc(t.x + 4, t.y + 4, t.r, 0, Math.PI*2); ctx.fill();
@@ -815,17 +795,12 @@
         ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI*2); ctx.fill();
       });
 
-      // 필드 아이템 (등급별 특수 오라 효과)
+      // 바닥 드롭 아이템 (텍스트 없이 구체 아이콘 형태)
       droppedItems.forEach(item => {
         if (item.zone !== gameState.currentZone) return;
-        const color = RARITY_COLORS[item.rarity] || '#fff';
-
-        if (item.rarity === 'transcendent' || item.rarity === 'immortal') {
-          ctx.fillStyle = item.rarity === 'immortal' ? '#ff4500' : '#4a154b';
-          ctx.beginPath(); ctx.arc(item.x, item.y, 10, 0, Math.PI*2); ctx.fill();
-        }
-        ctx.fillStyle = color;
+        ctx.fillStyle = COLOR_COMMON;
         ctx.beginPath(); ctx.arc(item.x, item.y, 5, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
       });
 
       // NPC
@@ -838,14 +813,26 @@
         }
       });
 
-      // 동그라미 적
+      // 적 (체력바 포함)
       enemies.forEach(enemy => {
         if (enemy.isDead || enemy.zone !== gameState.currentZone) return;
+
+        // 슬라임 몸체
         ctx.beginPath(); ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI*2);
         ctx.fillStyle = enemy.color; ctx.fill();
+
+        // 적 체력바 (HP Bar)
+        const barW = 24, barH = 4;
+        const barX = enemy.x - barW / 2;
+        const barY = enemy.y - enemy.radius - 8;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(barX, barY, barW, barH);
+        ctx.fillStyle = '#e74c3c';
+        ctx.fillRect(barX, barY, (barW * Math.max(0, enemy.hp)) / enemy.maxHp, barH);
       });
 
-      // 플레이어 및 쨉 공격 애니메이션
+      // 플레이어 및 쨉
       ctx.save();
       ctx.translate(player.x, player.y); ctx.rotate(player.angle);
       ctx.fillStyle = player.color;
@@ -854,12 +841,12 @@
       if (player.isAttacking) {
         const swing = Math.sin(player.attackProgress * Math.PI) * 12;
         ctx.fillStyle = '#f39c12';
-        if (player.attackSide === 0) ctx.fillRect(player.size/2 + swing, -6, 5, 5); // 오른손 쨉
-        else ctx.fillRect(player.size/2 + swing, 1, 5, 5);  // 왼손 쨉
+        if (player.attackSide === 0) ctx.fillRect(player.size/2 + swing, -6, 5, 5);
+        else ctx.fillRect(player.size/2 + swing, 1, 5, 5);
       }
       ctx.restore();
 
-      // 스매시 화염 충격파 연출
+      // 스매시 스킬 화염 연출
       smashEffects.forEach(se => {
         ctx.save();
         ctx.globalAlpha = Math.max(0, se.alpha);
@@ -878,9 +865,20 @@
         ctx.restore();
       });
 
-      ctx.restore(); // 카메라 복구
+      // 아이템 먹었을 때 뜨는 "따따닥" 텍스트 연출
+      pickupTexts.forEach(pt => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, pt.alpha);
+        ctx.fillStyle = '#f1c40f';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(pt.text, pt.x, pt.y);
+        ctx.restore();
+      });
 
-      // 중앙 지역명 타이틀
+      ctx.restore();
+
+      // 화면 타이틀
       if (gameState.zoneTitleAlpha > 0) {
         ctx.save();
         ctx.globalAlpha = gameState.zoneTitleAlpha;
@@ -890,7 +888,7 @@
         ctx.restore();
       }
 
-      // 페이드 화면 전환 오버레이
+      // 전환 오버레이
       if (gameState.fadeInAlpha > 0 || gameState.fadeTransitionAlpha > 0) {
         const a = Math.max(gameState.fadeInAlpha, gameState.fadeTransitionAlpha);
         ctx.fillStyle = `rgba(0, 0, 0, ${a})`; ctx.fillRect(0, 0, viewWidth(), viewHeight());
