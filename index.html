@@ -2,9 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <!-- 모바일 화면 터치 및 스크롤 방지 설정 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mobile Web RPG</title>
+  <title>Mobile Pixel RPG</title>
   <style>
     * {
       box-sizing: border-box;
@@ -18,16 +17,16 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #111;
-      font-family: sans-serif;
+      background-color: #050505;
+      font-family: 'Apple SD Gothic Neo', sans-serif;
     }
     #gameCanvas {
       display: block;
       width: 100vw;
       height: 100vh;
-      background: #222;
     }
-    /* 터치 UI 레이어 */
+    
+    /* UI Overlay */
     .ui-layer {
       position: absolute;
       top: 0;
@@ -36,48 +35,119 @@
       height: 100%;
       pointer-events: none;
     }
-    /* 가상 조이스틱 */
+
+    /* Quest Log Header */
+    #quest-ui {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      max-width: 260px;
+    }
+    #quest-ui h4 {
+      margin: 0 0 4px 0;
+      color: #ffd700;
+      font-size: 14px;
+    }
+
+    /* Dialogue Window */
+    #dialogue-box {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 500px;
+      background: rgba(15, 15, 25, 0.92);
+      border: 2px solid #5577aa;
+      border-radius: 10px;
+      padding: 14px;
+      color: white;
+      display: none;
+      pointer-events: auto;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    #dialogue-speaker {
+      font-weight: bold;
+      color: #88ccff;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    #dialogue-text {
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+    #dialogue-next {
+      background: #335588;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      float: right;
+      font-size: 12px;
+    }
+
+    /* Joysticks & Action Buttons */
     #joystick-zone {
       position: absolute;
-      bottom: 40px;
-      left: 40px;
-      width: 120px;
-      height: 120px;
-      background: rgba(255, 255, 255, 0.15);
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      bottom: 30px;
+      left: 30px;
+      width: 110px;
+      height: 110px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 2px solid rgba(255, 255, 255, 0.25);
       border-radius: 50%;
       pointer-events: auto;
     }
     #joystick-knob {
       position: absolute;
-      top: 35px;
-      left: 35px;
-      width: 50px;
-      height: 50px;
-      background: rgba(255, 255, 255, 0.5);
+      top: 32.5px;
+      left: 32.5px;
+      width: 45px;
+      height: 45px;
+      background: rgba(255, 255, 255, 0.45);
       border-radius: 50%;
     }
-    /* 공격 버튼 */
-    #attack-btn {
+
+    .btn-container {
       position: absolute;
-      bottom: 50px;
-      right: 40px;
-      width: 80px;
-      height: 80px;
-      background: rgba(230, 60, 60, 0.7);
-      border: 2px solid rgba(255, 255, 255, 0.5);
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      gap: 15px;
+      align-items: flex-end;
+      pointer-events: auto;
+    }
+    .action-btn {
       border-radius: 50%;
       color: white;
       font-weight: bold;
-      font-size: 18px;
       display: flex;
       justify-content: center;
       align-items: center;
-      pointer-events: auto;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
-    #attack-btn:active {
-      background: rgba(255, 60, 60, 0.9);
-      transform: scale(0.95);
+    #attack-btn {
+      width: 75px;
+      height: 75px;
+      background: rgba(220, 50, 50, 0.8);
+      font-size: 16px;
+    }
+    #skill-btn {
+      width: 55px;
+      height: 55px;
+      background: rgba(50, 120, 220, 0.8);
+      font-size: 13px;
+    }
+    .action-btn:active {
+      transform: scale(0.92);
     }
   </style>
 </head>
@@ -86,37 +156,108 @@
   <canvas id="gameCanvas"></canvas>
 
   <div class="ui-layer">
+    <div id="quest-ui">
+      <h4 id="zone-title">구역: 시작의 숲</h4>
+      <div id="quest-text">NPC 아리엘에게 말을 걸어보세요.</div>
+    </div>
+
+    <div id="dialogue-box">
+      <div id="dialogue-speaker">NPC 이름</div>
+      <div id="dialogue-text">대화 내용이 들어갑니다.</div>
+      <button id="dialogue-next" onclick="advanceDialogue()">다음</button>
+    </div>
+
     <div id="joystick-zone">
       <div id="joystick-knob"></div>
     </div>
-    <div id="attack-btn">공격</div>
+
+    <div class="btn-container">
+      <div class="action-btn" id="skill-btn">스킬</div>
+      <div class="action-btn" id="attack-btn">공격</div>
+    </div>
   </div>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    // 디바이스 DPR 적용 (고화질 연출)
+    let dpr = window.devicePixelRatio || 1;
     function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.scale(dpr, dpr);
     }
     window.addEventListener('resize', resize);
     resize();
 
-    // 플레이어 객체
-    const player = {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      size: 20,
-      color: '#4CAF50',
-      speed: 4,
-      vx: 0,
-      vy: 0,
-      isAttacking: false,
-      attackTimer: 0
+    const viewWidth = () => window.innerWidth;
+    const viewHeight = () => window.innerHeight;
+
+    // 게임 상태 & 스토리 변수
+    let gameState = {
+      storyStage: 0,
+      fadeInAlpha: 1.0,
+      currentZone: "잊혀진 숲",
+      questGoal: 3,
+      questProgress: 0
     };
 
-    // 조이스틱 조작 로직
+    // 맵 크기 지정
+    const MAP_SIZE = 1600;
+
+    // 플레이어 정의 (네모)
+    const player = {
+      x: 800,
+      y: 800,
+      size: 28,
+      color: '#3498db',
+      speed: 3.8,
+      angle: 0, // 바라보는 방향 (라디안)
+      vx: 0,
+      vy: 0,
+      hp: 100,
+      maxHp: 100,
+      isAttacking: false,
+      attackProgress: 0, // 0 to 1
+      attackType: 'normal' // normal or skill
+    };
+
+    // NPC 정의 (네모)
+    const npcs = [
+      {
+        id: 'ariel',
+        name: '수호자 아리엘',
+        x: 720,
+        y: 750,
+        size: 30,
+        color: '#f1c40f',
+        dialogues: [
+          "어둠의 골렘들이 숲의 정수를 위협하고 있어!",
+          "우선 마을 근처의 어둠 골렘 3마리를 처치해주겠나?",
+          "고맙네! 골렘들을 물리치고 돌아와주게."
+        ]
+      }
+    ];
+
+    // 적 정의 (네모)
+    let enemies = [
+      { id: 1, x: 500, y: 500, size: 32, color: '#e74c3c', hp: 80, maxHp: 80, isDead: false },
+      { id: 2, x: 1100, y: 600, size: 32, color: '#e74c3c', hp: 80, maxHp: 80, isDead: false },
+      { id: 3, x: 900, y: 1200, size: 32, color: '#e74c3c', hp: 80, maxHp: 80, isDead: false }
+    ];
+
+    // 데미지 텍스트 팝업 배열
+    let damageTexts = [];
+
+    // 카메라
+    const camera = {
+      x: 0,
+      y: 0
+    };
+
+    // --- 터치 조이스틱 로직 ---
     const joystickZone = document.getElementById('joystick-zone');
     const joystickKnob = document.getElementById('joystick-knob');
     let joystickActive = false;
@@ -124,6 +265,7 @@
     const maxRadius = 35;
 
     joystickZone.addEventListener('touchstart', (e) => {
+      e.preventDefault();
       const touch = e.changedTouches[0];
       joystickActive = true;
       joystickTouchId = touch.identifier;
@@ -151,7 +293,6 @@
         }
       }
     }
-
     window.addEventListener('touchend', endJoystick);
     window.addEventListener('touchcancel', endJoystick);
 
@@ -172,80 +313,253 @@
 
       joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
 
-      if (dist > 0) {
+      if (dist > 5) {
         player.vx = (dx / maxRadius) * player.speed;
         player.vy = (dy / maxRadius) * player.speed;
+        player.angle = Math.atan2(dy, dx);
       } else {
         player.vx = 0;
         player.vy = 0;
       }
     }
 
-    // 공격 버튼 로직
-    const attackBtn = document.getElementById('attack-btn');
-    attackBtn.addEventListener('touchstart', (e) => {
+    // --- 공격 및 스킬 ---
+    document.getElementById('attack-btn').addEventListener('touchstart', (e) => {
       e.preventDefault();
-      if (!player.isAttacking) {
-        player.isAttacking = true;
-        player.attackTimer = 10; // 공격 연출 프레임 수
-      }
+      triggerAttack('normal');
     });
 
-    // 게임 루프
-    function update() {
-      // 이동 적용
-      player.x += player.vx;
-      player.y += player.vy;
+    document.getElementById('skill-btn').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      triggerAttack('skill');
+    });
 
-      // 화면 경계 제한
-      player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
-      player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+    function triggerAttack(type) {
+      if (player.isAttacking) return;
+      player.isAttacking = true;
+      player.attackProgress = 0;
+      player.attackType = type;
 
-      // 공격 타이머 업데이트
-      if (player.isAttacking) {
-        player.attackTimer--;
-        if (player.attackTimer <= 0) {
-          player.isAttacking = false;
+      // 히트박스 계산 및 충돌 판정 (보이지 않는 전방 히트박스)
+      const hitDistance = type === 'skill' ? 65 : 45;
+      const hitRadius = type === 'skill' ? 55 : 35;
+      
+      const hitX = player.x + Math.cos(player.angle) * hitDistance;
+      const hitY = player.y + Math.sin(player.angle) * hitDistance;
+
+      // NPC 대화 판정
+      npcs.forEach(npc => {
+        const dist = Math.hypot(player.x - npc.x, player.y - npc.y);
+        if (dist < 60) {
+          openDialogue(npc);
+        }
+      });
+
+      // 적 공격 판정
+      enemies.forEach(enemy => {
+        if (enemy.isDead) return;
+        const dist = Math.hypot(hitX - enemy.x, hitY - enemy.y);
+        
+        if (dist < enemy.size / 2 + hitRadius) {
+          // 데미지 계산 및 크리티컬/스킬 판정
+          const isCrit = Math.random() < 0.3 || type === 'skill';
+          let damage = type === 'skill' ? 35 : 18;
+          if (isCrit) damage = Math.floor(damage * 1.5);
+
+          enemy.hp -= damage;
+          
+          // 데미지 이펙트 팝업 생성
+          damageTexts.push({
+            x: enemy.x + (Math.random() * 20 - 10),
+            y: enemy.y - 20,
+            text: damage,
+            isCrit: isCrit || type === 'skill',
+            alpha: 1.0,
+            life: 40
+          });
+
+          if (enemy.hp <= 0) {
+            enemy.isDead = true;
+            if (gameState.storyStage === 1) {
+              gameState.questProgress++;
+              updateQuestUI();
+            }
+          }
+        }
+      });
+    }
+
+    // --- 대화 시스템 ---
+    let currentDialogueIndex = 0;
+    let activeNpc = null;
+
+    function openDialogue(npc) {
+      activeNpc = npc;
+      currentDialogueIndex = 0;
+      document.getElementById('dialogue-speaker').innerText = npc.name;
+      document.getElementById('dialogue-text').innerText = npc.dialogues[0];
+      document.getElementById('dialogue-box').style.display = 'block';
+    }
+
+    function advanceDialogue() {
+      if (!activeNpc) return;
+      currentDialogueIndex++;
+      if (currentDialogueIndex < activeNpc.dialogues.length) {
+        document.getElementById('dialogue-text').innerText = activeNpc.dialogues[currentDialogueIndex];
+      } else {
+        document.getElementById('dialogue-box').style.display = 'none';
+        if (gameState.storyStage === 0) {
+          gameState.storyStage = 1;
+          updateQuestUI();
         }
       }
     }
 
-    function render() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function updateQuestUI() {
+      const qText = document.getElementById('quest-text');
+      if (gameState.storyStage === 0) {
+        qText.innerText = "NPC 아리엘에게 말을 걸어보세요.";
+      } else if (gameState.storyStage === 1) {
+        qText.innerText = `어둠 골렘 처치 (${gameState.questProgress}/${gameState.questGoal})`;
+        if (gameState.questProgress >= gameState.questGoal) {
+          qText.innerText = "골렘 처치 완료! 아리엘에게 돌아가세요.";
+        }
+      }
+    }
 
-      // 격자 배경 그려주기
-      ctx.strokeStyle = '#333';
+    // --- 업데이트 & 메인 루프 ---
+    function update() {
+      // 시작 화면 페이드인
+      if (gameState.fadeInAlpha > 0) {
+        gameState.fadeInAlpha -= 0.015;
+      }
+
+      // 플레이어 이동
+      player.x += player.vx;
+      player.y += player.vy;
+
+      // 맵 경계 체크
+      player.x = Math.max(player.size, Math.min(MAP_SIZE - player.size, player.x));
+      player.y = Math.max(player.size, Math.min(MAP_SIZE - player.size, player.y));
+
+      // 카메라는 항상 플레이어 중심
+      camera.x = player.x - viewWidth() / 2;
+      camera.y = player.y - viewHeight() / 2;
+
+      // 주먹 공격 애니메이션 진행
+      if (player.isAttacking) {
+        player.attackProgress += 0.12;
+        if (player.attackProgress >= 1) {
+          player.isAttacking = false;
+          player.attackProgress = 0;
+        }
+      }
+
+      // 데미지 텍스트 위치 및 속성 업데이트
+      damageTexts.forEach((dt, idx) => {
+        dt.y -= 0.8;
+        dt.alpha -= 0.025;
+        dt.life--;
+        if (dt.life <= 0) {
+          damageTexts.splice(idx, 1);
+        }
+      });
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, viewWidth(), viewHeight());
+
+      ctx.save();
+      // 카메라 변환 적용 (모든 개체가 플레이어 중심으로 이동)
+      ctx.translate(-camera.x, -camera.y);
+
+      // 격자 맵 그리드
+      ctx.strokeStyle = '#1e2530';
       ctx.lineWidth = 1;
-      const gridSize = 50;
-      for (let x = 0; x < canvas.width; x += gridSize) {
+      const gridSize = 60;
+      for (let x = 0; x <= MAP_SIZE; x += gridSize) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
+        ctx.lineTo(x, MAP_SIZE);
         ctx.stroke();
       }
-      for (let y = 0; y < canvas.height; y += gridSize) {
+      for (let y = 0; y <= MAP_SIZE; y += gridSize) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
+        ctx.lineTo(MAP_SIZE, y);
         ctx.stroke();
       }
 
-      // 공격 상태 연출
-      if (player.isAttacking) {
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.size + 25, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 200, 50, 0.4)';
-        ctx.fill();
-      }
+      // NPC 그리기 (네모)
+      npcs.forEach(npc => {
+        ctx.fillStyle = npc.color;
+        ctx.fillRect(npc.x - npc.size / 2, npc.y - npc.size / 2, npc.size, npc.size);
+        
+        // NPC 이름표
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(npc.name, npc.x, npc.y - npc.size / 2 - 8);
+      });
 
-      // 플레이어 그리기
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+      // 적 몬스터 그리기 (네모)
+      enemies.forEach(enemy => {
+        if (enemy.isDead) return;
+        ctx.fillStyle = enemy.color;
+        ctx.fillRect(enemy.x - enemy.size / 2, enemy.y - enemy.size / 2, enemy.size, enemy.size);
+
+        // HP 바
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(enemy.x - 20, enemy.y - enemy.size / 2 - 10, 40, 5);
+        ctx.fillStyle = '#2ecc71';
+        ctx.fillRect(enemy.x - 20, enemy.y - enemy.size / 2 - 10, (enemy.hp / enemy.maxHp) * 40, 5);
+      });
+
+      // 플레이어 그리기 (네모)
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.angle);
+
+      // 플레이어 본체 네모
       ctx.fillStyle = player.color;
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
+      ctx.fillRect(-player.size / 2, -player.size / 2, player.size, player.size);
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.strokeRect(-player.size / 2, -player.size / 2, player.size, player.size);
+
+      // 주먹 휘두르는 애니메이션 연출 (전방 시각 효과)
+      if (player.isAttacking) {
+        const swingOffset = Math.sin(player.attackProgress * Math.PI) * 22;
+        ctx.fillStyle = player.attackType === 'skill' ? '#3498db' : '#f39c12';
+        
+        // 앞쪽으로 주먹을 내지르는 네모 연출
+        ctx.fillRect(player.size / 2 + swingOffset, -6, 12, 12);
+      }
+      ctx.restore();
+
+      // 데미지 텍스트 팝업 및 크리티컬 효과
+      damageTexts.forEach(dt => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, dt.alpha);
+        if (dt.isCrit) {
+          ctx.fillStyle = '#ff2222';
+          ctx.font = 'bold 22px sans-serif';
+        } else {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 15px sans-serif';
+        }
+        ctx.textAlign = 'center';
+        ctx.fillText(dt.text, dt.x, dt.y);
+        ctx.restore();
+      });
+
+      ctx.restore(); // 카메라 변환 복구
+
+      // 오버레이 페이드인 연출 (시작 시 검은 화면에서 투명화)
+      if (gameState.fadeInAlpha > 0) {
+        ctx.fillStyle = `rgba(0, 0, 0, ${gameState.fadeInAlpha})`;
+        ctx.fillRect(0, 0, viewWidth(), viewHeight());
+      }
     }
 
     function loop() {
