@@ -1,148 +1,261 @@
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Game</title>
+    <title>Pixel Block Break Game</title>
     <style>
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
+            width: 100vw;
             height: 100vh;
             background-color: #000000;
             overflow: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        #gameContainer {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vmin;
+            height: 100vmin;
+            max-width: 600px;
+            max-height: 600px;
+            padding: 10px;
         }
         canvas {
             background-color: #000000;
+            border: 2px solid #333333;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.15);
             touch-action: none;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // 모바일 전용 화면 크기 설정 (정사각형)
-        const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
-        canvas.width = size;
-        canvas.height = size;
-
-        // 작은 픽셀 격자 설정
+        // Square grid resolution configuration
         const gridCount = 50; 
-        const pixelSize = size / gridCount;
+        let canvasSize = 0;
+        let pixelSize = 0;
 
-        const pixels = [];
+        // Game Entities
+        let blocks = [];
+        let particles = [];
+        let ball = {};
 
-        // 가운데 3x3 영역 범위 계산
-        const centerStart = Math.floor(gridCount / 2) - 1;
-        const centerEnd = centerStart + 2;
+        function resizeCanvas() {
+            const container = document.getElementById('gameContainer');
+            const minDim = Math.min(container.clientWidth, container.clientHeight) - 20;
+            canvasSize = Math.max(280, minDim);
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+            pixelSize = canvasSize / gridCount;
 
-        // 픽셀 격자 생성 (3x3 공백 영역 제외)
-        for (let r = 0; r < gridCount; r++) {
-            for (let c = 0; c < gridCount; c++) {
-                if (r >= centerStart && r <= centerEnd && c >= centerStart && c <= centerEnd) {
-                    continue;
+            initGame();
+        }
+
+        function initGame() {
+            blocks = [];
+            particles = [];
+
+            const centerStart = Math.floor(gridCount / 2) - 1; // Center 3x3 index start
+            const centerEnd = centerStart + 2;                 // Center 3x3 index end
+
+            // Generate pixel grid excluding center 3x3 empty space
+            for (let r = 0; r < gridCount; r++) {
+                for (let c = 0; c < gridCount; c++) {
+                    if (r >= centerStart && r <= centerEnd && c >= centerStart && c <= centerEnd) {
+                        continue; // Empty center space
+                    }
+                    blocks.push({
+                        col: c,
+                        row: r,
+                        x: c * pixelSize,
+                        y: r * pixelSize,
+                        active: true
+                    });
                 }
-                pixels.push({
-                    x: c * pixelSize,
-                    y: r * pixelSize,
-                    col: c,
-                    row: r
+            }
+
+            // Ball starting at center of empty 3x3 space
+            const centerX = (centerStart + 1.5) * pixelSize;
+            const centerY = (centerStart + 1.5) * pixelSize;
+            
+            // Random initial direction angle
+            const angle = Math.random() * Math.PI * 2;
+            const speed = pixelSize * 0.25;
+
+            ball = {
+                x: centerX,
+                y: centerY,
+                radius: pixelSize * 0.4,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: '#FFA500',
+                history: []
+            };
+
+            // Avoid perfectly vertical or horizontal directions
+            if (Math.abs(ball.vx) < 0.5) ball.vx = speed * 0.7;
+            if (Math.abs(ball.vy) < 0.5) ball.vy = speed * 0.7;
+        }
+
+        function createExplosion(x, y, color) {
+            const particleCount = 18;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * (pixelSize * 0.3) + (pixelSize * 0.1);
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: Math.random() * (pixelSize * 0.25) + 1,
+                    color: color,
+                    alpha: 1.0,
+                    life: Math.random() * 0.04 + 0.02
                 });
             }
         }
 
-        // 공 설정 (공백 중앙 위치, 속도 벡터 및 잔상)
-        const ball = {
-            x: (centerStart + 1.5) * pixelSize,
-            y: (centerStart + 1.5) * pixelSize,
-            radius: pixelSize * 0.35,
-            dx: pixelSize * 0.15, // x축 속도
-            dy: pixelSize * 0.12, // y축 속도
-            color: 'orange',
-            history: []
-        };
-
-        // 물리 업데이트 함수
         function update() {
-            // 잔상 위치 기록
+            // Ball position history for trail/afterimage
             ball.history.push({ x: ball.x, y: ball.y });
-            if (ball.history.length > 10) {
+            if (ball.history.length > 8) {
                 ball.history.shift();
             }
 
-            // 다음 위치 계산
-            let nextX = ball.x + ball.dx;
-            let nextY = ball.y + ball.dy;
+            // Next ball position
+            let nextX = ball.x + ball.vx;
+            let nextY = ball.y + ball.vy;
 
-            // 1. 캔버스 외곽 벽 충돌 처리
-            if (nextX - ball.radius < 0 || nextX + ball.radius > canvas.width) {
-                ball.dx = -ball.dx;
-                nextX = ball.x + ball.dx;
+            // 1. Screen Borders Collision Handling
+            if (nextX - ball.radius <= 0) {
+                ball.vx = Math.abs(ball.vx);
+                nextX = ball.radius;
+                createExplosion(0, ball.y, '#FFA500');
+            } else if (nextX + ball.radius >= canvas.width) {
+                ball.vx = -Math.abs(ball.vx);
+                nextX = canvas.width - ball.radius;
+                createExplosion(canvas.width, ball.y, '#FFA500');
             }
-            if (nextY - ball.radius < 0 || nextY + ball.radius > canvas.height) {
-                ball.dy = -ball.dy;
-                nextY = ball.y + ball.dy;
+
+            if (nextY - ball.radius <= 0) {
+                ball.vy = Math.abs(ball.vy);
+                nextY = ball.radius;
+                createExplosion(ball.x, 0, '#FFA500');
+            } else if (nextY + ball.radius >= canvas.height) {
+                ball.vy = -Math.abs(ball.vy);
+                nextY = canvas.height - ball.radius;
+                createExplosion(ball.x, canvas.height, '#FFA500');
             }
 
-            // 2. 회색 블록(픽셀)과의 충돌 처리
-            for (let i = 0; i < pixels.length; i++) {
-                const p = pixels[i];
+            // 2. Block Collisions Handling
+            for (let i = 0; i < blocks.length; i++) {
+                const b = blocks[i];
+                if (!b.active) continue;
 
-                // 공과 가장 가까운 픽셀 내의 점 위치 계산
-                const closestX = Math.max(p.x, Math.min(nextX, p.x + pixelSize));
-                const closestY = Math.max(p.y, Math.min(nextY, p.y + pixelSize));
+                // Find closest point on block rectangle to ball center
+                const closestX = Math.max(b.x, Math.min(nextX, b.x + pixelSize));
+                const closestY = Math.max(b.y, Math.min(nextY, b.y + pixelSize));
 
                 const distX = nextX - closestX;
                 const distY = nextY - closestY;
                 const distance = Math.hypot(distX, distY);
 
-                // 충돌 발생 시 반사
+                // Collision detected
                 if (distance < ball.radius) {
-                    if (Math.abs(distX) > Math.abs(distY)) {
-                        ball.dx = -ball.dx;
+                    b.active = false; // Destroy block
+
+                    // Collision particle effect
+                    createExplosion(b.x + pixelSize / 2, b.y + pixelSize / 2, '#AAAAAA');
+
+                    // Determine bounce direction based on overlap angle
+                    const overlapX = (pixelSize / 2 + ball.radius) - Math.abs(nextX - (b.x + pixelSize / 2));
+                    const overlapY = (pixelSize / 2 + ball.radius) - Math.abs(nextY - (b.y + pixelSize / 2));
+
+                    if (overlapX < overlapY) {
+                        ball.vx = -ball.vx;
                     } else {
-                        ball.dy = -ball.dy;
+                        ball.vy = -ball.vy;
                     }
                     break;
                 }
             }
 
-            // 위치 이동 적용
-            ball.x += ball.dx;
-            ball.y += ball.dy;
+            // Apply ball velocity
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // 3. Update Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= p.life;
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
         }
 
-        // 화면 그리프 함수
         function draw() {
-            // 검은색 배경[span_1](start_span)[span_1](end_span)
+            // Black Background
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 회색 블록[span_2](start_span)[span_2](end_span)
+            // Grey Pixel Blocks
             ctx.fillStyle = '#888888';
-            for (let i = 0; i < pixels.length; i++) {
-                ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
+            for (let i = 0; i < blocks.length; i++) {
+                const b = blocks[i];
+                if (b.active) {
+                    ctx.fillRect(b.x, b.y, pixelSize - 0.5, pixelSize - 0.5);
+                }
             }
 
-            // 잔상 효과
+            // Particles Explosion Render
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Ball Motion Trail
             for (let i = 0; i < ball.history.length; i++) {
                 const pos = ball.history[i];
-                const alpha = (i + 1) / ball.history.length;
+                const alpha = ((i + 1) / ball.history.length) * 0.4;
                 ctx.beginPath();
                 ctx.arc(pos.x, pos.y, ball.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 165, 0, ${alpha * 0.4})`;
+                ctx.fillStyle = `rgba(255, 165, 0, ${alpha})`;
                 ctx.fill();
-                ctx.closePath();
             }
 
-            // 주황색 공
+            // Orange Ball
             ctx.beginPath();
             ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
             ctx.fillStyle = ball.color;
@@ -150,14 +263,19 @@
             ctx.closePath();
         }
 
-        // 게임 메인 루프
-        function loop() {
+        function gameLoop() {
             update();
             draw();
-            requestAnimationFrame(loop);
+            requestAnimationFrame(gameLoop);
         }
 
-        loop();
+        window.addEventListener('resize', resizeCanvas);
+
+        window.onload = function() {
+            resizeCanvas();
+            gameLoop();
+        };
     </script>
 </body>
 </html>
+```
