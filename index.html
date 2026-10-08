@@ -27,7 +27,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // 1. 공 설정 (기존 반지름 10의 4분의 1 크기인 2.5)
+        // 1. 공 설정 (시작 지점을 정가운데로 설정)
         const ball = {
             x: canvas.width / 2,
             y: canvas.height / 2,
@@ -40,7 +40,7 @@
             active: true
         };
 
-        // 2. 맵에 공보다 조금 큰 픽셀을 빈틈없이 여러 개 배치 (공 위치 제외)
+        // 2. 맵에 픽셀 배치 (중앙 공 시작 위치 비움)
         const pixelSize = 6;
         const pixels = [];
         const cols = Math.floor(canvas.width / pixelSize);
@@ -51,19 +51,19 @@
                 const px = c * pixelSize;
                 const py = r * pixelSize;
                 
-                // 공이 시작되는 위치에는 픽셀을 비워둠
-                const distToBall = Math.hypot((px + pixelSize / 2) - ball.x, (py + pixelSize / 2) - ball.y);
+                // 정가운데 공의 위치 주변에는 픽셀을 배치하지 않음
+                const distToBall = Math.hypot((px + pixelSize / 2) - (canvas.width / 2), (py + pixelSize / 2) - (canvas.height / 2));
                 if (distToBall > 30) {
                     pixels.push({ x: px, y: py });
                 }
             }
         }
 
-        // 3. 공이 벽에 닿았을 때 나오는 파티클 이펙트
+        // 3. 파티클 이펙트
         const particles = [];
 
         function createImpactParticles(x, y) {
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < 35; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const speed = Math.random() * 6 + 1;
                 particles.push({
@@ -72,7 +72,6 @@
                     dx: Math.cos(angle) * speed,
                     dy: Math.sin(angle) * speed,
                     radius: Math.random() * 2 + 1,
-                    color: 'orange',
                     alpha: 1,
                     life: 0.03
                 });
@@ -81,7 +80,7 @@
 
         function update() {
             if (ball.active) {
-                // 뒤에 잔상이 남도록 현재 위치 기록
+                // 잔상 기록
                 ball.history.push({ x: ball.x, y: ball.y });
                 if (ball.history.length > ball.maxHistory) {
                     ball.history.shift();
@@ -91,21 +90,34 @@
                 ball.x += ball.dx;
                 ball.y += ball.dy;
 
-                // 공이 벽에 닿으면 없어지면서 이펙트 발생
-                if (
-                    ball.x - ball.radius <= 0 ||
-                    ball.x + ball.radius >= canvas.width ||
-                    ball.y - ball.radius <= 0 ||
-                    ball.y + ball.radius >= canvas.height
-                ) {
-                    const impactX = Math.max(0, Math.min(canvas.width, ball.x));
-                    const impactY = Math.max(0, Math.min(canvas.height, ball.y));
+                // 벽 충돌 감지: 닿는 즉시 정지하고 부서지는 이펙트 발생 후 공 제거
+                let hit = false;
+                let impactX = ball.x;
+                let impactY = ball.y;
+
+                if (ball.x - ball.radius <= 0) {
+                    impactX = 0;
+                    hit = true;
+                } else if (ball.x + ball.radius >= canvas.width) {
+                    impactX = canvas.width;
+                    hit = true;
+                }
+
+                if (ball.y - ball.radius <= 0) {
+                    impactY = 0;
+                    hit = true;
+                } else if (ball.y + ball.radius >= canvas.height) {
+                    impactY = canvas.height;
+                    hit = true;
+                }
+
+                if (hit) {
                     createImpactParticles(impactX, impactY);
-                    ball.active = false;
+                    ball.active = false; // 튕기지 않고 소멸
                 }
             }
 
-            // 이펙트 파티클 업데이트
+            // 파티클 업데이트
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
                 p.x += p.dx;
@@ -118,19 +130,18 @@
         }
 
         function draw() {
-            // 배경 검은색
+            // 검은색 배경
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 빈틈없이 배치된 픽셀 그리기
+            // 픽셀 격자
             ctx.fillStyle = '#222222';
             for (let i = 0; i < pixels.length; i++) {
                 ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
 
-            // 공 및 잔상 그리기
+            // 공 및 잔상
             if (ball.active) {
-                // 잔상
                 for (let i = 0; i < ball.history.length; i++) {
                     const pos = ball.history[i];
                     const alpha = (i + 1) / ball.history.length;
@@ -141,7 +152,6 @@
                     ctx.closePath();
                 }
 
-                // 주황색 공
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
                 ctx.fillStyle = ball.color;
@@ -149,7 +159,7 @@
                 ctx.closePath();
             }
 
-            // 벽 충돌 이펙트 그리기
+            // 충돌 파티클 이펙트
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
                 ctx.beginPath();
