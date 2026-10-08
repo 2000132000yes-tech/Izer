@@ -28,7 +28,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // 모바일 전용 정사각형 화면 설정
+        // 모바일 전용 화면 크기 설정 (정사각형)
         const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
         canvas.width = size;
         canvas.height = size;
@@ -43,43 +43,106 @@
         const centerStart = Math.floor(gridCount / 2) - 1;
         const centerEnd = centerStart + 2;
 
+        // 픽셀 격자 생성 (3x3 공백 영역 제외)
         for (let r = 0; r < gridCount; r++) {
             for (let c = 0; c < gridCount; c++) {
-                // 가운데 3x3 영역은 제외
                 if (r >= centerStart && r <= centerEnd && c >= centerStart && c <= centerEnd) {
                     continue;
                 }
                 pixels.push({
                     x: c * pixelSize,
-                    y: r * pixelSize
+                    y: r * pixelSize,
+                    col: c,
+                    row: r
                 });
             }
         }
 
-        // 가운데 3x3 공백 영역 안에서 무작위 위치 계산
-        const randomCol = centerStart + Math.floor(Math.random() * 3);
-        const randomRow = centerStart + Math.floor(Math.random() * 3);
-
-        // 무작위 생성될 객체 (주황색 공)
+        // 공 설정 (공백 중앙 위치, 속도 벡터 및 잔상)
         const ball = {
-            x: (randomCol + 0.5) * pixelSize,
-            y: (randomRow + 0.5) * pixelSize,
+            x: (centerStart + 1.5) * pixelSize,
+            y: (centerStart + 1.5) * pixelSize,
             radius: pixelSize * 0.35,
-            color: 'orange'
+            dx: pixelSize * 0.15, // x축 속도
+            dy: pixelSize * 0.12, // y축 속도
+            color: 'orange',
+            history: []
         };
 
+        // 물리 업데이트 함수
+        function update() {
+            // 잔상 위치 기록
+            ball.history.push({ x: ball.x, y: ball.y });
+            if (ball.history.length > 10) {
+                ball.history.shift();
+            }
+
+            // 다음 위치 계산
+            let nextX = ball.x + ball.dx;
+            let nextY = ball.y + ball.dy;
+
+            // 1. 캔버스 외곽 벽 충돌 처리
+            if (nextX - ball.radius < 0 || nextX + ball.radius > canvas.width) {
+                ball.dx = -ball.dx;
+                nextX = ball.x + ball.dx;
+            }
+            if (nextY - ball.radius < 0 || nextY + ball.radius > canvas.height) {
+                ball.dy = -ball.dy;
+                nextY = ball.y + ball.dy;
+            }
+
+            // 2. 회색 블록(픽셀)과의 충돌 처리
+            for (let i = 0; i < pixels.length; i++) {
+                const p = pixels[i];
+
+                // 공과 가장 가까운 픽셀 내의 점 위치 계산
+                const closestX = Math.max(p.x, Math.min(nextX, p.x + pixelSize));
+                const closestY = Math.max(p.y, Math.min(nextY, p.y + pixelSize));
+
+                const distX = nextX - closestX;
+                const distY = nextY - closestY;
+                const distance = Math.hypot(distX, distY);
+
+                // 충돌 발생 시 반사
+                if (distance < ball.radius) {
+                    if (Math.abs(distX) > Math.abs(distY)) {
+                        ball.dx = -ball.dx;
+                    } else {
+                        ball.dy = -ball.dy;
+                    }
+                    break;
+                }
+            }
+
+            // 위치 이동 적용
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+        }
+
+        // 화면 그리프 함수
         function draw() {
-            // 검은색 배경[span_0](start_span)[span_0](end_span)
+            // 검은색 배경[span_1](start_span)[span_1](end_span)
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 회색 블록[span_1](start_span)[span_1](end_span)
+            // 회색 블록[span_2](start_span)[span_2](end_span)
             ctx.fillStyle = '#888888';
             for (let i = 0; i < pixels.length; i++) {
                 ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
 
-            // 가운데 공백 안 무작위 위치에 주황색 공 그리기
+            // 잔상 효과
+            for (let i = 0; i < ball.history.length; i++) {
+                const pos = ball.history[i];
+                const alpha = (i + 1) / ball.history.length;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 165, 0, ${alpha * 0.4})`;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            // 주황색 공
             ctx.beginPath();
             ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
             ctx.fillStyle = ball.color;
@@ -87,7 +150,14 @@
             ctx.closePath();
         }
 
-        draw();
+        // 게임 메인 루프
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
     </script>
 </body>
 </html>
