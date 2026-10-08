@@ -28,24 +28,24 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // 모바일 전용 화면크기 처리 (화면의 폭과 높이 중 작은 쪽에 맞춘 정사각형)
+        // 모바일 전용 정사각형 화면 설정
         const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
         canvas.width = size;
         canvas.height = size;
 
-        // 엄청 작은 픽셀 격자 설정 (예: 50x50 격자)
+        // 작은 픽셀 격자 설정
         const gridCount = 50; 
         const pixelSize = size / gridCount;
 
         const pixels = [];
 
-        // 가운데 3x3 영역의 그리드 좌표 범위 계산
-        const centerStart = Math.floor(gridCount / 2) - 1; // 가운데 3개 중 첫 번째 index
-        const centerEnd = centerStart + 2;                 // 가운데 3개 중 마지막 index
+        // 가운데 3x3 영역 범위 계산
+        const centerStart = Math.floor(gridCount / 2) - 1;
+        const centerEnd = centerStart + 2;
 
         for (let r = 0; r < gridCount; r++) {
             for (let c = 0; c < gridCount; c++) {
-                // 가운데 3x3 영역은 제외 (공백 처리)
+                // 가운데 3x3 영역은 제외
                 if (r >= centerStart && r <= centerEnd && c >= centerStart && c <= centerEnd) {
                     continue;
                 }
@@ -56,17 +56,35 @@
             }
         }
 
+        // 가운데 3x3 공백 영역 안에서 무작위 위치 계산
+        const randomCol = centerStart + Math.floor(Math.random() * 3);
+        const randomRow = centerStart + Math.floor(Math.random() * 3);
+
+        // 무작위 생성될 객체 (주황색 공)
+        const ball = {
+            x: (randomCol + 0.5) * pixelSize,
+            y: (randomRow + 0.5) * pixelSize,
+            radius: pixelSize * 0.35,
+            color: 'orange'
+        };
+
         function draw() {
-            // 배경: 검은색
+            // 검은색 배경[span_0](start_span)[span_0](end_span)
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 블록: 회색
+            // 회색 블록[span_1](start_span)[span_1](end_span)
             ctx.fillStyle = '#888888';
             for (let i = 0; i < pixels.length; i++) {
-                // 픽셀 간 구분을 위해 약간의 간격(0.5px) 부여
                 ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
+
+            // 가운데 공백 안 무작위 위치에 주황색 공 그리기
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = ball.color;
+            ctx.fill();
+            ctx.closePath();
         }
 
         draw();
