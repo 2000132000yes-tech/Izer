@@ -2,177 +2,74 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Physics Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Game</title>
     <style>
         body {
             margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #000;
+            background-color: #000000;
             overflow: hidden;
         }
         canvas {
-            border: 1px solid #333;
-            background-color: #000;
+            background-color: #000000;
+            touch-action: none;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // 1. 공 설정 (중앙 위치, 2.5 반지름)
-        const ball = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            radius: 2.5,
-            color: 'orange',
-            vx: 6,
-            vy: -4,
-            history: [],
-            maxHistory: 15,
-            active: true
-        };
+        // 모바일 전용 화면크기 처리 (화면의 폭과 높이 중 작은 쪽에 맞춘 정사각형)
+        const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+        canvas.width = size;
+        canvas.height = size;
 
-        // 2. 배경 픽셀 격자 (공 위치 제외)
-        const pixelSize = 8;
+        // 엄청 작은 픽셀 격자 설정 (예: 50x50 격자)
+        const gridCount = 50; 
+        const pixelSize = size / gridCount;
+
         const pixels = [];
-        const cols = Math.floor(canvas.width / pixelSize);
-        const rows = Math.floor(canvas.height / pixelSize);
 
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                const px = c * pixelSize;
-                const py = r * pixelSize;
-                const distToCenter = Math.hypot((px + pixelSize / 2) - ball.x, (py + pixelSize / 2) - ball.y);
-                if (distToCenter > 20) {
-                    pixels.push({ x: px, y: py });
+        // 가운데 3x3 영역의 그리드 좌표 범위 계산
+        const centerStart = Math.floor(gridCount / 2) - 1; // 가운데 3개 중 첫 번째 index
+        const centerEnd = centerStart + 2;                 // 가운데 3개 중 마지막 index
+
+        for (let r = 0; r < gridCount; r++) {
+            for (let c = 0; c < gridCount; c++) {
+                // 가운데 3x3 영역은 제외 (공백 처리)
+                if (r >= centerStart && r <= centerEnd && c >= centerStart && c <= centerEnd) {
+                    continue;
                 }
-            }
-        }
-
-        // 3. 충돌 파티클 이펙트
-        const particles = [];
-
-        function spawnImpact(x, y) {
-            for (let i = 0; i < 40; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 6 + 1;
-                particles.push({
-                    x: x,
-                    y: y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    radius: Math.random() * 2 + 0.5,
-                    alpha: 1,
-                    decay: Math.random() * 0.04 + 0.02
+                pixels.push({
+                    x: c * pixelSize,
+                    y: r * pixelSize
                 });
             }
         }
 
-        // 물리 업데이트 엔진
-        function updatePhysics() {
-            if (ball.active) {
-                // 잔상 궤적 추가
-                ball.history.push({ x: ball.x, y: ball.y });
-                if (ball.history.length > ball.maxHistory) {
-                    ball.history.shift();
-                }
-
-                // 이동 실행
-                const nextX = ball.x + ball.vx;
-                const nextY = ball.y + ball.vy;
-
-                // 벽 충돌 정밀 물리 체크 (상하좌우 경계선)
-                let hitX = null;
-                let hitY = null;
-
-                if (nextX - ball.radius <= 0) hitX = 0;
-                else if (nextX + ball.radius >= canvas.width) hitX = canvas.width;
-
-                if (nextY - ball.radius <= 0) hitY = 0;
-                else if (nextY + ball.radius >= canvas.height) hitY = canvas.height;
-
-                if (hitX !== null || hitY !== null) {
-                    // 벽 접촉 지점에서 즉시 소멸 및 파티클 생성
-                    const impactX = hitX !== null ? hitX : nextX;
-                    const impactY = hitY !== null ? hitY : nextY;
-                    
-                    spawnImpact(impactX, impactY);
-                    ball.active = false;
-                } else {
-                    ball.x = nextX;
-                    ball.y = nextY;
-                }
-            }
-
-            // 파티클 물리 업데이트
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.alpha -= p.decay;
-                if (p.alpha <= 0) {
-                    particles.splice(i, 1);
-                }
-            }
-        }
-
-        // 화면 렌더링
-        function render() {
-            // 검은색 배경
+        function draw() {
+            // 배경: 검은색
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 픽셀 격자
-            ctx.fillStyle = '#222222';
+            // 블록: 회색
+            ctx.fillStyle = '#888888';
             for (let i = 0; i < pixels.length; i++) {
+                // 픽셀 간 구분을 위해 약간의 간격(0.5px) 부여
                 ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
-
-            // 공 및 잔상
-            if (ball.active) {
-                for (let i = 0; i < ball.history.length; i++) {
-                    const pos = ball.history[i];
-                    const alpha = (i + 1) / ball.history.length;
-                    ctx.beginPath();
-                    ctx.arc(pos.x, pos.y, ball.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255, 165, 0, ${alpha * 0.4})`;
-                    ctx.fill();
-                    ctx.closePath();
-                }
-
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-                ctx.fillStyle = ball.color;
-                ctx.fill();
-                ctx.closePath();
-            }
-
-            // 파티클
-            for (let i = 0; i < particles.length; i++) {
-                const p = particles[i];
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 165, 0, ${p.alpha})`;
-                ctx.fill();
-                ctx.closePath();
-            }
         }
 
-        function gameLoop() {
-            updatePhysics();
-            render();
-            requestAnimationFrame(gameLoop);
-        }
-
-        gameLoop();
+        draw();
     </script>
 </body>
 </html>
