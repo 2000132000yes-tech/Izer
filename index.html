@@ -79,11 +79,6 @@
             flex-shrink: 0;
         }
 
-        #gemCount {
-            color: #ffffff;
-            text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
-        }
-
         .plus-btn {
             width: 40px;
             height: 40px;
@@ -107,19 +102,19 @@
             background: #333333;
         }
 
-        /* 슬라이드 업그레이드 창 (빠르다가 점점 느리게 내려옴) */
+        /* 슬라이드 업그레이드 창 */
         .upgrade-panel {
             position: absolute;
             top: -100%;
             left: 0;
             width: 100%;
-            height: 65%;
-            background: rgba(15, 15, 15, 0.95);
+            height: 75%;
+            background: rgba(15, 15, 15, 0.96);
             border-bottom: 2px solid #00e5ff;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9);
             transition: top 0.5s cubic-bezier(0, 0, 0.2, 1);
             z-index: 200;
-            padding: 20px;
+            padding: 16px;
             color: #ffffff;
             display: flex;
             flex-direction: column;
@@ -134,8 +129,8 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #333333;
-            padding-bottom: 12px;
-            margin-bottom: 15px;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .panel-title {
@@ -144,34 +139,63 @@
             color: #00e5ff;
         }
 
+        .panel-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .close-btn {
             background: none;
             border: none;
             color: #ffffff;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
-            padding: 4px 8px;
+            padding: 2px 6px;
         }
 
         .upgrade-list {
             flex: 1;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+            padding-right: 4px;
         }
 
-        .upgrade-item {
+        /* 업그레이드 카드 디자인 */
+        .upgrade-card {
+            background: #1e1e1e;
+            border: 1px solid #333333;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #222222;
-            padding: 14px;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            border: 1px solid #333333;
         }
 
         .upgrade-info {
+            display: flex;
+            align-items: center;
             font-size: 16px;
             font-weight: bold;
+        }
+
+        .orange-ball-icon {
+            width: 14px;
+            height: 14px;
+            background-color: orange;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+            box-shadow: 0 0 6px rgba(255, 165, 0, 0.8);
         }
 
         .upgrade-cost-btn {
@@ -183,22 +207,53 @@
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .upgrade-cost-btn:disabled {
-            background: #555555;
+        .upgrade-cost-btn:active {
+            transform: scale(0.96);
+        }
+
+        .down-arrow-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid #444444;
+            color: #aaaaaa;
+            width: 100%;
+            padding: 6px 0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .down-arrow-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .section-title {
+            font-size: 14px;
             color: #888888;
-            cursor: not-allowed;
+            font-weight: bold;
+            margin-top: 4px;
+            margin-bottom: -4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
     </style>
 </head>
 <body>
     <div id="gameContainer">
-        <!-- 상단 UI -->
+        <!-- 메인 화면 상단 UI -->
         <div class="ui-layer">
             <div class="currency-box">
                 <div class="diamond-icon"></div>
-                <span id="gemCount">0</span>
+                <span class="gem-count-text">0</span>
             </div>
             <button class="plus-btn" id="openUpgradeBtn">+</button>
         </div>
@@ -207,12 +262,66 @@
         <div class="upgrade-panel" id="upgradePanel">
             <div class="panel-header">
                 <div class="panel-title">UPGRADES</div>
-                <button class="close-btn" id="closeUpgradeBtn">✕</button>
+                <div class="panel-header-right">
+                    <div class="currency-box" style="padding: 4px 10px; font-size: 15px;">
+                        <div class="diamond-icon" style="width: 10px; height: 10px; margin-right: 6px;"></div>
+                        <span class="gem-count-text">0</span>
+                    </div>
+                    <button class="close-btn" id="closeUpgradeBtn">✕</button>
+                </div>
             </div>
-            <div class="upgrade-list">
-                <div class="upgrade-item">
-                    <div class="upgrade-info">+1 ball</div>
-                    <button class="upgrade-cost-btn" id="buyBallBtn">💎 10</button>
+
+            <div class="upgrade-list" id="upgradeList">
+                <!-- 메인 개수 업그레이드 -->
+                <div class="upgrade-card">
+                    <div class="card-row">
+                        <div class="upgrade-info">
+                            +1 ball <span class="orange-ball-icon"></span>
+                        </div>
+                        <button class="upgrade-cost-btn" id="buyBallBtn">
+                            <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                            <span id="ballCostText">10</span>
+                        </button>
+                    </div>
+                    <button class="down-arrow-btn" id="scrollToBallSectionBtn">▼ 주황색 공 상세 업그레이드</button>
+                </div>
+
+                <!-- 주황색 공 개별 업그레이드 섹션 -->
+                <div class="section-title" id="orangeBallSection">
+                    <span class="orange-ball-icon" style="margin-left:0;"></span> 주황색 공 강화
+                </div>
+
+                <!-- 속도 업그레이드 -->
+                <div class="upgrade-card">
+                    <div class="card-row">
+                        <div class="upgrade-info">+1 Speed</div>
+                        <button class="upgrade-cost-btn" id="buySpeedBtn">
+                            <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                            <span id="speedCostText">20</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 크기 업그레이드 -->
+                <div class="upgrade-card">
+                    <div class="card-row">
+                        <div class="upgrade-info">+0.5 size</div>
+                        <button class="upgrade-cost-btn" id="buySizeBtn">
+                            <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                            <span id="sizeCostText">50</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 블록 파괴 재화 추가 업그레이드 -->
+                <div class="upgrade-card">
+                    <div class="card-row">
+                        <div class="upgrade-info">+1 Block</div>
+                        <button class="upgrade-cost-btn" id="buyBlockBtn">
+                            <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                            <span id="blockCostText">500</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -223,16 +332,41 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const gemCountEl = document.getElementById('gemCount');
+        const gemCountTexts = document.querySelectorAll('.gem-count-text');
+        
         const upgradePanel = document.getElementById('upgradePanel');
         const openUpgradeBtn = document.getElementById('openUpgradeBtn');
         const closeUpgradeBtn = document.getElementById('closeUpgradeBtn');
-        const buyBallBtn = document.getElementById('buyBallBtn');
+        const scrollToBallSectionBtn = document.getElementById('scrollToBallSectionBtn');
+        const orangeBallSection = document.getElementById('orangeBallSection');
 
+        // 버튼 및 가격 엘리먼트
+        const buyBallBtn = document.getElementById('buyBallBtn');
+        const ballCostText = document.getElementById('ballCostText');
+        const buySpeedBtn = document.getElementById('buySpeedBtn');
+        const speedCostText = document.getElementById('speedCostText');
+        const buySizeBtn = document.getElementById('buySizeBtn');
+        const sizeCostText = document.getElementById('sizeCostText');
+        const buyBlockBtn = document.getElementById('buyBlockBtn');
+        const blockCostText = document.getElementById('blockCostText');
+
+        // 게임 상태 변수
         let gems = 0;
         let ballCost = 10;
+        let speedCost = 20;
+        let sizeCost = 50;
+        let blockCost = 500;
 
-        // UI 이벤트 처리
+        let ballSpeedBonus = 0;
+        let ballSizeBonus = 0;
+        let gemsPerBlock = 1;
+
+        // 재화 UI 업데이트
+        function updateGemUI() {
+            gemCountTexts.forEach(el => el.textContent = gems);
+        }
+
+        // UI 이벤트
         openUpgradeBtn.addEventListener('click', () => {
             upgradePanel.classList.add('active');
         });
@@ -241,7 +375,11 @@
             upgradePanel.classList.remove('active');
         });
 
-        // 캔버스 크기 맞춤
+        scrollToBallSectionBtn.addEventListener('click', () => {
+            orangeBallSection.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // 캔버스 맞춤
         const size = Math.min(window.innerWidth, window.innerHeight);
         canvas.width = size;
         canvas.height = size;
@@ -253,7 +391,7 @@
         const particles = [];
         const balls = [];
 
-        // 가운데 3x3 공백
+        // 3x3 공백
         const centerStart = Math.floor(gridCount / 2) - 1;
         const centerEnd = centerStart + 2;
 
@@ -272,29 +410,77 @@
         // 공 생성 함수
         function createBall() {
             const angle = Math.random() * Math.PI * 2;
-            const speed = pixelSize * 0.18;
+            const baseSpeed = pixelSize * 0.18 + (ballSpeedBonus * pixelSize * 0.03);
+            const currentRadius = pixelSize * 0.35 + (ballSizeBonus * pixelSize * 0.05);
+
             balls.push({
                 x: (centerStart + 1.5) * pixelSize,
                 y: (centerStart + 1.5) * pixelSize,
-                radius: pixelSize * 0.35,
-                dx: Math.cos(angle) * speed,
-                dy: Math.sin(angle) * speed,
+                radius: currentRadius,
+                dx: Math.cos(angle) * baseSpeed,
+                dy: Math.sin(angle) * baseSpeed,
                 color: 'orange',
                 history: []
             });
         }
 
-        // 기본 첫 번째 공 추가
+        // 첫 번째 공 생성
         createBall();
 
-        // +1 ball 구매 클릭 이벤트
+        // 1. +1 ball 구매
         buyBallBtn.addEventListener('click', () => {
             if (gems >= ballCost) {
                 gems -= ballCost;
                 ballCost += 10;
-                gemCountEl.textContent = gems;
-                buyBallBtn.textContent = `💎 ${ballCost}`;
+                ballCostText.textContent = ballCost;
+                updateGemUI();
                 createBall();
+            }
+        });
+
+        // 2. +1 Speed 구매
+        buySpeedBtn.addEventListener('click', () => {
+            if (gems >= speedCost) {
+                gems -= speedCost;
+                speedCost += 20;
+                speedCostText.textContent = speedCost;
+                ballSpeedBonus += 1;
+                updateGemUI();
+
+                // 기존 모든 공의 속도 업데이트
+                balls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.18 + (ballSpeedBonus * pixelSize * 0.03);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+            }
+        });
+
+        // 3. +0.5 size 구매
+        buySizeBtn.addEventListener('click', () => {
+            if (gems >= sizeCost) {
+                gems -= sizeCost;
+                sizeCost += 50;
+                sizeCostText.textContent = sizeCost;
+                ballSizeBonus += 0.5;
+                updateGemUI();
+
+                // 기존 모든 공의 크기 업데이트
+                balls.forEach(ball => {
+                    ball.radius = pixelSize * 0.35 + (ballSizeBonus * pixelSize * 0.05);
+                });
+            }
+        });
+
+        // 4. +1 Block 구매
+        buyBlockBtn.addEventListener('click', () => {
+            if (gems >= blockCost) {
+                gems -= blockCost;
+                blockCost += 500;
+                blockCostText.textContent = blockCost;
+                gemsPerBlock += 1;
+                updateGemUI();
             }
         });
 
@@ -316,7 +502,6 @@
         }
 
         function update() {
-            // 모든 공 업데이트
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
@@ -353,8 +538,8 @@
                         createParticles(p.x + pixelSize / 2, p.y + pixelSize / 2);
                         pixels.splice(i, 1);
 
-                        gems += 1;
-                        gemCountEl.textContent = gems;
+                        gems += gemsPerBlock;
+                        updateGemUI();
 
                         if (Math.abs(distX) > Math.abs(distY)) {
                             ball.dx = -ball.dx;
@@ -398,7 +583,7 @@
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
 
-            // 공 및 잔상 그리기
+            // 공 및 잔상
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
