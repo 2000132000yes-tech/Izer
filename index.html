@@ -232,7 +232,6 @@
             color: #ffffff;
         }
 
-        /* 접기/펼치기 서브 패널 레벨 */
         .sub-upgrade-container {
             display: none;
             flex-direction: column;
@@ -257,7 +256,6 @@
 </head>
 <body>
     <div id="gameContainer">
-        <!-- UI -->
         <div class="ui-layer">
             <div class="currency-box">
                 <div class="diamond-icon"></div>
@@ -266,7 +264,6 @@
             <button class="plus-btn" id="openUpgradeBtn">+</button>
         </div>
 
-        <!-- 슬라이드 업그레이드 창 -->
         <div class="upgrade-panel" id="upgradePanel">
             <div class="panel-header">
                 <div class="panel-title">UPGRADES</div>
@@ -280,7 +277,6 @@
             </div>
 
             <div class="upgrade-list">
-                <!-- 메인 개수 업그레이드 -->
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
@@ -296,13 +292,11 @@
                     </button>
                 </div>
 
-                <!-- 주황공 서브 강화 목록 (기본은 토글되어 안보임) -->
                 <div class="sub-upgrade-container" id="orangeBallSubMenu">
                     <div class="section-title">
                         <span class="orange-ball-icon" style="margin-left:0;"></span> 주황색 공 전용 옵션
                     </div>
 
-                    <!-- 속도 업그레이드 -->
                     <div class="upgrade-card">
                         <div class="card-row">
                             <div class="upgrade-info">+1 Speed</div>
@@ -313,7 +307,6 @@
                         </div>
                     </div>
 
-                    <!-- 크기 업그레이드 -->
                     <div class="upgrade-card">
                         <div class="card-row">
                             <div class="upgrade-info">+0.5 size</div>
@@ -324,7 +317,6 @@
                         </div>
                     </div>
 
-                    <!-- 블록 파괴 재화 증가 업그레이드 -->
                     <div class="upgrade-card">
                         <div class="card-row">
                             <div class="upgrade-info">+1 Block</div>
@@ -379,13 +371,11 @@
         openUpgradeBtn.addEventListener('click', () => upgradePanel.classList.add('active'));
         closeUpgradeBtn.addEventListener('click', () => upgradePanel.classList.remove('active'));
 
-        // 주황색 공 강화 옵션 토글 버튼 (화살표 눌렀을 때만 보이기/안보이기)
         toggleOrangeBallBtn.addEventListener('click', () => {
             const isOpen = orangeBallSubMenu.classList.toggle('open');
             arrowIcon.textContent = isOpen ? '▲' : '▼';
         });
 
-        // Canvas 설정
         const size = Math.min(window.innerWidth, window.innerHeight);
         canvas.width = size;
         canvas.height = size;
@@ -393,20 +383,18 @@
         const gridCount = 50;
         const pixelSize = size / gridCount;
 
-        // 시야/밝기 맵 (Light Map Array) - 초기엔 중앙만 밝음
-        let lightMap = Array.from({ length: gridCount }, () => Array(gridCount).fill(false));
+        // 부드럽게 밝혀진 영구 광원 지점 배열 (Light Spot List)
+        const lightSpots = [];
 
         const centerStart = Math.floor(gridCount / 2) - 1;
         const centerEnd = centerStart + 2;
 
-        // 중앙 공백 및 시야 확보
-        for (let r = centerStart - 1; r <= centerEnd + 1; r++) {
-            for (let c = centerStart - 1; c <= centerEnd + 1; c++) {
-                if (r >= 0 && r < gridCount && c >= 0 && c < gridCount) {
-                    lightMap[r][c] = true;
-                }
-            }
-        }
+        // 중앙 공백 공간 기본 부드러운 빛 추가
+        lightSpots.push({
+            x: (centerStart + 1.5) * pixelSize,
+            y: (centerStart + 1.5) * pixelSize,
+            radius: pixelSize * 5.0
+        });
 
         let pixels = [];
         const particles = [];
@@ -418,8 +406,6 @@
                     continue;
                 }
                 pixels.push({
-                    r: r,
-                    c: c,
                     x: c * pixelSize,
                     y: r * pixelSize
                 });
@@ -428,7 +414,6 @@
 
         function createBall() {
             const angle = Math.random() * Math.PI * 2;
-            // 속도와 크기 증가 폭 수정
             const baseSpeed = pixelSize * 0.22 + (ballSpeedBonus * pixelSize * 0.12);
             const currentRadius = pixelSize * 0.35 + (ballSizeBonus * pixelSize * 0.12);
 
@@ -445,7 +430,6 @@
 
         createBall();
 
-        // 1. +1 ball
         buyBallBtn.addEventListener('click', () => {
             if (gems >= ballCost) {
                 gems -= ballCost;
@@ -456,7 +440,6 @@
             }
         });
 
-        // 2. +1 Speed (속도 대폭 체감 증가)
         buySpeedBtn.addEventListener('click', () => {
             if (gems >= speedCost) {
                 gems -= speedCost;
@@ -474,7 +457,6 @@
             }
         });
 
-        // 3. +0.5 size (크기 증가폭 적절 보정)
         buySizeBtn.addEventListener('click', () => {
             if (gems >= sizeCost) {
                 gems -= sizeCost;
@@ -489,7 +471,6 @@
             }
         });
 
-        // 4. +1 Block
         buyBlockBtn.addEventListener('click', () => {
             if (gems >= blockCost) {
                 gems -= blockCost;
@@ -513,18 +494,6 @@
                     alpha: 1,
                     life: 0.05
                 });
-            }
-        }
-
-        // 블록 부술 때 주변 빛(밝아짐) 시야 전개 함수
-        function revealLight(row, col) {
-            const revealRadius = 2; // 파괴 시 주변 2칸 시야 밝힘
-            for (let r = row - revealRadius; r <= row + revealRadius; r++) {
-                for (let c = col - revealRadius; c <= col + revealRadius; c++) {
-                    if (r >= 0 && r < gridCount && c >= 0 && c < gridCount) {
-                        lightMap[r][c] = true;
-                    }
-                }
             }
         }
 
@@ -560,10 +529,17 @@
                     const distance = Math.hypot(distX, distY);
 
                     if (distance < ball.radius) {
-                        createParticles(p.x + pixelSize / 2, p.y + pixelSize / 2);
+                        const blockCenterX = p.x + pixelSize / 2;
+                        const blockCenterY = p.y + pixelSize / 2;
+
+                        createParticles(blockCenterX, blockCenterY);
                         
-                        // 부순 위치 주변 시야(빛) 확보
-                        revealLight(p.r, p.c);
+                        // 부순 위치에 자연스럽게 퍼지는 원형 광원 추가
+                        lightSpots.push({
+                            x: blockCenterX,
+                            y: blockCenterY,
+                            radius: pixelSize * 3.5
+                        });
 
                         pixels.splice(i, 1);
 
@@ -595,33 +571,49 @@
         }
 
         function draw() {
-            // 바탕 칠하기
+            // 기본 완전 어두운 배경
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. 회색 블록 그리기 (시야 내부/외부 다르게 렌더링)
+            // 1. 어둡게 깔린 기본 블록들
+            ctx.fillStyle = '#181818';
             for (let i = 0; i < pixels.length; i++) {
-                const p = pixels[i];
-                if (lightMap[p.r][p.c]) {
-                    ctx.fillStyle = '#777777'; // 부숴진 시야 근처의 그려질 블록 (밝음)
-                } else {
-                    ctx.fillStyle = '#181818'; // 시야 확보 전 캄캄한 상태의 블록
-                }
-                ctx.fillRect(p.x, p.y, pixelSize - 0.5, pixelSize - 0.5);
+                ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
 
-            // 2. 파티클
+            // 2. 부수면서 축적된 부드러운 광원들 오버레이 (밝은 톤 덧그리기)
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter'; // 부드러운 빛 중첩 효과
+
+            for (let i = 0; i < lightSpots.length; i++) {
+                const spot = lightSpots[i];
+                const grad = ctx.createRadialGradient(
+                    spot.x, spot.y, 0,
+                    spot.x, spot.y, spot.radius
+                );
+                grad.addColorStop(0, 'rgba(100, 100, 100, 0.45)');
+                grad.addColorStop(0.5, 'rgba(60, 60, 60, 0.2)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.beginPath();
+                ctx.arc(spot.x, spot.y, spot.radius, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            // 3. 파티클
             for (let i = 0; i < particles.length; i++) {
                 const pt = particles[i];
                 ctx.fillStyle = `rgba(255, 165, 0, ${pt.alpha})`;
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
 
-            // 3. 공 & 광원(Glow) 및 잔상
+            // 4. 주황색 공 & 실시간 광원(Glow)
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
-                // 잔상
+                // 공 잔상
                 for (let i = 0; i < ball.history.length; i++) {
                     const pos = ball.history[i];
                     const alpha = (i + 1) / ball.history.length;
@@ -632,28 +624,30 @@
                     ctx.closePath();
                 }
 
-                // 공 주변 광원 효과 (Glow)
+                // 공 주변 실시간 부드러운 광원
                 const glowGradient = ctx.createRadialGradient(
                     ball.x, ball.y, ball.radius * 0.2,
-                    ball.x, ball.y, ball.radius * 3.5
+                    ball.x, ball.y, ball.radius * 4.0
                 );
-                glowGradient.addColorStop(0, 'rgba(255, 165, 0, 0.8)');
-                glowGradient.addColorStop(0.4, 'rgba(255, 140, 0, 0.25)');
+                glowGradient.addColorStop(0, 'rgba(255, 165, 0, 0.85)');
+                glowGradient.addColorStop(0.4, 'rgba(255, 140, 0, 0.3)');
                 glowGradient.addColorStop(1, 'rgba(255, 140, 0, 0)');
 
                 ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius * 3.5, 0, Math.PI * 2);
+                ctx.arc(ball.x, ball.y, ball.radius * 4.0, 0, Math.PI * 2);
                 ctx.fillStyle = glowGradient;
                 ctx.fill();
                 ctx.closePath();
 
-                // 실제 공
+                // 공 본체
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
                 ctx.fillStyle = '#ffaa00';
                 ctx.fill();
                 ctx.closePath();
             }
+
+            ctx.restore();
         }
 
         function loop() {
