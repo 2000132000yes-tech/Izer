@@ -433,7 +433,7 @@
                     </div>
                 </div>
 
-                <!-- bmb ball (새 명칭 적용) -->
+                <!-- bmb ball -->
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
@@ -562,12 +562,12 @@
         let redBallCost = 100;
         let redSpeedCost = 20;
         let redRangeCost = 50;
-        let redLuckCost = 10; // Luck 업그레이드 가격 10원 시작
+        let redLuckCost = 10;
 
         // Upgrades
         let ballSpeedLevel = 0;
         let orgDmgBonus = 0;
-        let gemsPerBlockBonus = 1; // +1 Block (기본 1)
+        let gemsPerBlockBonus = 1;
 
         let ertSpeedLevel = 0;
         let ertDmgBonus = 0;
@@ -614,7 +614,6 @@
                 redBallCostText.textContent = '🔒 Need 10 Ert';
             }
 
-            // Update Preview Stats (DMG 및 명칭 동기화)
             orgStatPreview.textContent = `${(1 + orgDmgBonus).toFixed(1)} DMG | Speed: Lv.${ballSpeedLevel} | +${gemsPerBlockBonus} Block`;
             ertStatPreview.textContent = `${(10 + ertDmgBonus * 10).toFixed(1)} DMG | Speed: Lv.${ertSpeedLevel} | Target: ${ertMaxTargets}`;
             redStatPreview.textContent = `1.0 DMG | ${(3 + redRangeBonus).toFixed(1)} Range | Speed: Lv.${redSpeedLevel} | +${redLuckBonus}% Luck`;
@@ -940,7 +939,6 @@
             }
         });
 
-        // 럭 업그레이드 가격 10원 시작 (+5원 오름)
         buyRedLuckBtn.addEventListener('click', () => {
             if (gems >= redLuckCost) {
                 gems -= redLuckCost;
@@ -991,7 +989,6 @@
             const dmgMultiplier = isCriticalLuck ? 3 : 2;
             const splashRadius = pixelSize * explosionRangeBlocks;
 
-            // 폭발 파티클 시각 이펙트
             createParticles(x, y, isCriticalLuck ? '#ffea00' : '#ff3333', isCriticalLuck ? 20 : 10);
 
             for (let j = pixels.length - 1; j >= 0; j--) {
@@ -1122,7 +1119,7 @@
                 }
             }
 
-            // 3. bmb balls (벽/블록 충돌 시 3블록 / 럭 성공 시 10블록 폭발)
+            // 3. bmb balls
             for (let b = 0; b < redBalls.length; b++) {
                 const ball = redBalls[b];
 
@@ -1158,7 +1155,6 @@
                             ball.y += (distY / distance) * overlap;
                         }
 
-                        // 블록 충돌 시에도 폭발
                         triggerExplosion(ball.x, ball.y);
 
                         if (Math.abs(distX) > Math.abs(distY)) ball.dx = -ball.dx;
@@ -1177,25 +1173,37 @@
             }
         }
 
+        // 공 주변 및 시야 가시성 복원 (기존처럼 넓고 시원한 명암 비춰짐)
         function isBlockLit(r, c, px, py) {
+            // 이미 부서진 곳 시야
             if (lightGrid[r][c]) return 0.85;
 
-            const lightRadius = pixelSize * 3.5;
+            // 공 주변 시야 범위 계산 (공 근처면 밝게 보임)
+            const lightRadius = pixelSize * 5.0; // 시야 범위 확장
             for (let b = 0; b < balls.length; b++) {
-                if (Math.hypot(px - balls[b].x, py - balls[b].y) < lightRadius) return 0.85;
+                const dist = Math.hypot(px - balls[b].x, py - balls[b].y);
+                if (dist < lightRadius) {
+                    return 0.18 + (1 - dist / lightRadius) * 0.67;
+                }
             }
             for (let b = 0; b < ertBalls.length; b++) {
-                if (Math.hypot(px - ertBalls[b].x, py - ertBalls[b].y) < lightRadius) return 0.85;
+                const dist = Math.hypot(px - ertBalls[b].x, py - ertBalls[b].y);
+                if (dist < lightRadius) {
+                    return 0.18 + (1 - dist / lightRadius) * 0.67;
+                }
             }
             for (let b = 0; b < redBalls.length; b++) {
-                if (Math.hypot(px - redBalls[b].x, py - redBalls[b].y) < lightRadius) return 0.85;
+                const dist = Math.hypot(px - redBalls[b].x, py - redBalls[b].y);
+                if (dist < lightRadius) {
+                    return 0.18 + (1 - dist / lightRadius) * 0.67;
+                }
             }
 
-            return 0.0;
+            // 멀리 있는 광물도 아예 칠흑처럼 까맣지 않고 은은하게 보임
+            return 0.18;
         }
 
         function draw() {
-            // 잔상 마스킹 버그 완벽 수정
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
