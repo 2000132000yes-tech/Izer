@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pixel Break Game - Complete Edition</title>
+    <title>Pixel Miner Game</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -12,599 +16,1835 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #0b0b0b;
+            background-color: #000000;
             overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             user-select: none;
         }
+
         #gameContainer {
             position: relative;
             width: 100vmin;
             height: 100vmin;
-            max-width: 800px;
-            max-height: 800px;
+            max-width: 100vw;
+            max-height: 100vh;
+            overflow: hidden;
         }
+
         canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             background-color: #000000;
-            border: 2px solid #222;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
             touch-action: none;
-            display: block;
+            z-index: 1;
         }
+
         .ui-layer {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
+            top: 12px;
+            left: 12px;
+            right: 12px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            z-index: 10;
+            align-items: flex-start;
+            z-index: 100;
             pointer-events: none;
         }
-        .ui-group {
+
+        .left-ui {
             display: flex;
-            align-items: center;
-            gap: 15px;
+            flex-direction: column;
+            gap: 8px;
             pointer-events: auto;
         }
-        .stat-box {
+
+        .top-row {
             display: flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(20, 20, 20, 0.85);
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            font-weight: bold;
-            font-size: 15px;
-            color: #fff;
+            gap: 10px;
         }
+
+        .floor-box {
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #00e5ff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #00e5ff;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 229, 255, 0.3);
+        }
+
+        .currency-box {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #ffffff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
         .diamond-icon {
             width: 12px;
             height: 12px;
-            background-color: #f39c12;
+            background-color: #00e5ff;
             transform: rotate(45deg);
+            margin-right: 8px;
+            box-shadow: 0 0 8px #00e5ff;
+            flex-shrink: 0;
         }
-        .btn-top {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        .btn-top:hover {
-            background: #3a3a3a;
-        }
-        #upgrade-panel {
-            position: absolute;
-            top: -450px;
-            left: 0;
-            width: 100%;
-            height: 420px;
-            background: rgba(15, 15, 18, 0.95);
-            border-bottom: 2px solid #333;
-            border-radius: 0 0 16px 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
-            transition: top 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+        .ball-count-panel {
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 8px 12px;
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            box-sizing: border-box;
-            z-index: 20;
+            gap: 6px;
+            width: fit-content;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
         }
-        #upgrade-panel.open {
+
+        .ball-count-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .right-btn-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .dev-btn {
+            background: rgba(255, 0, 85, 0.8);
+            border: 1.5px solid #ff0055;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+            touch-action: manipulation;
+        }
+
+        .dev-btn:active {
+            transform: scale(0.92);
+        }
+
+        .plus-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1.5px solid #ffffff;
+            border-radius: 50%;
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            outline: none;
+            touch-action: manipulation;
+        }
+
+        .plus-btn:active {
+            transform: scale(0.90);
+            background: #333333;
+        }
+
+        .upgrade-panel {
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 82%;
+            background: rgba(15, 15, 15, 0.96);
+            border-bottom: 2px solid #00e5ff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9);
+            transition: top 0.3s ease;
+            z-index: 200;
+            padding: 16px;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .upgrade-panel.active {
             top: 0;
         }
+
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #333333;
             padding-bottom: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
-        .panel-header h2 {
-            margin: 0;
+
+        .panel-title {
             font-size: 18px;
-            color: #f39c12;
-        }
-        .close-btn {
-            background: #e74c3c;
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
             font-weight: bold;
+            color: #00e5ff;
         }
-        .upgrade-content {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+
+        .panel-header-right {
+            display: flex;
+            align-items: center;
             gap: 12px;
-            overflow-y: auto;
-            flex: 1;
-            padding-right: 5px;
         }
-        .upgrade-card {
-            background: rgba(30, 30, 35, 0.8);
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 10px 14px;
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px 8px;
+            touch-action: manipulation;
+        }
+
+        .upgrade-list {
+            flex: 1;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 12px;
+            padding-right: 4px;
         }
-        .card-top {
+
+        .upgrade-card {
+            background: #1e1e1e;
+            border: 1px solid #333333;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .card-title {
+
+        .upgrade-info {
+            display: flex;
+            align-items: center;
+            font-size: 15px;
             font-weight: bold;
-            font-size: 14px;
-            color: #ddd;
+            gap: 6px;
         }
-        .buy-btn {
-            background: #27ae60;
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 6px;
-            cursor: pointer;
+
+        .desc-label {
             font-size: 12px;
+            color: #888888;
+            font-weight: normal;
+        }
+
+        .stat-preview {
+            font-size: 12px;
+            color: #aaaaaa;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .orange-ball-icon, .yellow-ball-icon, .red-ball-icon, .purple-ball-icon {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .orange-ball-icon { background-color: orange; box-shadow: 0 0 8px rgba(255, 165, 0, 0.9); }
+        .yellow-ball-icon { background-color: #ffea00; box-shadow: 0 0 8px rgba(255, 234, 0, 0.9); }
+        .red-ball-icon { background-color: #ff3333; box-shadow: 0 0 8px rgba(255, 51, 51, 0.9); }
+        .purple-ball-icon { background-color: #b026ff; box-shadow: 0 0 8px rgba(176, 38, 255, 0.9); }
+
+        .upgrade-cost-btn {
+            background: #00e5ff;
+            color: #000000;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            touch-action: manipulation;
+            white-space: nowrap;
+        }
+
+        .upgrade-cost-btn:disabled {
+            background: #444444 !important;
+            color: #888888 !important;
+            cursor: not-allowed;
+        }
+
+        .upgrade-cost-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .toggle-arrow-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid #444444;
+            color: #aaaaaa;
+            width: 100%;
+            padding: 8px 0;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            touch-action: manipulation;
+        }
+
+        .toggle-arrow-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .sub-upgrade-container {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .sub-upgrade-container.open {
+            display: flex;
+        }
+
+        .section-title {
+            font-size: 13px;
+            color: #888888;
             font-weight: bold;
             display: flex;
             align-items: center;
             gap: 6px;
-            transition: background 0.2s;
-        }
-        .buy-btn:hover:not(:disabled) {
-            background: #2ecc71;
-        }
-        .buy-btn:disabled {
-            background: #555 !important;
-            color: #888 !important;
-            cursor: not-allowed;
-        }
-        .card-stats {
-            font-size: 11px;
-            color: #aaa;
-            line-height: 1.3;
-        }
-        .sub-label {
-            font-size: 10px;
-            color: #888;
-            margin-left: 4px;
+            margin-top: 4px;
         }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <div class="ui-layer">
-            <div class="ui-group">
-                <div class="stat-box">
-                    <div class="diamond-icon"></div>
-                    <span id="gemCount">0</span>
+            <div class="left-ui">
+                <div class="top-row">
+                    <div class="floor-box" id="floorText">1F</div>
+                    <div class="currency-box">
+                        <div class="diamond-icon"></div>
+                        <span class="gem-count-text">0</span>
+                    </div>
                 </div>
-                <div class="stat-box" id="floorDisplay" style="color: #3498db;">1F</div>
+
+                <div class="ball-count-panel">
+                    <div class="ball-count-row">
+                        <span class="orange-ball-icon"></span> : <span id="orgCountText">1</span>
+                    </div>
+                    <div class="ball-count-row">
+                        <span class="yellow-ball-icon"></span> : <span id="ertCountText">0</span>
+                    </div>
+                    <div class="ball-count-row">
+                        <span class="red-ball-icon"></span> : <span id="redCountText">0</span>
+                    </div>
+                    <div class="ball-count-row">
+                        <span class="purple-ball-icon"></span> : <span id="cblCountText">0</span>
+                    </div>
+                </div>
             </div>
-            <div class="ui-group">
-                <button class="btn-top" id="devBtn" style="background: #8e44ad;">DEV</button>
-                <button class="btn-top" id="upgradeToggleBtn">⚙️ Upgrade</button>
+
+            <div class="right-btn-group">
+                <button class="dev-btn" id="devBtn">DEV</button>
+                <button class="plus-btn" id="openUpgradeBtn">+</button>
             </div>
         </div>
 
-        <div id="upgrade-panel">
+        <div class="upgrade-panel" id="upgradePanel">
             <div class="panel-header">
-                <h2>Upgrades & Ball Shop</h2>
-                <button class="close-btn" id="closePanelBtn">✕</button>
+                <div class="panel-title">UPGRADES</div>
+                <div class="panel-header-right">
+                    <div class="currency-box" style="padding: 4px 10px; font-size: 15px;">
+                        <div class="diamond-icon" style="width: 10px; height: 10px; margin-right: 6px;"></div>
+                        <span class="gem-count-text">0</span>
+                    </div>
+                    <button class="close-btn" id="closeUpgradeBtn">✕</button>
+                </div>
             </div>
-            <div class="upgrade-content" id="upgradeList"></div>
+
+            <div class="upgrade-list">
+                <!-- org ball -->
+                <div class="upgrade-card">
+                    <div class="card-row">
+                        <div class="upgrade-info">
+                            +1 org ball <span class="orange-ball-icon" style="margin-left:4px;"></span>
+                        </div>
+                        <button class="upgrade-cost-btn" id="buyBallBtn">
+                            <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                            <span id="ballCostText">10</span>
+                        </button>
+                    </div>
+                    <div class="stat-preview" id="orgStatPreview">1.0 DMG | Speed: Lv.0 | +1 Block</div>
+                    <button class="toggle-arrow-btn" id="toggleOrangeBallBtn">
+                        <span id="arrowIcon">▼</span> org ball upgrades
+                    </button>
+                </div>
+
+                <div class="sub-upgrade-container" id="orangeBallSubMenu">
+                    <div class="section-title">
+                        <span class="orange-ball-icon"></span> org ball options
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Speed <span class="desc-label">(속도 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buySpeedBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="speedCostText">20</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Block <span class="desc-label">(획득량 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyBlockBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="blockCostText">500</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 DMG <span class="desc-label">(데미지 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyDmgBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="dmgCostText">500</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ert ball -->
+                <div class="upgrade-card">
+                    <div class="card-row">
+                        <div class="upgrade-info">
+                            +1 ert ball <span class="yellow-ball-icon" style="margin-left:4px;"></span>
+                        </div>
+                        <button class="upgrade-cost-btn" id="buyErtBallBtn" disabled>
+                            <span id="ertBallCostText">🔒 Need 10 Org</span>
+                        </button>
+                    </div>
+                    <div class="stat-preview" id="ertStatPreview">0.1 DMG | Speed: Lv.0 | Target: 1</div>
+                    <button class="toggle-arrow-btn" id="toggleYellowBallBtn" disabled>
+                        <span id="yellowArrowIcon">▼</span> ert ball upgrades
+                    </button>
+                </div>
+
+                <div class="sub-upgrade-container" id="yellowBallSubMenu">
+                    <div class="section-title">
+                        <span class="yellow-ball-icon"></span> ert ball options
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Speed <span class="desc-label">(속도 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyErtSpeedBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="ertSpeedCostText">20</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+0.1 DMG <span class="desc-label">(데미지 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyErtDmgBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="ertDmgCostText">100</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Target <span class="desc-label">(타겟 수 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyTargetBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="targetCostText">200</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- bmb ball -->
+                <div class="upgrade-card">
+                    <div class="card-row">
+                        <div class="upgrade-info">
+                            +1 bmb ball <span class="red-ball-icon" style="margin-left:4px;"></span>
+                        </div>
+                        <button class="upgrade-cost-btn" id="buyRedBallBtn" disabled>
+                            <span id="redBallCostText">🔒 Need 10 Ert</span>
+                        </button>
+                    </div>
+                    <div class="stat-preview" id="redStatPreview">1.0 DMG | 3 Range | Speed: Lv.0 | +0% Luck</div>
+                    <button class="toggle-arrow-btn" id="toggleRedBallBtn" disabled>
+                        <span id="redArrowIcon">▼</span> bmb ball upgrades
+                    </button>
+                </div>
+
+                <div class="sub-upgrade-container" id="redBallSubMenu">
+                    <div class="section-title">
+                        <span class="red-ball-icon"></span> bmb ball options
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Speed <span class="desc-label">(속도 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyRedSpeedBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="redSpeedCostText">20</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Range <span class="desc-label">(폭발 범위 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyRedRangeBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="redRangeCostText">50</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 DMG <span class="desc-label">(데미지 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyRedDmgBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="redDmgCostText">100</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1% Luck <span class="desc-label">(크리티컬 확률)</span></div>
+                            <button class="upgrade-cost-btn" id="buyRedLuckBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="redLuckCostText">10</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CBL ball (보라색 공) -->
+                <div class="upgrade-card">
+                    <div class="card-row">
+                        <div class="upgrade-info">
+                            +1 CBL ball <span class="purple-ball-icon" style="margin-left:4px;"></span>
+                        </div>
+                        <button class="upgrade-cost-btn" id="buyCblBallBtn" disabled>
+                            <span id="cblBallCostText">🔒 Need 10 Bmb</span>
+                        </button>
+                    </div>
+                    <div class="stat-preview" id="cblStatPreview">1.0 DMG | 1 Cog | Range: 1 | Speed: Lv.0</div>
+                    <button class="toggle-arrow-btn" id="togglePurpleBallBtn" disabled>
+                        <span id="purpleArrowIcon">▼</span> CBL ball upgrades
+                    </button>
+                </div>
+
+                <div class="sub-upgrade-container" id="purpleBallSubMenu">
+                    <div class="section-title">
+                        <span class="purple-ball-icon"></span> CBL ball options
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Cog Speed <span class="desc-label">(톱니 회전속도)</span></div>
+                            <button class="upgrade-cost-btn" id="buyCogSpeedBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="cogSpeedCostText">150</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Ball Speed <span class="desc-label">(공 이동속도)</span></div>
+                            <button class="upgrade-cost-btn" id="buyCblSpeedBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="cblSpeedCostText">150</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Cog <span class="desc-label">(톱니 개수 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyCogCountBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="cogCountCostText">100</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 DMG <span class="desc-label">(데미지 증가)</span></div>
+                            <button class="upgrade-cost-btn" id="buyCblDmgBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="cblDmgCostText">100</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Cog Range <span class="desc-label">(톱니 거리/크기)</span></div>
+                            <button class="upgrade-cost-btn" id="buyCogRangeBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="cogRangeCostText">100</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="gameCanvas"></canvas>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const gemCountTexts = document.querySelectorAll('.gem-count-text');
+        const floorText = document.getElementById('floorText');
+        
+        const orgCountText = document.getElementById('orgCountText');
+        const ertCountText = document.getElementById('ertCountText');
+        const redCountText = document.getElementById('redCountText');
+        const cblCountText = document.getElementById('cblCountText');
 
-        let gems = 0;
+        const devBtn = document.getElementById('devBtn');
+
+        const upgradePanel = document.getElementById('upgradePanel');
+        const openUpgradeBtn = document.getElementById('openUpgradeBtn');
+        const closeUpgradeBtn = document.getElementById('closeUpgradeBtn');
+        
+        const toggleOrangeBallBtn = document.getElementById('toggleOrangeBallBtn');
+        const orangeBallSubMenu = document.getElementById('orangeBallSubMenu');
+        const arrowIcon = document.getElementById('arrowIcon');
+
+        const toggleYellowBallBtn = document.getElementById('toggleYellowBallBtn');
+        const yellowBallSubMenu = document.getElementById('yellowBallSubMenu');
+        const yellowArrowIcon = document.getElementById('yellowArrowIcon');
+
+        const toggleRedBallBtn = document.getElementById('toggleRedBallBtn');
+        const redBallSubMenu = document.getElementById('redBallSubMenu');
+        const redArrowIcon = document.getElementById('redArrowIcon');
+
+        const togglePurpleBallBtn = document.getElementById('togglePurpleBallBtn');
+        const purpleBallSubMenu = document.getElementById('purpleBallSubMenu');
+        const purpleArrowIcon = document.getElementById('purpleArrowIcon');
+
+        // Buttons
+        const buyBallBtn = document.getElementById('buyBallBtn');
+        const ballCostText = document.getElementById('ballCostText');
+        const buySpeedBtn = document.getElementById('buySpeedBtn');
+        const speedCostText = document.getElementById('speedCostText');
+        const buyBlockBtn = document.getElementById('buyBlockBtn');
+        const blockCostText = document.getElementById('blockCostText');
+        const buyDmgBtn = document.getElementById('buyDmgBtn');
+        const dmgCostText = document.getElementById('dmgCostText');
+
+        const buyErtBallBtn = document.getElementById('buyErtBallBtn');
+        const ertBallCostText = document.getElementById('ertBallCostText');
+        const buyErtSpeedBtn = document.getElementById('buyErtSpeedBtn');
+        const ertSpeedCostText = document.getElementById('ertSpeedCostText');
+        const buyErtDmgBtn = document.getElementById('buyErtDmgBtn');
+        const ertDmgCostText = document.getElementById('ertDmgCostText');
+        const buyTargetBtn = document.getElementById('buyTargetBtn');
+        const targetCostText = document.getElementById('targetCostText');
+
+        const buyRedBallBtn = document.getElementById('buyRedBallBtn');
+        const redBallCostText = document.getElementById('redBallCostText');
+        const buyRedSpeedBtn = document.getElementById('buyRedSpeedBtn');
+        const redSpeedCostText = document.getElementById('redSpeedCostText');
+        const buyRedRangeBtn = document.getElementById('buyRedRangeBtn');
+        const redRangeCostText = document.getElementById('redRangeCostText');
+        const buyRedDmgBtn = document.getElementById('buyRedDmgBtn');
+        const redDmgCostText = document.getElementById('redDmgCostText');
+        const buyRedLuckBtn = document.getElementById('buyRedLuckBtn');
+        const redLuckCostText = document.getElementById('redLuckCostText');
+
+        const buyCblBallBtn = document.getElementById('buyCblBallBtn');
+        const cblBallCostText = document.getElementById('cblBallCostText');
+        const buyCogSpeedBtn = document.getElementById('buyCogSpeedBtn');
+        const cogSpeedCostText = document.getElementById('cogSpeedCostText');
+        const buyCblSpeedBtn = document.getElementById('buyCblSpeedBtn');
+        const cblSpeedCostText = document.getElementById('cblSpeedCostText');
+        const buyCogCountBtn = document.getElementById('buyCogCountBtn');
+        const cogCountCostText = document.getElementById('cogCountCostText');
+        const buyCblDmgBtn = document.getElementById('buyCblDmgBtn');
+        const cblDmgCostText = document.getElementById('cblDmgCostText');
+        const buyCogRangeBtn = document.getElementById('buyCogRangeBtn');
+        const cogRangeCostText = document.getElementById('cogRangeCostText');
+
+        // Stat Previews
+        const orgStatPreview = document.getElementById('orgStatPreview');
+        const ertStatPreview = document.getElementById('ertStatPreview');
+        const redStatPreview = document.getElementById('redStatPreview');
+        const cblStatPreview = document.getElementById('cblStatPreview');
+
+        let isDevMode = false;
+
         let currentFloor = 1;
-        let totalBlocksInFloor = 0;
-        let destroyedBlocksInFloor = 0;
+        let gems = 0;
 
-        const tierConfig = [
-            { color: '#888888', hp: 1, reward: 1 },
-            { color: '#f1c40f', hp: 2, reward: 5 },
-            { color: '#e67e22', hp: 3, reward: 10 },
-            { color: '#e74c3c', hp: 4, reward: 15 },
-            { color: '#2ecc71', hp: 5, reward: 20 },
-            { color: '#1abc9c', hp: 6, reward: 25 },
-            { color: '#3498db', hp: 7, reward: 30 },
-            { color: '#2980b9', hp: 8, reward: 35 },
-            { color: '#e056fd', hp: 9, reward: 40 },
-            { color: '#9b59b6', hp: 10, reward: 50 }
+        // Costs
+        let ballCost = 10;
+        let speedCost = 20;
+        let blockCost = 500;
+        let dmgCost = 500;
+
+        let ertBallCost = 50;
+        let ertSpeedCost = 20;
+        let ertDmgCost = 100;
+        let targetCost = 200;
+
+        let redBallCost = 100;
+        let redSpeedCost = 20;
+        let redRangeCost = 50;
+        let redDmgCost = 100;
+        let redLuckCost = 10;
+
+        let cblBallCost = 100;
+        let cogSpeedCost = 150;
+        let cblSpeedCost = 150;
+        let cogCountCost = 100;
+        let cblDmgCost = 100;
+        let cogRangeCost = 100;
+
+        // Upgrades
+        let ballSpeedLevel = 0;
+        let orgDmgBonus = 0;
+        let gemsPerBlockBonus = 1;
+
+        let ertSpeedLevel = 0;
+        let ertDmgBonus = 0;
+        let ertMaxTargets = 1;
+
+        let redSpeedLevel = 0;
+        let redRangeBonus = 0;
+        let redDmgBonus = 0;
+        let redLuckBonus = 0;
+
+        let cblCogSpeedLevel = 0;
+        let cblBallSpeedLevel = 0;
+        let cblCogCount = 1;
+        let cblDmgBonus = 0;
+        let cblCogRange = 1;
+
+        const oreTiers = [
+            { color: '#777777', hp: 1,  reward: 1 },
+            { color: '#ffea00', hp: 2,  reward: 5 },
+            { color: '#ff9900', hp: 3,  reward: 10 },
+            { color: '#ff3333', hp: 4,  reward: 15 },
+            { color: '#a6ff00', hp: 5,  reward: 20 },
+            { color: '#0066ff', hp: 6,  reward: 25 },
+            { color: '#00e5ff', hp: 7,  reward: 30 },
+            { color: '#ff66cc', hp: 8,  reward: 35 },
+            { color: '#9933ff', hp: 9,  reward: 40 },
+            { color: '#ffffff', hp: 10, reward: 45 }
         ];
 
-        let balls = [];
+        let baseGridCount = 50;
+        let gridCount = 50;
+        const size = Math.min(window.innerWidth, window.innerHeight);
+        canvas.width = size;
+        canvas.height = size;
+        let pixelSize = size / gridCount;
 
-        function spawnOrgBall() {
-            balls.push({
-                type: 'org',
-                x: canvas.width / 2,
-                y: canvas.height / 2,
-                radius: 2.5,
-                color: 'orange',
-                dx: 4,
-                dy: -3.5,
-                history: [],
-                maxHistory: 12,
-                active: true,
-                dmg: 1,
-                speedLv: 0,
-                sizeLv: 0
-            });
-        }
-        spawnOrgBall();
-
-        const upgrades = [
-            {
-                id: 'org_speed',
-                name: 'Org Ball: +1 Speed',
-                category: 'org',
-                cost: 50,
-                costInc: 50,
-                maxLevel: 5,
-                level: 0,
-                buy() {
-                    if (gems >= this.cost && this.level < this.maxLevel) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        this.level++;
-                        balls.forEach(b => { if(b.type === 'org') { b.dx *= 1.25; b.dy *= 1.25; b.speedLv = this.level; } });
-                    }
-                }
-            },
-            {
-                id: 'org_size',
-                name: 'Org Ball: Size',
-                category: 'org',
-                cost: 80,
-                costInc: 80,
-                maxLevel: 10,
-                level: 0,
-                buy() {
-                    const maxRadius = pixelSize * 0.75;
-                    if (gems >= this.cost && this.level < this.maxLevel) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        this.level++;
-                        balls.forEach(b => { 
-                            if(b.type === 'org') { 
-                                b.radius = Math.min(maxRadius, 2.5 + (this.level * 0.3));
-                                b.sizeLv = this.level;
-                            } 
-                        });
-                    }
-                }
-            },
-            {
-                id: 'org_dmg',
-                name: 'Org Ball: +1 DMG',
-                category: 'org',
-                cost: 100,
-                costInc: 100,
-                maxLevel: 20,
-                level: 0,
-                buy() {
-                    if (gems >= this.cost) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        this.level++;
-                        balls.forEach(b => { if(b.type === 'org') { b.dmg += 1; } });
-                    }
-                }
-            },
-            {
-                id: 'buy_ert',
-                name: 'Buy Ert Ball',
-                category: 'unlock',
-                cost: 50,
-                costInc: 50,
-                buy() {
-                    if (gems >= this.cost) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        balls.push({
-                            type: 'ert',
-                            x: canvas.width / 2,
-                            y: canvas.height / 2,
-                            radius: 2.5 * (2/3),
-                            color: '#f1c40f',
-                            dx: 3.5,
-                            dy: -3,
-                            history: [],
-                            maxHistory: 10,
-                            active: true,
-                            dpsBonus: 0,
-                            maxTargets: 1,
-                            speedLv: 0
-                        });
-                    }
-                }
-            },
-            {
-                id: 'ert_dmg',
-                name: 'Ert Ball: +0.5 DMG',
-                category: 'ert',
-                cost: 100,
-                costInc: 100,
-                level: 0,
-                buy() {
-                    if (gems >= this.cost) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        this.level++;
-                        balls.forEach(b => { if(b.type === 'ert') { b.dpsBonus += 0.5; } });
-                    }
-                }
-            },
-            {
-                id: 'ert_targets',
-                name: 'Ert Ball: 피격대상 추가',
-                category: 'ert',
-                cost: 500,
-                costInc: 500,
-                maxLevel: 9,
-                level: 0,
-                buy() {
-                    if (gems >= this.cost && this.level < this.maxLevel) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        this.level++;
-                        balls.forEach(b => { if(b.type === 'ert' && b.maxTargets < 10) { b.maxTargets++; } });
-                    }
-                }
-            },
-            {
-                id: 'buy_cbl',
-                name: 'Buy CBL Ball',
-                category: 'unlock',
-                cost: 100,
-                costInc: 150,
-                buy() {
-                    if (gems >= this.cost) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        balls.push({
-                            type: 'cbl',
-                            x: canvas.width / 2,
-                            y: canvas.height / 2,
-                            radius: 3,
-                            color: '#9b59b6',
-                            dx: 3,
-                            dy: -3,
-                            history: [],
-                            maxHistory: 10,
-                            active: true,
-                            gearsCount: 1,
-                            gearDmg: 1,
-                            gearDist: 25,
-                            gearSize: 6,
-                            gearAngle: 0,
-                            gearSpeed: 0.05
-                        });
-                    }
-                }
-            },
-            {
-                id: 'cbl_gears',
-                name: 'CBL: +1 톱니 (Max 6)',
-                category: 'cbl',
-                cost: 100,
-                costInc: 100,
-                level: 0,
-                maxLevel: 5,
-                buy() {
-                    if (gems >= this.cost && this.level < this.maxLevel) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        this.level++;
-                        balls.forEach(b => { if(b.type === 'cbl' && b.gearsCount < 6) { b.gearsCount++; } });
-                    }
-                }
-            },
-            {
-                id: 'cbl_dmg',
-                name: 'CBL: +1 DMG',
-                category: 'cbl',
-                cost: 100,
-                costInc: 100,
-                level: 0,
-                buy() {
-                    if (gems >= this.cost) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        this.level++;
-                        balls.forEach(b => { if(b.type === 'cbl') { b.gearDmg += 1; } });
-                    }
-                }
-            },
-            {
-                id: 'cbl_dist',
-                name: 'CBL: 톱니 범위 증가',
-                category: 'cbl',
-                cost: 100,
-                costInc: 100,
-                level: 0,
-                buy() {
-                    if (gems >= this.cost) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        this.level++;
-                        balls.forEach(b => { if(b.type === 'cbl') { b.gearDist += pixelSize; b.gearSize += 0.3; } });
-                    }
-                }
-            },
-            {
-                id: 'cbl_gspeed',
-                name: 'CBL: 톱니 속도 증가',
-                category: 'cbl',
-                cost: 150,
-                costInc: 200,
-                level: 0,
-                buy() {
-                    if (gems >= this.cost) {
-                        gems -= this.cost;
-                        this.cost += this.costInc;
-                        this.level++;
-                        balls.forEach(b => { if(b.type === 'cbl') { b.gearSpeed += 0.04; } });
-                    }
-                }
-            }
-        ];
-
-        const pixelSize = 6;
-        let pixels = [];
         let emptyLights = [];
+        let pixels = [];
+        let totalMineableBlocks = 0;
 
-        function initMap() {
+        const particles = [];
+        const ringEffects = [];
+
+        const balls = [];
+        const ertBalls = [];
+        const redBalls = [];
+        const cblBalls = [];
+
+        function updateGemUI() {
+            gemCountTexts.forEach(el => el.textContent = gems);
+            floorText.textContent = `${currentFloor}F`;
+
+            orgCountText.textContent = balls.length;
+            ertCountText.textContent = ertBalls.length;
+            redCountText.textContent = redBalls.length;
+            cblCountText.textContent = cblBalls.length;
+
+            checkButtonAffordability(buyBallBtn, ballCost);
+            checkButtonAffordability(buySpeedBtn, speedCost);
+            checkButtonAffordability(buyBlockBtn, blockCost);
+            checkButtonAffordability(buyDmgBtn, dmgCost);
+
+            checkButtonAffordability(buyErtSpeedBtn, ertSpeedCost);
+            checkButtonAffordability(buyErtDmgBtn, ertDmgCost);
+            checkButtonAffordability(buyTargetBtn, targetCost);
+
+            checkButtonAffordability(buyRedSpeedBtn, redSpeedCost);
+            checkButtonAffordability(buyRedRangeBtn, redRangeCost);
+            checkButtonAffordability(buyRedDmgBtn, redDmgCost);
+            checkButtonAffordability(buyRedLuckBtn, redLuckCost);
+
+            checkButtonAffordability(buyCogSpeedBtn, cogSpeedCost);
+            checkButtonAffordability(buyCblSpeedBtn, cblSpeedCost);
+            checkButtonAffordability(buyCogCountBtn, cogCountCost);
+            checkButtonAffordability(buyCblDmgBtn, cblDmgCost);
+            checkButtonAffordability(buyCogRangeBtn, cogRangeCost);
+
+            if (balls.length >= 10 || isDevMode) {
+                if (buyErtBallBtn.disabled && ertBallCostText.textContent.includes('Need')) {
+                    buyErtBallBtn.disabled = false;
+                    ertBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${ertBallCost}`;
+                }
+            } else {
+                buyErtBallBtn.disabled = true;
+                ertBallCostText.textContent = '🔒 Need 10 Org';
+            }
+
+            if (ertBalls.length > 0 || isDevMode) {
+                toggleYellowBallBtn.disabled = false;
+            } else {
+                toggleYellowBallBtn.disabled = true;
+                yellowBallSubMenu.classList.remove('open');
+                yellowArrowIcon.textContent = '▼';
+            }
+
+            if (ertBalls.length >= 10 || isDevMode) {
+                if (buyRedBallBtn.disabled && redBallCostText.textContent.includes('Need')) {
+                    buyRedBallBtn.disabled = false;
+                    redBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${redBallCost}`;
+                }
+            } else {
+                buyRedBallBtn.disabled = true;
+                redBallCostText.textContent = '🔒 Need 10 Ert';
+            }
+
+            if (redBalls.length > 0 || isDevMode) {
+                toggleRedBallBtn.disabled = false;
+            } else {
+                toggleRedBallBtn.disabled = true;
+                redBallSubMenu.classList.remove('open');
+                redArrowIcon.textContent = '▼';
+            }
+
+            if (redBalls.length >= 10 || isDevMode) {
+                if (buyCblBallBtn.disabled && cblBallCostText.textContent.includes('Need')) {
+                    buyCblBallBtn.disabled = false;
+                    cblBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${cblBallCost}`;
+                }
+            } else {
+                buyCblBallBtn.disabled = true;
+                cblBallCostText.textContent = '🔒 Need 10 Bmb';
+            }
+
+            if (cblBalls.length > 0 || isDevMode) {
+                togglePurpleBallBtn.disabled = false;
+            } else {
+                togglePurpleBallBtn.disabled = true;
+                purpleBallSubMenu.classList.remove('open');
+                purpleArrowIcon.textContent = '▼';
+            }
+
+            orgStatPreview.textContent = `${(1 + orgDmgBonus).toFixed(1)} DMG | Speed: Lv.${ballSpeedLevel} | +${gemsPerBlockBonus} Block`;
+            ertStatPreview.textContent = `${(0.1 + ertDmgBonus * 0.1).toFixed(1)} DMG | Speed: Lv.${ertSpeedLevel} | Target: ${ertMaxTargets}`;
+            redStatPreview.textContent = `${(1.0 + redDmgBonus).toFixed(1)} DMG | ${(3 + redRangeBonus).toFixed(1)} Range | Speed: Lv.${redSpeedLevel} | +${redLuckBonus}% Luck`;
+            cblStatPreview.textContent = `${(1.0 + cblDmgBonus).toFixed(1)} DMG | ${cblCogCount} Cog | Range: ${cblCogRange} | Speed: Lv.${cblBallSpeedLevel}`;
+        }
+
+        function checkButtonAffordability(btn, cost) {
+            if (btn.disabled && (btn.textContent.includes('🔒') || btn.textContent === 'MAX')) return;
+            if (gems < cost) {
+                btn.disabled = true;
+            } else {
+                btn.disabled = false;
+            }
+        }
+
+        devBtn.addEventListener('click', () => {
+            gems += 10000;
+            isDevMode = true;
+            updateGemUI();
+        });
+
+        openUpgradeBtn.addEventListener('click', () => upgradePanel.classList.add('active'));
+        closeUpgradeBtn.addEventListener('click', () => upgradePanel.classList.remove('active'));
+
+        toggleOrangeBallBtn.addEventListener('click', () => {
+            const isOpen = orangeBallSubMenu.classList.toggle('open');
+            arrowIcon.textContent = isOpen ? '▲' : '▼';
+        });
+
+        toggleYellowBallBtn.addEventListener('click', () => {
+            if (ertBalls.length === 0 && !isDevMode) return;
+            const isOpen = yellowBallSubMenu.classList.toggle('open');
+            yellowArrowIcon.textContent = isOpen ? '▲' : '▼';
+        });
+
+        toggleRedBallBtn.addEventListener('click', () => {
+            if (redBalls.length === 0 && !isDevMode) return;
+            const isOpen = redBallSubMenu.classList.toggle('open');
+            redArrowIcon.textContent = isOpen ? '▲' : '▼';
+        });
+
+        togglePurpleBallBtn.addEventListener('click', () => {
+            if (cblBalls.length === 0 && !isDevMode) return;
+            const isOpen = purpleBallSubMenu.classList.toggle('open');
+            purpleArrowIcon.textContent = isOpen ? '▲' : '▼';
+        });
+
+        function initFloorMap() {
+            pixelSize = size / gridCount;
             pixels = [];
             emptyLights = [];
-            const cols = Math.floor(canvas.width / pixelSize);
-            const rows = Math.floor(canvas.height / pixelSize);
-            let grid = Array(rows).fill(0).map(() => Array(cols).fill(-1));
 
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    const px = c * pixelSize;
-                    const py = r * pixelSize;
-                    if (Math.hypot((px + pixelSize/2) - canvas.width/2, (py + pixelSize/2) - canvas.height/2) < 40) continue;
+            const centerStart = Math.floor(gridCount / 2) - 1;
+            const centerEnd = centerStart + 2;
 
-                    if (Math.random() < 0.008) {
-                        grid[r][c] = 99;
+            for (let r = centerStart; r <= centerEnd; r++) {
+                for (let c = centerStart; c <= centerEnd; c++) {
+                    emptyLights.push({ x: (c + 0.5) * pixelSize, y: (r + 0.5) * pixelSize });
+                }
+            }
+
+            const gridMap = Array.from({ length: gridCount }, () => Array(gridCount).fill(null));
+
+            const bedrockCount = Math.floor(gridCount * gridCount * 0.008);
+            for (let i = 0; i < bedrockCount; i++) {
+                const r = Math.floor(Math.random() * gridCount);
+                const c = Math.floor(Math.random() * gridCount);
+                if (!(r >= centerStart && r <= centerEnd && c >= centerStart && c <= centerEnd)) {
+                    gridMap[r][c] = { isBedrock: true };
+                }
+            }
+
+            const floorBonus = Math.min(5, currentFloor - 1);
+            for (let tier = 1; tier < oreTiers.length; tier++) {
+                const chance = Math.min(1.0, ((oreTiers.length - tier) / oreTiers.length) + (floorBonus * 0.08));
+                const veinCount = Math.floor(chance * 5) + 1;
+
+                for (let v = 0; v < veinCount; v++) {
+                    let vr = Math.floor(Math.random() * gridCount);
+                    let vc = Math.floor(Math.random() * gridCount);
+
+                    const veinSize = Math.floor(chance * 6) + 2;
+                    for (let s = 0; s < veinSize; s++) {
+                        const nr = vr + Math.floor(Math.random() * 3) - 1;
+                        const nc = vc + Math.floor(Math.random() * 3) - 1;
+
+                        if (nr >= 0 && nr < gridCount && nc >= 0 && nc < gridCount) {
+                            if (!(nr >= centerStart && nr <= centerEnd && nc >= centerStart && nc <= centerEnd)) {
+                                if (!gridMap[nr][nc]) {
+                                    gridMap[nr][nc] = { tier: tier };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            totalMineableBlocks = 0;
+            for (let r = 0; r < gridCount; r++) {
+                for (let c = 0; c < gridCount; c++) {
+                    if (r >= centerStart && r <= centerEnd && c >= centerStart && c <= centerEnd) {
                         continue;
                     }
-
-                    let cumulative = 0;
-                    for(let t = 0; t < tierConfig.length; t++) {
-                        cumulative += (0.1 + (tierConfig.length - t) * 0.05);
+                    const cell = gridMap[r][c];
+                    if (cell && cell.isBedrock) {
+                        pixels.push({
+                            r: r, c: c,
+                            x: c * pixelSize, y: r * pixelSize,
+                            isBedrock: true, color: '#ffffff'
+                        });
+                    } else {
+                        const tierIndex = cell ? cell.tier : 0;
+                        const tierData = oreTiers[tierIndex];
+                        const hpVal = tierData.hp + (currentFloor - 1);
+                        pixels.push({
+                            r: r, c: c,
+                            x: c * pixelSize, y: r * pixelSize,
+                            tier: tierIndex,
+                            hp: hpVal,
+                            maxHp: hpVal,
+                            isBedrock: false
+                        });
+                        totalMineableBlocks++;
                     }
-                    let pickRand = Math.random() * cumulative;
-                    let currentSum = 0;
-                    let tier = 0;
-                    for(let t = 0; t < tierConfig.length; t++) {
-                        let weight = 0.1 + (tierConfig.length - t) * 0.05;
-                        currentSum += weight;
-                        if(pickRand <= currentSum) { tier = t; break; }
-                    }
-                    grid[r][c] = tier;
                 }
             }
 
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    let val = grid[r][c];
-                    if (val === -1) continue;
-                    let isBedrock = (val === 99);
-                    let tier = isBedrock ? 0 : val;
-                    let maxHp = isBedrock ? 99999 : (tierConfig[tier].hp + (currentFloor - 1));
-
-                    pixels.push({
-                        x: c * pixelSize,
-                        y: r * pixelSize,
-                        tier: tier,
-                        hp: maxHp,
-                        maxHp: maxHp,
-                        isBedrock: isBedrock,
-                        active: true
-                    });
-                }
-            }
-            totalBlocksInFloor = pixels.filter(p => !p.isBedrock).length;
-            destroyedBlocksInFloor = 0;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            [...balls, ...ertBalls, ...redBalls, ...cblBalls].forEach(ball => {
+                ball.x = centerX;
+                ball.y = centerY;
+                ball.radius = pixelSize * 0.35;
+            });
         }
 
-        initMap();
+        function nextFloor() {
+            currentFloor++;
+            if (gridCount < baseGridCount + 5) {
+                gridCount += 1;
+            }
+            initFloorMap();
+            updateGemUI();
+        }
 
-        let particles = [];
-        function createParticles(x, y, color) {
-            let count = Math.floor(Math.random() * 6) + 5;
+        function createBall() {
+            const angle = Math.random() * Math.PI * 2;
+            const baseSpeed = pixelSize * 0.2 + (ballSpeedLevel * pixelSize * 0.05);
+
+            balls.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: pixelSize * 0.35,
+                dx: Math.cos(angle) * baseSpeed,
+                dy: Math.sin(angle) * baseSpeed,
+                color: '#ff9900'
+            });
+            updateGemUI();
+        }
+
+        function createErtBall() {
+            const angle = Math.random() * Math.PI * 2;
+            const baseSpeed = pixelSize * 0.22 + (ertSpeedLevel * pixelSize * 0.05);
+
+            ertBalls.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: pixelSize * 0.32,
+                dx: Math.cos(angle) * baseSpeed,
+                dy: Math.sin(angle) * baseSpeed,
+                color: '#ffea00',
+                targets: []
+            });
+            updateGemUI();
+        }
+
+        function createRedBall() {
+            const angle = Math.random() * Math.PI * 2;
+            const baseSpeed = pixelSize * 0.2 + (redSpeedLevel * pixelSize * 0.05);
+
+            redBalls.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: pixelSize * 0.35,
+                dx: Math.cos(angle) * baseSpeed,
+                dy: Math.sin(angle) * baseSpeed,
+                color: '#ff3333'
+            });
+            updateGemUI();
+        }
+
+        function createCblBall() {
+            const angle = Math.random() * Math.PI * 2;
+            const baseSpeed = pixelSize * 0.2 + (cblBallSpeedLevel * pixelSize * 0.05);
+
+            cblBalls.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: pixelSize * 0.35,
+                dx: Math.cos(angle) * baseSpeed,
+                dy: Math.sin(angle) * baseSpeed,
+                color: '#b026ff',
+                cogAngle: 0
+            });
+            updateGemUI();
+        }
+
+        initFloorMap();
+        createBall();
+
+        buyBallBtn.addEventListener('click', () => {
+            if (gems >= ballCost) {
+                gems -= ballCost;
+                ballCost += 10;
+                ballCostText.textContent = ballCost;
+                createBall();
+            }
+        });
+
+        buySpeedBtn.addEventListener('click', () => {
+            if (gems >= speedCost && ballSpeedLevel < 5) {
+                gems -= speedCost;
+                ballSpeedLevel += 1;
+                speedCost += 20;
+                if (ballSpeedLevel >= 5) {
+                    speedCostText.textContent = "MAX";
+                    buySpeedBtn.disabled = true;
+                } else {
+                    speedCostText.textContent = speedCost;
+                }
+                balls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.2 + (ballSpeedLevel * pixelSize * 0.05);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+                updateGemUI();
+            }
+        });
+
+        buyBlockBtn.addEventListener('click', () => {
+            if (gems >= blockCost) {
+                gems -= blockCost;
+                blockCost += 500;
+                blockCostText.textContent = blockCost;
+                gemsPerBlockBonus += 1;
+                updateGemUI();
+            }
+        });
+
+        buyDmgBtn.addEventListener('click', () => {
+            if (gems >= dmgCost) {
+                gems -= dmgCost;
+                dmgCost += 500;
+                dmgCostText.textContent = dmgCost;
+                orgDmgBonus += 1;
+                updateGemUI();
+            }
+        });
+
+        buyErtBallBtn.addEventListener('click', () => {
+            if (gems >= ertBallCost && (balls.length >= 10 || isDevMode)) {
+                gems -= ertBallCost;
+                ertBallCost += 50;
+                ertBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${ertBallCost}`;
+                createErtBall();
+            }
+        });
+
+        buyErtSpeedBtn.addEventListener('click', () => {
+            if (gems >= ertSpeedCost && ertSpeedLevel < 5) {
+                gems -= ertSpeedCost;
+                ertSpeedLevel += 1;
+                ertSpeedCost += 20;
+                if (ertSpeedLevel >= 5) {
+                    ertSpeedCostText.textContent = "MAX";
+                    buyErtSpeedBtn.disabled = true;
+                } else {
+                    ertSpeedCostText.textContent = ertSpeedCost;
+                }
+                ertBalls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.22 + (ertSpeedLevel * pixelSize * 0.05);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+                updateGemUI();
+            }
+        });
+
+        buyErtDmgBtn.addEventListener('click', () => {
+            if (gems >= ertDmgCost) {
+                gems -= ertDmgCost;
+                ertDmgBonus += 1;
+                ertDmgCost += 100;
+                ertDmgCostText.textContent = ertDmgCost;
+                updateGemUI();
+            }
+        });
+
+        buyTargetBtn.addEventListener('click', () => {
+            if (gems >= targetCost && ertMaxTargets < 10) {
+                gems -= targetCost;
+                ertMaxTargets += 1;
+                targetCost += 200;
+                if (ertMaxTargets >= 10) {
+                    targetCostText.textContent = "MAX";
+                    buyTargetBtn.disabled = true;
+                } else {
+                    targetCostText.textContent = targetCost;
+                }
+                updateGemUI();
+            }
+        });
+
+        buyRedBallBtn.addEventListener('click', () => {
+            if (gems >= redBallCost && (ertBalls.length >= 10 || isDevMode)) {
+                gems -= redBallCost;
+                redBallCost += 100;
+                redBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${redBallCost}`;
+                createRedBall();
+            }
+        });
+
+        buyRedSpeedBtn.addEventListener('click', () => {
+            if (gems >= redSpeedCost && redSpeedLevel < 5) {
+                gems -= redSpeedCost;
+                redSpeedLevel += 1;
+                redSpeedCost += 20;
+                if (redSpeedLevel >= 5) {
+                    redSpeedCostText.textContent = "MAX";
+                    buyRedSpeedBtn.disabled = true;
+                } else {
+                    redSpeedCostText.textContent = redSpeedCost;
+                }
+                redBalls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.2 + (redSpeedLevel * pixelSize * 0.05);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+                updateGemUI();
+            }
+        });
+
+        buyRedRangeBtn.addEventListener('click', () => {
+            if (gems >= redRangeCost) {
+                gems -= redRangeCost;
+                redRangeBonus += 1;
+                redRangeCost += 50;
+                redRangeCostText.textContent = redRangeCost;
+                updateGemUI();
+            }
+        });
+
+        buyRedDmgBtn.addEventListener('click', () => {
+            if (gems >= redDmgCost) {
+                gems -= redDmgCost;
+                redDmgBonus += 1;
+                redDmgCost += 100;
+                redDmgCostText.textContent = redDmgCost;
+                updateGemUI();
+            }
+        });
+
+        buyRedLuckBtn.addEventListener('click', () => {
+            if (gems >= redLuckCost && redLuckBonus < 100) {
+                gems -= redLuckCost;
+                redLuckBonus += 1;
+                redLuckCost += 5;
+                if (redLuckBonus >= 100) {
+                    redLuckCostText.textContent = "MAX";
+                    buyRedLuckBtn.disabled = true;
+                } else {
+                    redLuckCostText.textContent = redLuckCost;
+                }
+                updateGemUI();
+            }
+        });
+
+        buyCblBallBtn.addEventListener('click', () => {
+            if (gems >= cblBallCost && (redBalls.length >= 10 || isDevMode)) {
+                gems -= cblBallCost;
+                cblBallCost += 150;
+                cblBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${cblBallCost}`;
+                createCblBall();
+            }
+        });
+
+        buyCogSpeedBtn.addEventListener('click', () => {
+            if (gems >= cogSpeedCost) {
+                gems -= cogSpeedCost;
+                cblCogSpeedLevel += 1;
+                cogSpeedCost += 200;
+                cogSpeedCostText.textContent = cogSpeedCost;
+                updateGemUI();
+            }
+        });
+
+        buyCblSpeedBtn.addEventListener('click', () => {
+            if (gems >= cblSpeedCost) {
+                gems -= cblSpeedCost;
+                cblBallSpeedLevel += 1;
+                cblSpeedCost += 200;
+                cblSpeedCostText.textContent = cblSpeedCost;
+
+                cblBalls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.2 + (cblBallSpeedLevel * pixelSize * 0.05);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+                updateGemUI();
+            }
+        });
+
+        buyCogCountBtn.addEventListener('click', () => {
+            if (gems >= cogCountCost && cblCogCount < 6) {
+                gems -= cogCountCost;
+                cblCogCount += 1;
+                cogCountCost += 100;
+                if (cblCogCount >= 6) {
+                    cogCountCostText.textContent = "MAX";
+                    buyCogCountBtn.disabled = true;
+                } else {
+                    cogCountCostText.textContent = cogCountCost;
+                }
+                updateGemUI();
+            }
+        });
+
+        buyCblDmgBtn.addEventListener('click', () => {
+            if (gems >= cblDmgCost) {
+                gems -= cblDmgCost;
+                cblDmgBonus += 1;
+                cblDmgCost += 100;
+                cblDmgCostText.textContent = cblDmgCost;
+                updateGemUI();
+            }
+        });
+
+        buyCogRangeBtn.addEventListener('click', () => {
+            if (gems >= cogRangeCost) {
+                gems -= cogRangeCost;
+                cblCogRange += 1;
+                cogRangeCost += 100;
+                cogRangeCostText.textContent = cogRangeCost;
+                updateGemUI();
+            }
+        });
+
+        function createBreakParticles(x, y, color, count = 6) {
             for (let i = 0; i < count; i++) {
-                let angle = Math.random() * Math.PI * 2;
-                let speed = Math.random() * 3 + 1;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 1.8 + 0.6;
                 particles.push({
                     x: x, y: y,
                     dx: Math.cos(angle) * speed,
                     dy: Math.sin(angle) * speed,
-                    radius: Math.random() * 1.5 + 1,
-                    color: color,
-                    alpha: 1,
-                    decay: 0.05
+                    size: pixelSize * 0.3,
+                    alpha: 1.0,
+                    color: color
                 });
             }
         }
 
-        function update() {
-            balls.forEach(ball => {
-                if (!ball.active) return;
+        function createExplosionRing(x, y, maxRadius, color = '#ff3333') {
+            ringEffects.push({
+                x: x,
+                y: y,
+                currentRadius: pixelSize * 0.5,
+                maxRadius: maxRadius,
+                alpha: 0.9,
+                color: color
+            });
+        }
 
-                ball.history.push({ x: ball.x, y: ball.y });
-                if (ball.history.length > ball.maxHistory) ball.history.shift();
+        function destroyBlock(index, p) {
+            const blockCenterX = p.x + pixelSize / 2;
+            const blockCenterY = p.y + pixelSize / 2;
+
+            emptyLights.push({ x: blockCenterX, y: blockCenterY });
+
+            const baseReward = oreTiers[p.tier].reward;
+            gems += baseReward * gemsPerBlockBonus;
+            updateGemUI();
+
+            pixels.splice(index, 1);
+
+            const remainingMineable = pixels.filter(px => !px.isBedrock).length;
+            if (remainingMineable <= totalMineableBlocks * 0.1) {
+                nextFloor();
+            }
+        }
+
+        function triggerExplosion(x, y) {
+            const isCriticalLuck = Math.random() * 100 < redLuckBonus;
+            const explosionRangeBlocks = isCriticalLuck ? 10 : (3 + redRangeBonus);
+            const dmgMultiplier = isCriticalLuck ? 3 : 2;
+            const splashRadius = pixelSize * explosionRangeBlocks;
+
+            createExplosionRing(x, y, splashRadius, isCriticalLuck ? '#ffea00' : '#ff3333');
+
+            const dmg = (1.0 + redDmgBonus) * dmgMultiplier;
+
+            for (let j = pixels.length - 1; j >= 0; j--) {
+                const sp = pixels[j];
+                if (sp.isBedrock) continue;
+                const spDist = Math.hypot(x - (sp.x + pixelSize / 2), y - (sp.y + pixelSize / 2));
+                if (spDist <= splashRadius) {
+                    sp.hp -= dmg;
+                    if (sp.hp <= 0) destroyBlock(j, sp);
+                }
+            }
+        }
+
+        function update() {
+            // 1. org balls
+            for (let b = 0; b < balls.length; b++) {
+                const ball = balls[b];
 
                 ball.x += ball.dx;
                 ball.y += ball.dy;
 
-                if (ball.x - ball.radius <= 0) { ball.x = ball.radius; ball.dx *= -1; }
-                if (ball.x + ball.radius >= canvas.width) { ball.x = canvas.width - ball.radius; ball.dx *= -1; }
-                if (ball.y - ball.radius <= 0) { ball.y = ball.radius; ball.dy *= -1; }
-                if (ball.y + ball.radius >= canvas.height) { ball.y = canvas.height - ball.radius; ball.dy *= -1; }
+                if (ball.x - ball.radius < 0) { ball.x = ball.radius; ball.dx = Math.abs(ball.dx); }
+                else if (ball.x + ball.radius > canvas.width) { ball.x = canvas.width - ball.radius; ball.dx = -Math.abs(ball.dx); }
 
-                for (let i = 0; i < pixels.length; i++) {
-                    let p = pixels[i];
-                    if (!p.active) continue;
+                if (ball.y - ball.radius < 0) { ball.y = ball.radius; ball.dy = Math.abs(ball.dy); }
+                else if (ball.y + ball.radius > canvas.height) { ball.y = canvas.height - ball.radius; ball.dy = -Math.abs(ball.dy); }
 
-                    let bx = p.x, by = p.y, bw = pixelSize - 0.5, bh = pixelSize - 0.5;
-                    let closestX = Math.max(bx, Math.min(ball.x, bx + bw));
-                    let closestY = Math.max(by, Math.min(ball.y, by + bh));
+                for (let i = pixels.length - 1; i >= 0; i--) {
+                    const p = pixels[i];
+                    const closestX = Math.max(p.x, Math.min(ball.x, p.x + pixelSize));
+                    const closestY = Math.max(p.y, Math.min(ball.y, p.y + pixelSize));
+                    const distX = ball.x - closestX;
+                    const distY = ball.y - closestY;
+                    const distance = Math.hypot(distX, distY);
 
-                    if (Math.hypot(ball.x - closestX, ball.y - closestY) < ball.radius) {
-                        let overlapX = ball.radius - Math.abs(ball.x - (bx + bw/2));
-                        let overlapY = ball.radius - Math.abs(ball.y - (by + bh/2));
-                        if (overlapX < overlapY) ball.dx *= -1; else ball.dy *= -1;
+                    if (distance < ball.radius) {
+                        const overlap = ball.radius - distance;
+                        if (distance > 0) {
+                            ball.x += (distX / distance) * overlap;
+                            ball.y += (distY / distance) * overlap;
+                        }
 
                         if (!p.isBedrock) {
-                            let dmg = ball.type === 'org' ? ball.dmg : 1;
-                            p.hp -= dmg;
-                            if (p.hp <= 0) {
-                                p.active = false;
-                                destroyedBlocksInFloor++;
-                                emptyLights.push({ x: bx + bw/2, y: by + bh/2 });
-                                createParticles(bx + bw/2, by + bh/2, tierConfig[p.tier].color);
-                                gems += tierConfig[p.tier].reward;
-                            }
+                            createBreakParticles(p.x + pixelSize / 2, p.y + pixelSize / 2, oreTiers[p.tier].color, 6);
+                            p.hp -= (1 + orgDmgBonus);
+                            if (p.hp <= 0) destroyBlock(i, p);
                         }
+
+                        if (Math.abs(distX) > Math.abs(distY)) ball.dx = -ball.dx;
+                        else ball.dy = -ball.dy;
+                        break;
+                    }
+                }
+            }
+
+            // 2. ert balls
+            const laserRange = pixelSize * 5;
+            const dps = 1.0 + (ertDmgBonus * 1.0);
+            const frameDmg = dps / 60;
+
+            for (let b = 0; b < ertBalls.length; b++) {
+                const ball = ertBalls[b];
+
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+
+                if (ball.x - ball.radius < 0) { ball.x = ball.radius; ball.dx = Math.abs(ball.dx); }
+                else if (ball.x + ball.radius > canvas.width) { ball.x = canvas.width - ball.radius; ball.dx = -Math.abs(ball.dx); }
+
+                if (ball.y - ball.radius < 0) { ball.y = ball.radius; ball.dy = Math.abs(ball.dy); }
+                else if (ball.y + ball.radius > canvas.height) { ball.y = canvas.height - ball.radius; ball.dy = -Math.abs(ball.dy); }
+
+                for (let i = pixels.length - 1; i >= 0; i--) {
+                    const p = pixels[i];
+                    const closestX = Math.max(p.x, Math.min(ball.x, p.x + pixelSize));
+                    const closestY = Math.max(p.y, Math.min(ball.y, p.y + pixelSize));
+                    const distX = ball.x - closestX;
+                    const distY = ball.y - closestY;
+                    const distance = Math.hypot(distX, distY);
+
+                    if (distance < ball.radius) {
+                        const overlap = ball.radius - distance;
+                        if (distance > 0) {
+                            ball.x += (distX / distance) * overlap;
+                            ball.y += (distY / distance) * overlap;
+                        }
+                        if (Math.abs(distX) > Math.abs(distY)) ball.dx = -ball.dx;
+                        else ball.dy = -ball.dy;
                         break;
                     }
                 }
 
-                // 노란공(ert) 레이저 공격 및 지속 데미지 (초당 0.1 틱당 0.1)
-                if (ball.type === 'ert') {
-                    let range = pixelSize * 5;
-                    let validBlocks = pixels.filter(p => p.active && !p.isBedrock && Math.hypot(ball.x - (p.x + pixelSize/2), ball.y - (p.y + pixelSize/2)) <= range);
-                    validBlocks.sort((a, b) => Math.hypot(ball.x - (a.x + pixelSize/2), ball.y - (a.y + pixelSize/2)) - Math.hypot(ball.x - (b.x + pixelSize/2), ball.y - (b.y + pixelSize/2)));
+                const candidateBlocks = [];
+                for (let i = 0; i < pixels.length; i++) {
+                    const p = pixels[i];
+                    if (p.isBedrock) continue;
+                    const blockCenterX = p.x + pixelSize / 2;
+                    const blockCenterY = p.y + pixelSize / 2;
+                    const dist = Math.hypot(ball.x - blockCenterX, ball.y - blockCenterY);
 
-                    ball.activeTargets = validBlocks.slice(0, ball.maxTargets);
-                    ball.activeTargets.forEach(p => {
-                        p.hp -= (0.1 + ball.dpsBonus);
-                        if (p.hp <= 0) {
-                            p.active = false;
-                            destroyedBlocksInFloor++;
+                    if (dist <= laserRange) {
+                        candidateBlocks.push({ pixel: p, dist: dist, cx: blockCenterX, cy: blockCenterY });
+                    }
+                }
+
+                candidateBlocks.sort((a, b) => a.dist - b.dist);
+                const activeTargets = candidateBlocks.slice(0, ertMaxTargets);
+                ball.targets = activeTargets;
+
+                for (let t = 0; t < activeTargets.length; t++) {
+                    const target = activeTargets[t];
+                    const p = target.pixel;
+                    p.hp -= frameDmg;
+
+                    if (p.hp <= 0) {
+                        const index = pixels.indexOf(p);
+                        if (index !== -1) {
+                            createBreakParticles(target.cx, target.cy, oreTiers[p.tier].color, 6);
+                            destroyBlock(index, p);
+                        }
+                    }
+                }
+            }
+
+            // 3. bmb balls
+            for (let b = 0; b < redBalls.length; b++) {
+                const ball = redBalls[b];
+
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+
+                let wallHit = false;
+                if (ball.x - ball.radius < 0) { ball.x = ball.radius; ball.dx = Math.abs(ball.dx); wallHit = true; }
+                else if (ball.x + ball.radius > canvas.width) { ball.x = canvas.width - ball.radius; ball.dx = -Math.abs(ball.dx); wallHit = true; }
+
+                if (ball.y - ball.radius < 0) { ball.y = ball.radius; ball.dy = Math.abs(ball.dy); wallHit = true; }
+                else if (ball.y + ball.radius > canvas.height) { ball.y = canvas.height - ball.radius; ball.dy = -Math.abs(ball.dy); wallHit = true; }
+
+                if (wallHit) {
+                    triggerExplosion(ball.x, ball.y);
+                }
+
+                for (let i = pixels.length - 1; i >= 0; i--) {
+                    const p = pixels[i];
+                    const closestX = Math.max(p.x, Math.min(ball.x, p.x + pixelSize));
+                    const closestY = Math.max(p.y, Math.min(ball.y, p.y + pixelSize));
+                    const distX = ball.x - closestX;
+                    const distY = ball.y - closestY;
+                    const distance = Math.hypot(distX, distY);
+
+                    if (distance < ball.radius) {
+                        const overlap = ball.radius - distance;
+                        if (distance > 0) {
+                            ball.x += (distX / distance) * overlap;
+                            ball.y += (distY / distance) * overlap;
+                        }
+
+                        triggerExplosion(ball.x, ball.y);
+
+                        if (Math.abs(distX) > Math.abs(distY)) ball.dx = -ball.dx;
+                        else ball.dy = -ball.dy;
+                        break;
+                    }
+                }
+            }
+
+            // 4. CBL balls (기존의 뭉툭하고 둥근 톱니바퀴 스타일로 원복)
+            const cogSpeed = 0.08 + (cblCogSpeedLevel * 0.04);
+            const cogDistOffset = pixelSize * (1.0 + (cblCogRange - 1) * 1.0);
+            const cogBaseRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.3);
+            const cblDamage = 1.0 + cblDmgBonus;
+
+            for (let b = 0; b < cblBalls.length; b++) {
+                const ball = cblBalls[b];
+
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+
+                ball.cogAngle += cogSpeed;
+
+                if (ball.x - ball.radius < 0) { ball.x = ball.radius; ball.dx = Math.abs(ball.dx); }
+                else if (ball.x + ball.radius > canvas.width) { ball.x = canvas.width - ball.radius; ball.dx = -Math.abs(ball.dx); }
+
+                if (ball.y - ball.radius < 0) { ball.y = ball.radius; ball.dy = Math.abs(ball.dy); }
+                else if (ball.y + ball.radius > canvas.height) { ball.y = canvas.height - ball.radius; ball.dy = -Math.abs(ball.dy); }
+
+                for (let i = pixels.length - 1; i >= 0; i--) {
+                    const p = pixels[i];
+                    const closestX = Math.max(p.x, Math.min(ball.x, p.x + pixelSize));
+                    const closestY = Math.max(p.y, Math.min(ball.y, p.y + pixelSize));
+                    const distX = ball.x - closestX;
+                    const distY = ball.y - closestY;
+                    const distance = Math.hypot(distX, distY);
+
+                    if (distance < ball.radius) {
+                        const overlap = ball.radius - distance;
+                        if (distance > 0) {
+                            ball.x += (distX / distance) * overlap;
+                            ball.y += (distY / distance) * overlap;
+                        }
+                        if (Math.abs(distX) > Math.abs(distY)) ball.dx = -ball.dx;
+                        else ball.dy = -ball.dy;
+                        break;
+                    }
+                }
+
+                for (let c = 0; c < cblCogCount; c++) {
+                    const angle = ball.cogAngle + (Math.PI * 2 / cblCogCount) * c;
+                    const cogX = ball.x + Math.cos(angle) * (ball.radius + cogDistOffset);
+                    const cogY = ball.y + Math.sin(angle) * (ball.radius + cogDistOffset);
+
+                    for (let i = pixels.length - 1; i >= 0; i--) {
+                        const p = pixels[i];
+                        if (p.isBedrock) continue;
+
+                        const closestX = Math.max(p.x, Math.min(cogX, p.x + pixelSize));
+                        const closestY = Math.max(p.y, Math.min(cogY, p.y + pixelSize));
+                        const distX = cogX - closestX;
+                        const distY = cogY - closestY;
+                        const distance = Math.hypot(distX, distY);
+
+                        if (distance < cogBaseRadius) {
+                            createBreakParticles(p.x + pixelSize / 2, p.y + pixelSize / 2, oreTiers[p.tier].color, 2);
+                            p.hp -= cblDamage * 0.1;
+                            if (p.hp <= 0) destroyBlock(index = i, p);
+                        }
+                    }
+                }
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const pt = particles[i];
+                pt.x += pt.dx;
+                pt.y += pt.dy;
+                pt.alpha -= 0.05;
+                if (pt.alpha <= 0) particles.splice(i, 1);
+            }
+
+            for (let i = ringEffects.length - 1; i >= 0; i--) {
+                const ring = ringEffects[i];
+                ring.currentRadius += (ring.maxRadius - ring.currentRadius) * 0.15 + 1.0;
+                ring.alpha -= 0.035;
+                if (ring.alpha <= 0 || ring.currentRadius >= ring.maxRadius) {
+                    ringEffects.splice(i, 1);
+                }
+            }
+        }
+
+        function getLightFactor(px, py) {
+            let maxLight = 0;
+
+            const emptyLightRadius = pixelSize * 4.0;
+            for (let i = 0; i < emptyLights.length; i++) {
+                const dist = Math.hypot(px - emptyLights[i].x, py - emptyLights[i].y);
+                if (dist < emptyLightRadius) {
+                    const val = (1 - dist / emptyLightRadius) * 0.4;
+                    if (val > maxLight) maxLight = val;
+                }
+            }
+
+            const ballLightRadius = pixelSize * 5.0;
+            const allBalls = [...balls, ...ertBalls, ...redBalls, ...cblBalls];
+            for (let i = 0; i < allBalls.length; i++) {
+                const b = allBalls[i];
+                const dist = Math.hypot(px - b.x, py - b.y);
+                if (dist < ballLightRadius) {
+                    const val = (1 - dist / ballLightRadius) * 0.95;
+                    if (val > maxLight) maxLight = val;
+                }
+            }
+
+            return maxLight;
+        }
+
+        // 뭉툭하고 도톰한 톱니바퀴 형태로 원복
+        function drawChubbyCogwheel(x, y, radius, rotationAngle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotationAngle);
+
+            ctx.fillStyle = '#b026ff';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.2;
+
+            const teethCount = 6;
+            const toothDepth = radius * 0.3;
+
+            ctx.beginPath();
+            for (let i = 0; i < teethCount; i++) {
+                const a1 = (Math.PI * 2 / teethCount) * i;
+                const a2 = a1 + (Math.PI * 2 / teethCount) * 0.5;
+
+                const rOuter = radius + toothDepth;
+                const rInner = radius;
+
+                ctx.lineTo(Math.cos(a1) * rInner, Math.sin(a1) * rInner);
+                ctx.lineTo(Math.cos(a1) * rOuter, Math.sin(a1) * rOuter);
+                ctx.lineTo(Math.cos(a2) * rOuter, Math.sin(a2) * rOuter);
+                ctx.lineTo(Math.cos(a2) * rInner, Math.sin(a2) * rInner);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 가운데 구멍 뚫기
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.35, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+
+            ctx.restore();
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Render Blocks
+            for (let i = 0; i < pixels.length; i++) {
+                const p = pixels[i];
+                const lightFactor = getLightFactor(p.x + pixelSize / 2, p.y + pixelSize / 2);
+
+                if (lightFactor > 0.02) {
+                    ctx.save();
+                    ctx.globalAlpha = lightFactor;
+                    ctx.fillStyle = p.isBedrock ? '#ffffff' : oreTiers[p.tier].color;
+                    ctx.fillRect(p.x, p.y, pixelSize - 0.5, pixelSize - 0.5);
+
+                    if (!p.isBedrock && p.hp < p.maxHp) {
+                        const damageRatio = 1 - (p.hp / p.maxHp);
+                        ctx.fillStyle = `rgba(0, 0, 0, ${damageRatio * 0.5})`;
+                        ctx.fillRect(p.x, p.y, pixelSize - 0.5, pixelSize - 0.5);
+                    }
+                    ctx.restore();
+                }
+            }
+
+            // 2. 공백 가산 빛 레이어
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            const emptyRadius = pixelSize * 3.5;
+            for (let i = 0; i < emptyLights.length; i++) {
+                const el = emptyLights[i];
+                const grad = ctx.createRadialGradient(el.x, el.y, 0, el.x, el.y, emptyRadius);
+                grad.addColorStop(0, 'rgba(255, 220, 150, 0.07)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.beginPath();
+                ctx.arc(el.x, el.y, emptyRadius, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // 3. ert ball Lasers
+            for (let b = 0; b < ertBalls.length; b++) {
+                const ball = ertBalls[b];
+                for (let t = 0; t < ball.targets.length; t++) {
+                    const target = ball.targets[t];
+                    ctx.beginPath();
+                    ctx.moveTo(ball.x, ball.y);
+                    ctx.lineTo(target.cx, target.cy);
+                    ctx.strokeStyle = 'rgba(255, 234, 0, 0.85)';
+                    ctx.lineWidth = pixelSize * 0.12;
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+            }
+
+            // 4. 파티클
+            for (let i = 0; i < particles.length; i++) {
+                const pt = particles[i];
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, pt.alpha);
+                ctx.fillStyle = pt.color;
+                ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+                ctx.restore();
+            }
+
+            // 5. 폭발 링
+            for (let i = 0; i < ringEffects.length; i++) {
+                const ring = ringEffects[i];
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, ring.alpha);
+                ctx.beginPath();
+                ctx.arc(ring.x, ring.y, ring.currentRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = ring.color;
+                ctx.lineWidth = pixelSize * 0.2;
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+            }
+
+            // 6. CBL 뭉툭한 톱니바퀴 그리기
+            const cogDistOffset = pixelSize * (1.0 + (cblCogRange - 1) * 1.0);
+            const cogRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.3);
+            for (let b = 0; b < cblBalls.length; b++) {
+                const ball = cblBalls[b];
+                for (let c = 0; c < cblCogCount; c++) {
+                    const angle = ball.cogAngle + (Math.PI * 2 / cblCogCount) * c;
+                    const cogX = ball.x + Math.cos(angle) * (ball.radius + cogDistOffset);
+                    const cogY = ball.y + Math.sin(angle) * (ball.radius + cogDistOffset);
+
+                    drawChubbyCogwheel(cogX, cogY, cogRadius, ball.cogAngle * 2);
+                }
+            }
+
+            // 7. Render Balls
+            for (let b = 0; b < balls.length; b++) {
+                const ball = balls[b];
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            for (let b = 0; b < ertBalls.length; b++) {
+                const ball = ertBalls[b];
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            for (let b = 0; b < redBalls.length; b++) {
+                const ball = redBalls[b];
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            for (let b = 0; b < cblBalls.length; b++) {
+                const ball = cblBalls[b];
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>
