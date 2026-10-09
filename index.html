@@ -49,19 +49,26 @@
             right: 12px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             z-index: 100;
             pointer-events: none;
         }
 
         .left-ui {
             display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .top-row {
+            display: flex;
             align-items: center;
             gap: 10px;
         }
 
         .floor-box {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             border: 1px solid #00e5ff;
             padding: 6px 14px;
             border-radius: 20px;
@@ -69,13 +76,12 @@
             font-size: 18px;
             font-weight: bold;
             box-shadow: 0 2px 8px rgba(0, 229, 255, 0.3);
-            pointer-events: auto;
         }
 
         .currency-box {
             display: flex;
             align-items: center;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.85);
             border: 1px solid #ffffff;
             padding: 6px 14px;
             border-radius: 20px;
@@ -83,7 +89,6 @@
             font-size: 18px;
             font-weight: bold;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-            pointer-events: auto;
         }
 
         .diamond-icon {
@@ -96,14 +101,36 @@
             flex-shrink: 0;
         }
 
+        /* 좌측 세로 공 개수 표기 박스 */
+        .ball-count-panel {
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: fit-content;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
+        }
+
+        .ball-count-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
         .plus-btn {
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.75);
-            border: 1px solid #ffffff;
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1.5px solid #ffffff;
             border-radius: 50%;
             color: #ffffff;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             display: flex;
             justify-content: center;
@@ -112,10 +139,11 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
             pointer-events: auto;
             outline: none;
+            touch-action: manipulation;
         }
 
         .plus-btn:active {
-            transform: scale(0.92);
+            transform: scale(0.90);
             background: #333333;
         }
 
@@ -124,11 +152,11 @@
             top: -100%;
             left: 0;
             width: 100%;
-            height: 80%;
+            height: 82%;
             background: rgba(15, 15, 15, 0.96);
             border-bottom: 2px solid #00e5ff;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9);
-            transition: top 0.4s ease;
+            transition: top 0.3s ease;
             z-index: 200;
             padding: 16px;
             color: #ffffff;
@@ -165,9 +193,10 @@
             background: none;
             border: none;
             color: #ffffff;
-            font-size: 20px;
+            font-size: 22px;
             cursor: pointer;
-            padding: 2px 6px;
+            padding: 4px 8px;
+            touch-action: manipulation;
         }
 
         .upgrade-list {
@@ -183,7 +212,7 @@
             background: #1e1e1e;
             border: 1px solid #333333;
             border-radius: 12px;
-            padding: 14px;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -198,7 +227,7 @@
         .upgrade-info {
             display: flex;
             align-items: center;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
         }
 
@@ -211,35 +240,17 @@
             border: 1px solid #2a2a2a;
         }
 
-        .orange-ball-icon {
+        .orange-ball-icon, .yellow-ball-icon, .red-ball-icon {
             width: 14px;
             height: 14px;
-            background-color: orange;
             border-radius: 50%;
             display: inline-block;
-            margin-left: 8px;
-            box-shadow: 0 0 8px rgba(255, 165, 0, 0.9);
+            flex-shrink: 0;
         }
 
-        .yellow-ball-icon {
-            width: 14px;
-            height: 14px;
-            background-color: #ffea00;
-            border-radius: 50%;
-            display: inline-block;
-            margin-left: 8px;
-            box-shadow: 0 0 8px rgba(255, 234, 0, 0.9);
-        }
-
-        .red-ball-icon {
-            width: 14px;
-            height: 14px;
-            background-color: #ff3333;
-            border-radius: 50%;
-            display: inline-block;
-            margin-left: 8px;
-            box-shadow: 0 0 8px rgba(255, 51, 51, 0.9);
-        }
+        .orange-ball-icon { background-color: orange; box-shadow: 0 0 8px rgba(255, 165, 0, 0.9); }
+        .yellow-ball-icon { background-color: #ffea00; box-shadow: 0 0 8px rgba(255, 234, 0, 0.9); }
+        .red-ball-icon { background-color: #ff3333; box-shadow: 0 0 8px rgba(255, 51, 51, 0.9); }
 
         .upgrade-cost-btn {
             background: #00e5ff;
@@ -253,16 +264,17 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            touch-action: manipulation;
         }
 
         .upgrade-cost-btn:disabled {
-            background: #444444;
-            color: #888888;
+            background: #444444 !important;
+            color: #888888 !important;
             cursor: not-allowed;
         }
 
         .upgrade-cost-btn:active:not(:disabled) {
-            transform: scale(0.96);
+            transform: scale(0.95);
         }
 
         .toggle-arrow-btn {
@@ -278,6 +290,12 @@
             justify-content: center;
             align-items: center;
             gap: 6px;
+            touch-action: manipulation;
+        }
+
+        .toggle-arrow-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .sub-upgrade-container {
@@ -306,12 +324,28 @@
     <div id="gameContainer">
         <div class="ui-layer">
             <div class="left-ui">
-                <div class="floor-box" id="floorText">1F</div>
-                <div class="currency-box">
-                    <div class="diamond-icon"></div>
-                    <span class="gem-count-text">0</span>
+                <div class="top-row">
+                    <div class="floor-box" id="floorText">1F</div>
+                    <div class="currency-box">
+                        <div class="diamond-icon"></div>
+                        <span class="gem-count-text">0</span>
+                    </div>
+                </div>
+
+                <!-- 왼쪽 세로 공 개수 표기 -->
+                <div class="ball-count-panel">
+                    <div class="ball-count-row">
+                        <span class="orange-ball-icon"></span> : <span id="orgCountText">1</span>
+                    </div>
+                    <div class="ball-count-row">
+                        <span class="yellow-ball-icon"></span> : <span id="ertCountText">0</span>
+                    </div>
+                    <div class="ball-count-row">
+                        <span class="red-ball-icon"></span> : <span id="redCountText">0</span>
+                    </div>
                 </div>
             </div>
+
             <button class="plus-btn" id="openUpgradeBtn">+</button>
         </div>
 
@@ -332,7 +366,7 @@
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
-                            +1 org ball <span class="orange-ball-icon"></span>
+                            +1 org ball <span class="orange-ball-icon" style="margin-left:8px;"></span>
                         </div>
                         <button class="upgrade-cost-btn" id="buyBallBtn">
                             <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
@@ -347,7 +381,7 @@
 
                 <div class="sub-upgrade-container" id="orangeBallSubMenu">
                     <div class="section-title">
-                        <span class="orange-ball-icon" style="margin-left:0;"></span> org ball options
+                        <span class="orange-ball-icon"></span> org ball options
                     </div>
 
                     <div class="upgrade-card">
@@ -385,21 +419,21 @@
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
-                            +1 ert ball <span class="yellow-ball-icon"></span>
+                            +1 ert ball <span class="yellow-ball-icon" style="margin-left:8px;"></span>
                         </div>
                         <button class="upgrade-cost-btn" id="buyErtBallBtn" disabled>
                             <span id="ertBallCostText">🔒 Need 10 Org</span>
                         </button>
                     </div>
-                    <div class="stat-preview" id="ertStatPreview">10.0 DMG | Speed: Lv.0 | Target: 1</div>
-                    <button class="toggle-arrow-btn" id="toggleYellowBallBtn">
+                    <div class="stat-preview" id="ertStatPreview">0.1 DMG | Speed: Lv.0 | Target: 1</div>
+                    <button class="toggle-arrow-btn" id="toggleYellowBallBtn" disabled>
                         <span id="yellowArrowIcon">▼</span> ert ball upgrades
                     </button>
                 </div>
 
                 <div class="sub-upgrade-container" id="yellowBallSubMenu">
                     <div class="section-title">
-                        <span class="yellow-ball-icon" style="margin-left:0;"></span> ert ball options
+                        <span class="yellow-ball-icon"></span> ert ball options
                     </div>
 
                     <div class="upgrade-card">
@@ -437,21 +471,21 @@
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
-                            +1 bmb ball <span class="red-ball-icon"></span>
+                            +1 bmb ball <span class="red-ball-icon" style="margin-left:8px;"></span>
                         </div>
                         <button class="upgrade-cost-btn" id="buyRedBallBtn" disabled>
                             <span id="redBallCostText">🔒 Need 10 Ert</span>
                         </button>
                     </div>
-                    <div class="stat-preview" id="redStatPreview">1.0 DMG | 3 Block Range | Speed: Lv.0 | +0% Luck</div>
-                    <button class="toggle-arrow-btn" id="toggleRedBallBtn">
+                    <div class="stat-preview" id="redStatPreview">1.0 DMG | 3 Range | Speed: Lv.0 | +0% Luck</div>
+                    <button class="toggle-arrow-btn" id="toggleRedBallBtn" disabled>
                         <span id="redArrowIcon">▼</span> bmb ball upgrades
                     </button>
                 </div>
 
                 <div class="sub-upgrade-container" id="redBallSubMenu">
                     <div class="section-title">
-                        <span class="red-ball-icon" style="margin-left:0;"></span> bmb ball options
+                        <span class="red-ball-icon"></span> bmb ball options
                     </div>
 
                     <div class="upgrade-card">
@@ -466,7 +500,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+0.5 Range</div>
+                            <div class="upgrade-info">+1 Range</div>
                             <button class="upgrade-cost-btn" id="buyRedRangeBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="redRangeCostText">50</span>
@@ -496,6 +530,10 @@
         const gemCountTexts = document.querySelectorAll('.gem-count-text');
         const floorText = document.getElementById('floorText');
         
+        const orgCountText = document.getElementById('orgCountText');
+        const ertCountText = document.getElementById('ertCountText');
+        const redCountText = document.getElementById('redCountText');
+
         const upgradePanel = document.getElementById('upgradePanel');
         const openUpgradeBtn = document.getElementById('openUpgradeBtn');
         const closeUpgradeBtn = document.getElementById('closeUpgradeBtn');
@@ -590,10 +628,33 @@
             { color: '#9933ff', hp: 10, reward: 45 }
         ];
 
+        // 맵 그리드 크기 (다음 층으로 갈 때마다 +1줄씩 커짐)
+        let gridCount = 50;
+        const size = Math.min(window.innerWidth, window.innerHeight);
+        canvas.width = size;
+        canvas.height = size;
+        let pixelSize = size / gridCount;
+
+        let emptyLights = [];
+        let pixels = [];
+        let totalMineableBlocks = 0;
+
+        const particles = [];
+        const ringEffects = []; // 원형 폭발 이펙트
+
+        const balls = [];
+        const ertBalls = [];
+        const redBalls = [];
+
         function updateGemUI() {
             gemCountTexts.forEach(el => el.textContent = gems);
             floorText.textContent = `${currentFloor}F`;
 
+            orgCountText.textContent = balls.length;
+            ertCountText.textContent = ertBalls.length;
+            redCountText.textContent = redBalls.length;
+
+            // 해금 조건 검사 (해금 안 하면 업그레이드도 열지 못함)
             if (balls.length >= 10) {
                 if (buyErtBallBtn.disabled && ertBallCostText.textContent.includes('Need')) {
                     buyErtBallBtn.disabled = false;
@@ -602,6 +663,14 @@
             } else {
                 buyErtBallBtn.disabled = true;
                 ertBallCostText.textContent = '🔒 Need 10 Org';
+            }
+
+            if (ertBalls.length > 0) {
+                toggleYellowBallBtn.disabled = false;
+            } else {
+                toggleYellowBallBtn.disabled = true;
+                yellowBallSubMenu.classList.remove('open');
+                yellowArrowIcon.textContent = '▼';
             }
 
             if (ertBalls.length >= 10) {
@@ -614,8 +683,17 @@
                 redBallCostText.textContent = '🔒 Need 10 Ert';
             }
 
+            if (redBalls.length > 0) {
+                toggleRedBallBtn.disabled = false;
+            } else {
+                toggleRedBallBtn.disabled = true;
+                redBallSubMenu.classList.remove('open');
+                redArrowIcon.textContent = '▼';
+            }
+
+            // 스탯 텍스트 동기화 (노란공 데미지 스택 0.1부터 표시)
             orgStatPreview.textContent = `${(1 + orgDmgBonus).toFixed(1)} DMG | Speed: Lv.${ballSpeedLevel} | +${gemsPerBlockBonus} Block`;
-            ertStatPreview.textContent = `${(10 + ertDmgBonus * 10).toFixed(1)} DMG | Speed: Lv.${ertSpeedLevel} | Target: ${ertMaxTargets}`;
+            ertStatPreview.textContent = `${(0.1 + ertDmgBonus * 0.1).toFixed(1)} DMG | Speed: Lv.${ertSpeedLevel} | Target: ${ertMaxTargets}`;
             redStatPreview.textContent = `1.0 DMG | ${(3 + redRangeBonus).toFixed(1)} Range | Speed: Lv.${redSpeedLevel} | +${redLuckBonus}% Luck`;
         }
 
@@ -628,37 +706,24 @@
         });
 
         toggleYellowBallBtn.addEventListener('click', () => {
+            if (ertBalls.length === 0) return;
             const isOpen = yellowBallSubMenu.classList.toggle('open');
             yellowArrowIcon.textContent = isOpen ? '▲' : '▼';
         });
 
         toggleRedBallBtn.addEventListener('click', () => {
+            if (redBalls.length === 0) return;
             const isOpen = redBallSubMenu.classList.toggle('open');
             redArrowIcon.textContent = isOpen ? '▲' : '▼';
         });
 
-        const size = Math.min(window.innerWidth, window.innerHeight);
-        canvas.width = size;
-        canvas.height = size;
-
-        const gridCount = 50;
-        const pixelSize = size / gridCount;
-
-        let emptyLights = [];
-
-        const centerStart = Math.floor(gridCount / 2) - 1;
-        const centerEnd = centerStart + 2;
-
-        let pixels = [];
-        let totalMineableBlocks = 0;
-        const particles = [];
-        const balls = [];
-        const ertBalls = [];
-        const redBalls = [];
-
         function initFloorMap() {
+            pixelSize = size / gridCount;
             pixels = [];
             emptyLights = [];
+
+            const centerStart = Math.floor(gridCount / 2) - 1;
+            const centerEnd = centerStart + 2;
 
             for (let r = centerStart; r <= centerEnd; r++) {
                 for (let c = centerStart; c <= centerEnd; c++) {
@@ -731,10 +796,19 @@
                     }
                 }
             }
+
+            // 모든 공을 중앙 위치로 이동 스폰
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            [...balls, ...ertBalls, ...redBalls].forEach(ball => {
+                ball.x = centerX;
+                ball.y = centerY;
+            });
         }
 
         function nextFloor() {
             currentFloor++;
+            gridCount += 1; // 다음 층으로 가면 맵이 한 줄 더 크게 생성
             initFloorMap();
             updateGemUI();
         }
@@ -744,13 +818,12 @@
             const baseSpeed = pixelSize * 0.2 + (ballSpeedLevel * pixelSize * 0.05);
 
             balls.push({
-                x: (centerStart + 1.5) * pixelSize,
-                y: (centerStart + 1.5) * pixelSize,
+                x: canvas.width / 2,
+                y: canvas.height / 2,
                 radius: pixelSize * 0.35,
                 dx: Math.cos(angle) * baseSpeed,
                 dy: Math.sin(angle) * baseSpeed,
-                color: '#ff9900',
-                history: []
+                color: '#ff9900'
             });
             updateGemUI();
         }
@@ -760,13 +833,12 @@
             const baseSpeed = pixelSize * 0.22 + (ertSpeedLevel * pixelSize * 0.05);
 
             ertBalls.push({
-                x: (centerStart + 1.5) * pixelSize,
-                y: (centerStart + 1.5) * pixelSize,
+                x: canvas.width / 2,
+                y: canvas.height / 2,
                 radius: pixelSize * 0.32,
                 dx: Math.cos(angle) * baseSpeed,
                 dy: Math.sin(angle) * baseSpeed,
                 color: '#ffea00',
-                history: [],
                 targets: []
             });
             updateGemUI();
@@ -777,13 +849,12 @@
             const baseSpeed = pixelSize * 0.2 + (redSpeedLevel * pixelSize * 0.05);
 
             redBalls.push({
-                x: (centerStart + 1.5) * pixelSize,
-                y: (centerStart + 1.5) * pixelSize,
+                x: canvas.width / 2,
+                y: canvas.height / 2,
                 radius: pixelSize * 0.35,
                 dx: Math.cos(angle) * baseSpeed,
                 dy: Math.sin(angle) * baseSpeed,
-                color: '#ff3333',
-                history: []
+                color: '#ff3333'
             });
             updateGemUI();
         }
@@ -874,7 +945,7 @@
         buyErtDmgBtn.addEventListener('click', () => {
             if (gems >= ertDmgCost) {
                 gems -= ertDmgCost;
-                ertDmgBonus += 0.1;
+                ertDmgBonus += 1;
                 ertDmgCost += 100;
                 ertDmgCostText.textContent = ertDmgCost;
                 updateGemUI();
@@ -929,7 +1000,7 @@
         buyRedRangeBtn.addEventListener('click', () => {
             if (gems >= redRangeCost) {
                 gems -= redRangeCost;
-                redRangeBonus += 0.5;
+                redRangeBonus += 1; // 1당 1칸(1블록)으로 설정
                 redRangeCost += 50;
                 redRangeCostText.textContent = redRangeCost;
                 updateGemUI();
@@ -937,28 +1008,46 @@
         });
 
         buyRedLuckBtn.addEventListener('click', () => {
-            if (gems >= redLuckCost) {
+            if (gems >= redLuckCost && redLuckBonus < 100) {
                 gems -= redLuckCost;
                 redLuckBonus += 1;
                 redLuckCost += 5;
-                redLuckCostText.textContent = redLuckCost;
+                if (redLuckBonus >= 100) {
+                    redLuckCostText.textContent = "MAX";
+                    buyRedLuckBtn.disabled = true;
+                } else {
+                    redLuckCostText.textContent = redLuckCost;
+                }
                 updateGemUI();
             }
         });
 
-        function createParticles(x, y, color, count = 5) {
+        // 파괴 파티클 이펙트 (부서지며 점차 흐려짐)
+        function createBreakParticles(x, y, color, count = 4) {
             for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 2.2 + 0.8;
+                const speed = Math.random() * 1.8 + 0.6;
                 particles.push({
                     x: x, y: y,
                     dx: Math.cos(angle) * speed,
                     dy: Math.sin(angle) * speed,
-                    size: pixelSize * 0.25,
-                    alpha: 1, life: 0.08,
+                    size: pixelSize * 0.3,
+                    alpha: 1.0,
                     color: color
                 });
             }
+        }
+
+        // 폭발 원형 파티클 이펙트 (원으로 커지면서 흐려짐)
+        function createExplosionRing(x, y, maxRadius, color = '#ff3333') {
+            ringEffects.push({
+                x: x,
+                y: y,
+                currentRadius: pixelSize * 0.5,
+                maxRadius: maxRadius,
+                alpha: 0.9,
+                color: color
+            });
         }
 
         function destroyBlock(index, p) {
@@ -985,7 +1074,7 @@
             const dmgMultiplier = isCriticalLuck ? 3 : 2;
             const splashRadius = pixelSize * explosionRangeBlocks;
 
-            createParticles(x, y, isCriticalLuck ? '#ffea00' : '#ff3333', isCriticalLuck ? 20 : 10);
+            createExplosionRing(x, y, splashRadius, isCriticalLuck ? '#ffea00' : '#ff3333');
 
             for (let j = pixels.length - 1; j >= 0; j--) {
                 const sp = pixels[j];
@@ -1002,9 +1091,6 @@
             // 1. org balls
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
-
-                ball.history.push({ x: ball.x, y: ball.y });
-                if (ball.history.length > 3) ball.history.shift();
 
                 ball.x += ball.dx;
                 ball.y += ball.dy;
@@ -1031,7 +1117,7 @@
                         }
 
                         if (!p.isBedrock) {
-                            createParticles(p.x + pixelSize / 2, p.y + pixelSize / 2, oreTiers[p.tier].color);
+                            createBreakParticles(p.x + pixelSize / 2, p.y + pixelSize / 2, oreTiers[p.tier].color);
                             p.hp -= (1 + orgDmgBonus);
                             if (p.hp <= 0) destroyBlock(i, p);
                         }
@@ -1043,16 +1129,13 @@
                 }
             }
 
-            // 2. ert balls
+            // 2. ert balls (초당 딜 스탯 0.1 기반)
             const laserRange = pixelSize * 5;
-            const dps = 10 + (ertDmgBonus * 10);
+            const dps = 0.1 + (ertDmgBonus * 0.1);
             const frameDmg = dps / 60;
 
             for (let b = 0; b < ertBalls.length; b++) {
                 const ball = ertBalls[b];
-
-                ball.history.push({ x: ball.x, y: ball.y });
-                if (ball.history.length > 3) ball.history.shift();
 
                 ball.x += ball.dx;
                 ball.y += ball.dy;
@@ -1108,7 +1191,7 @@
                     if (p.hp <= 0) {
                         const index = pixels.indexOf(p);
                         if (index !== -1) {
-                            createParticles(target.cx, target.cy, oreTiers[p.tier].color);
+                            createBreakParticles(target.cx, target.cy, oreTiers[p.tier].color);
                             destroyBlock(index, p);
                         }
                     }
@@ -1118,9 +1201,6 @@
             // 3. bmb balls
             for (let b = 0; b < redBalls.length; b++) {
                 const ball = redBalls[b];
-
-                ball.history.push({ x: ball.x, y: ball.y });
-                if (ball.history.length > 3) ball.history.shift();
 
                 ball.x += ball.dx;
                 ball.y += ball.dy;
@@ -1160,49 +1240,58 @@
                 }
             }
 
+            // 파기 파티클 업데이트
             for (let i = particles.length - 1; i >= 0; i--) {
                 const pt = particles[i];
                 pt.x += pt.dx;
                 pt.y += pt.dy;
-                pt.alpha -= pt.life;
+                pt.alpha -= 0.04; // 부드럽게 흐려짐
                 if (pt.alpha <= 0) particles.splice(i, 1);
+            }
+
+            // 폭발 원형 링 업데이트
+            for (let i = ringEffects.length - 1; i >= 0; i--) {
+                const ring = ringEffects[i];
+                ring.currentRadius += (ring.maxRadius - ring.currentRadius) * 0.15 + 1.0;
+                ring.alpha -= 0.035; // 커지며 투명해짐
+                if (ring.alpha <= 0 || ring.currentRadius >= ring.maxRadius) {
+                    ringEffects.splice(i, 1);
+                }
             }
         }
 
-        // 빛의 감쇄(Distance-based Alpha)를 직접 연산하는 시야 시스템
+        // 경량화된 광원 계산 (렉 감소)
         function getLightFactor(px, py) {
             let maxLight = 0;
 
-            // 1. 공백(파낸 공간) 광원 연산
             const emptyLightRadius = pixelSize * 4.0;
             for (let i = 0; i < emptyLights.length; i++) {
                 const dist = Math.hypot(px - emptyLights[i].x, py - emptyLights[i].y);
                 if (dist < emptyLightRadius) {
-                    const val = (1 - dist / emptyLightRadius) * 0.45; // 은은함 0.45
+                    const val = (1 - dist / emptyLightRadius) * 0.4;
                     if (val > maxLight) maxLight = val;
                 }
             }
 
-            // 2. 공 주변 광원 연산
             const ballLightRadius = pixelSize * 5.0;
             const allBalls = [...balls, ...ertBalls, ...redBalls];
             for (let i = 0; i < allBalls.length; i++) {
                 const b = allBalls[i];
                 const dist = Math.hypot(px - b.x, py - b.y);
                 if (dist < ballLightRadius) {
-                    const val = (1 - dist / ballLightRadius) * 0.95; // 공 근처 0.95
+                    const val = (1 - dist / ballLightRadius) * 0.95;
                     if (val > maxLight) maxLight = val;
                 }
             }
 
-            return maxLight; // 빛 범위 밖(0)은 암흑 처리
+            return maxLight;
         }
 
         function draw() {
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Render Blocks (빛 받은 영역만 렌더링)
+            // 1. Render Blocks
             for (let i = 0; i < pixels.length; i++) {
                 const p = pixels[i];
                 const lightFactor = getLightFactor(p.x + pixelSize / 2, p.y + pixelSize / 2);
@@ -1222,14 +1311,14 @@
                 }
             }
 
-            // 2. 공백 영역 은은한 가산 광원 레이어 (Lighter Mode)
+            // 2. 공백 가산 빛 레이어
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
             const emptyRadius = pixelSize * 3.5;
             for (let i = 0; i < emptyLights.length; i++) {
                 const el = emptyLights[i];
                 const grad = ctx.createRadialGradient(el.x, el.y, 0, el.x, el.y, emptyRadius);
-                grad.addColorStop(0, 'rgba(255, 220, 150, 0.08)');
+                grad.addColorStop(0, 'rgba(255, 220, 150, 0.07)');
                 grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
                 ctx.beginPath();
@@ -1239,7 +1328,7 @@
             }
             ctx.restore();
 
-            // 3. Render ert ball Lasers
+            // 3. ert ball Lasers
             for (let b = 0; b < ertBalls.length; b++) {
                 const ball = ertBalls[b];
                 for (let t = 0; t < ball.targets.length; t++) {
@@ -1254,15 +1343,31 @@
                 }
             }
 
-            // 4. Particles
+            // 4. 부서지는 사각형 파티클 (점점 흐려짐)
             for (let i = 0; i < particles.length; i++) {
                 const pt = particles[i];
-                ctx.fillStyle = pt.color || `rgba(255, 165, 0, ${pt.alpha})`;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, pt.alpha);
+                ctx.fillStyle = pt.color;
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+                ctx.restore();
             }
 
-            // 5. Render Balls
-            // org ball
+            // 5. 폭발 원형 링 이펙트 (커지면서 흐려짐)
+            for (let i = 0; i < ringEffects.length; i++) {
+                const ring = ringEffects[i];
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, ring.alpha);
+                ctx.beginPath();
+                ctx.arc(ring.x, ring.y, ring.currentRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = ring.color;
+                ctx.lineWidth = pixelSize * 0.2;
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+            }
+
+            // 6. Render Balls
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
                 ctx.beginPath();
@@ -1272,7 +1377,6 @@
                 ctx.closePath();
             }
 
-            // ert ball
             for (let b = 0; b < ertBalls.length; b++) {
                 const ball = ertBalls[b];
                 ctx.beginPath();
@@ -1282,7 +1386,6 @@
                 ctx.closePath();
             }
 
-            // bmb ball
             for (let b = 0; b < redBalls.length; b++) {
                 const ball = redBalls[b];
                 ctx.beginPath();
