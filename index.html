@@ -598,31 +598,52 @@
                     ball.history.shift();
                 }
 
-                let nextX = ball.x + ball.dx;
-                let nextY = ball.y + ball.dy;
+                // 이동 적용
+                ball.x += ball.dx;
+                ball.y += ball.dy;
 
-                if (nextX - ball.radius < 0 || nextX + ball.radius > canvas.width) {
-                    ball.dx = -ball.dx;
-                    nextX = ball.x + ball.dx;
-                }
-                if (nextY - ball.radius < 0 || nextY + ball.radius > canvas.height) {
-                    ball.dy = -ball.dy;
-                    nextY = ball.y + ball.dy;
+                // 1. 외곽 벽면 충돌 및 끼임 방지
+                if (ball.x - ball.radius < 0) {
+                    ball.x = ball.radius;
+                    ball.dx = Math.abs(ball.dx);
+                } else if (ball.x + ball.radius > canvas.width) {
+                    ball.x = canvas.width - ball.radius;
+                    ball.dx = -Math.abs(ball.dx);
                 }
 
+                if (ball.y - ball.radius < 0) {
+                    ball.y = ball.radius;
+                    ball.dy = Math.abs(ball.dy);
+                } else if (ball.y + ball.radius > canvas.height) {
+                    ball.y = canvas.height - ball.radius;
+                    ball.dy = -Math.abs(ball.dy);
+                }
+
+                // 2. 블록 충돌 및 밀어내기 처리 (끼임 해결)
                 for (let i = pixels.length - 1; i >= 0; i--) {
                     const p = pixels[i];
 
-                    const closestX = Math.max(p.x, Math.min(nextX, p.x + pixelSize));
-                    const closestY = Math.max(p.y, Math.min(nextY, p.y + pixelSize));
+                    // 블록 중심 및 가장 가까운 지점 계산
+                    const closestX = Math.max(p.x, Math.min(ball.x, p.x + pixelSize));
+                    const closestY = Math.max(p.y, Math.min(ball.y, p.y + pixelSize));
 
-                    const distX = nextX - closestX;
-                    const distY = nextY - closestY;
+                    const distX = ball.x - closestX;
+                    const distY = ball.y - closestY;
                     const distance = Math.hypot(distX, distY);
 
                     if (distance < ball.radius) {
                         const blockCenterX = p.x + pixelSize / 2;
                         const blockCenterY = p.y + pixelSize / 2;
+
+                        // 위치 밀어내기 보정 (끼임 현상 원천 차단)
+                        const overlap = ball.radius - distance;
+                        if (distance > 0) {
+                            ball.x += (distX / distance) * overlap;
+                            ball.y += (distY / distance) * overlap;
+                        } else {
+                            ball.x += ball.dx > 0 ? -overlap : overlap;
+                            ball.y += ball.dy > 0 ? -overlap : overlap;
+                        }
 
                         if (!p.isBedrock) {
                             const currentTierData = oreTiers[p.tier];
@@ -643,6 +664,7 @@
                             }
                         }
 
+                        // 반사 방향 반전
                         if (Math.abs(distX) > Math.abs(distY)) {
                             ball.dx = -ball.dx;
                         } else {
@@ -651,9 +673,6 @@
                         break;
                     }
                 }
-
-                ball.x += ball.dx;
-                ball.y += ball.dy;
             }
 
             for (let i = particles.length - 1; i >= 0; i--) {
@@ -667,9 +686,8 @@
             }
         }
 
-        // 광원과의 거리에 따른 밝기 계산 (멀리 있으면 0 -> 아예 안 보임)
         function getBlockLightAlpha(bx, by) {
-            let maxLight = 0.0; // 멀리 떨어진 미탐사 블록은 0 (완전 어둠)
+            let maxLight = 0.0;
             const lightRadius = pixelSize * 3.5;
 
             for (let i = 0; i < emptyLights.length; i++) {
@@ -697,7 +715,7 @@
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. 블록 렌더링 (멀리 있으면 globalAlpha = 0으로 완전히 안 보임)
+            // 1. 블록 렌더링
             for (let i = 0; i < pixels.length; i++) {
                 const p = pixels[i];
                 const centerX = p.x + pixelSize / 2;
