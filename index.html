@@ -101,7 +101,6 @@
             flex-shrink: 0;
         }
 
-        /* 좌측 세로 공 개수 표기 박스 */
         .ball-count-panel {
             background: rgba(0, 0, 0, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -254,6 +253,13 @@
             font-weight: bold;
         }
 
+        .all-label {
+            font-size: 11px;
+            color: #888888;
+            font-weight: normal;
+            margin-left: 4px;
+        }
+
         .stat-preview {
             font-size: 12px;
             color: #aaaaaa;
@@ -288,7 +294,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             touch-action: manipulation;
             white-space: nowrap;
         }
@@ -418,7 +424,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Speed</div>
+                            <div class="upgrade-info">+1 Speed <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buySpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="speedCostText">20</span>
@@ -428,7 +434,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Block</div>
+                            <div class="upgrade-info">+1 Block <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyBlockBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="blockCostText">500</span>
@@ -438,7 +444,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 DMG</div>
+                            <div class="upgrade-info">+1 DMG <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyDmgBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="dmgCostText">500</span>
@@ -470,7 +476,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Speed</div>
+                            <div class="upgrade-info">+1 Speed <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyErtSpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="ertSpeedCostText">20</span>
@@ -480,7 +486,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+0.1 DMG</div>
+                            <div class="upgrade-info">+0.1 DMG <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyErtDmgBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="ertDmgCostText">100</span>
@@ -490,7 +496,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Target</div>
+                            <div class="upgrade-info">+1 Target <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyTargetBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="targetCostText">200</span>
@@ -522,7 +528,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Speed</div>
+                            <div class="upgrade-info">+1 Speed <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyRedSpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="redSpeedCostText">20</span>
@@ -532,7 +538,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Range</div>
+                            <div class="upgrade-info">+1 Range <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyRedRangeBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="redRangeCostText">50</span>
@@ -542,7 +548,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 DMG</div>
+                            <div class="upgrade-info">+1 DMG <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyRedDmgBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="redDmgCostText">100</span>
@@ -552,7 +558,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1% Luck</div>
+                            <div class="upgrade-info">+1% Luck <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyRedLuckBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="redLuckCostText">10</span>
@@ -584,7 +590,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Cog Speed</div>
+                            <div class="upgrade-info">+1 Cog Speed <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyCogSpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cogSpeedCostText">150</span>
@@ -594,7 +600,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Ball Speed</div>
+                            <div class="upgrade-info">+1 Ball Speed <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyCblSpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cblSpeedCostText">150</span>
@@ -604,7 +610,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Cog</div>
+                            <div class="upgrade-info">+1 Cog <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyCogCountBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cogCountCostText">100</span>
@@ -614,7 +620,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 DMG</div>
+                            <div class="upgrade-info">+1 DMG <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyCblDmgBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cblDmgCostText">100</span>
@@ -624,7 +630,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Cog Range</div>
+                            <div class="upgrade-info">+1 Cog Range <span class="all-label">(모두)</span></div>
                             <button class="upgrade-cost-btn" id="buyCogRangeBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cogRangeCostText">100</span>
@@ -714,6 +720,8 @@
         const buyCogRangeBtn = document.getElementById('buyCogRangeBtn');
         const cogRangeCostText = document.getElementById('cogRangeCostText');
 
+        const allCostButtons = document.querySelectorAll('.upgrade-cost-btn');
+
         // Stat Previews
         const orgStatPreview = document.getElementById('orgStatPreview');
         const ertStatPreview = document.getElementById('ertStatPreview');
@@ -775,11 +783,11 @@
             { color: '#ff9900', hp: 3,  reward: 10 },
             { color: '#ff3333', hp: 4,  reward: 15 },
             { color: '#a6ff00', hp: 5,  reward: 20 },
-            { color: '#00cc44', hp: 6,  reward: 25 },
-            { color: '#0066ff', hp: 7,  reward: 30 },
-            { color: '#00e5ff', hp: 8,  reward: 35 },
-            { color: '#ff66cc', hp: 9,  reward: 40 },
-            { color: '#9933ff', hp: 10, reward: 45 }
+            { color: '#0066ff', hp: 6,  reward: 25 },
+            { color: '#00e5ff', hp: 7,  reward: 30 },
+            { color: '#ff66cc', hp: 8,  reward: 35 },
+            { color: '#9933ff', hp: 9,  reward: 40 },
+            { color: '#ffffff', hp: 10, reward: 45 }
         ];
 
         let gridCount = 50;
@@ -808,6 +816,27 @@
             ertCountText.textContent = ertBalls.length;
             redCountText.textContent = redBalls.length;
             cblCountText.textContent = cblBalls.length;
+
+            // 재화에 따른 버튼 활성화/비활성화 (회색 처리)
+            checkButtonAffordability(buyBallBtn, ballCost);
+            checkButtonAffordability(buySpeedBtn, speedCost);
+            checkButtonAffordability(buyBlockBtn, blockCost);
+            checkButtonAffordability(buyDmgBtn, dmgCost);
+
+            checkButtonAffordability(buyErtSpeedBtn, ertSpeedCost);
+            checkButtonAffordability(buyErtDmgBtn, ertDmgCost);
+            checkButtonAffordability(buyTargetBtn, targetCost);
+
+            checkButtonAffordability(buyRedSpeedBtn, redSpeedCost);
+            checkButtonAffordability(buyRedRangeBtn, redRangeCost);
+            checkButtonAffordability(buyRedDmgBtn, redDmgCost);
+            checkButtonAffordability(buyRedLuckBtn, redLuckCost);
+
+            checkButtonAffordability(buyCogSpeedBtn, cogSpeedCost);
+            checkButtonAffordability(buyCblSpeedBtn, cblSpeedCost);
+            checkButtonAffordability(buyCogCountBtn, cogCountCost);
+            checkButtonAffordability(buyCblDmgBtn, cblDmgCost);
+            checkButtonAffordability(buyCogRangeBtn, cogRangeCost);
 
             // 해금 조건 검사
             if (balls.length >= 10 || isDevMode) {
@@ -864,14 +893,21 @@
                 purpleArrowIcon.textContent = '▼';
             }
 
-            // 스탯 표기 (노란공 0.1초당 0.1/초당 1데미지 동기화)
             orgStatPreview.textContent = `${(1 + orgDmgBonus).toFixed(1)} DMG | Speed: Lv.${ballSpeedLevel} | +${gemsPerBlockBonus} Block`;
             ertStatPreview.textContent = `${(0.1 + ertDmgBonus * 0.1).toFixed(1)} DMG | Speed: Lv.${ertSpeedLevel} | Target: ${ertMaxTargets}`;
             redStatPreview.textContent = `${(1.0 + redDmgBonus).toFixed(1)} DMG | ${(3 + redRangeBonus).toFixed(1)} Range | Speed: Lv.${redSpeedLevel} | +${redLuckBonus}% Luck`;
             cblStatPreview.textContent = `${(1.0 + cblDmgBonus).toFixed(1)} DMG | ${cblCogCount} Cog | Range: ${cblCogRange} | Speed: Lv.${cblBallSpeedLevel}`;
         }
 
-        // 개발자 패드 기능
+        function checkButtonAffordability(btn, cost) {
+            if (btn.disabled && (btn.textContent.includes('🔒') || btn.textContent === 'MAX')) return;
+            if (gems < cost) {
+                btn.disabled = true;
+            } else {
+                btn.disabled = false;
+            }
+        }
+
         devBtn.addEventListener('click', () => {
             gems += 10000;
             isDevMode = true;
@@ -984,7 +1020,6 @@
                 }
             }
 
-            // 중앙 위치에서 스폰
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             [...balls, ...ertBalls, ...redBalls, ...cblBalls].forEach(ball => {
@@ -1235,11 +1270,10 @@
             }
         });
 
-        // CBL Ball (보라색 공) 업그레이드
         buyCblBallBtn.addEventListener('click', () => {
             if (gems >= cblBallCost && (redBalls.length >= 10 || isDevMode)) {
                 gems -= cblBallCost;
-                cblBallCost += 150; // 150씩 증가
+                cblBallCost += 150;
                 cblBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${cblBallCost}`;
                 createCblBall();
             }
@@ -1249,7 +1283,7 @@
             if (gems >= cogSpeedCost) {
                 gems -= cogSpeedCost;
                 cblCogSpeedLevel += 1;
-                cogSpeedCost += 200; // 200원씩 증가
+                cogSpeedCost += 200;
                 cogSpeedCostText.textContent = cogSpeedCost;
                 updateGemUI();
             }
@@ -1259,7 +1293,7 @@
             if (gems >= cblSpeedCost) {
                 gems -= cblSpeedCost;
                 cblBallSpeedLevel += 1;
-                cblSpeedCost += 200; // 200원씩 증가
+                cblSpeedCost += 200;
                 cblSpeedCostText.textContent = cblSpeedCost;
 
                 cblBalls.forEach(ball => {
@@ -1273,11 +1307,16 @@
         });
 
         buyCogCountBtn.addEventListener('click', () => {
-            if (gems >= cogCountCost) {
+            if (gems >= cogCountCost && cblCogCount < 6) { // 최대 6개 제한
                 gems -= cogCountCost;
                 cblCogCount += 1;
-                cogCountCost += 100; // 100원씩 증가
-                cogCountCostText.textContent = cogCountCost;
+                cogCountCost += 100;
+                if (cblCogCount >= 6) {
+                    cogCountCostText.textContent = "MAX";
+                    buyCogCountBtn.disabled = true;
+                } else {
+                    cogCountCostText.textContent = cogCountCost;
+                }
                 updateGemUI();
             }
         });
@@ -1286,7 +1325,7 @@
             if (gems >= cblDmgCost) {
                 gems -= cblDmgCost;
                 cblDmgBonus += 1;
-                cblDmgCost += 100; // 100원씩 증가
+                cblDmgCost += 100;
                 cblDmgCostText.textContent = cblDmgCost;
                 updateGemUI();
             }
@@ -1296,13 +1335,14 @@
             if (gems >= cogRangeCost) {
                 gems -= cogRangeCost;
                 cblCogRange += 1;
-                cogRangeCost += 100; // 100원씩 증가
+                cogRangeCost += 100;
                 cogRangeCostText.textContent = cogRangeCost;
                 updateGemUI();
             }
         });
 
-        function createBreakParticles(x, y, color, count = 4) {
+        // 파괴 파티클 최적화 (5~10개 사이)
+        function createBreakParticles(x, y, color, count = 6) {
             for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const speed = Math.random() * 1.8 + 0.6;
@@ -1397,7 +1437,7 @@
                         }
 
                         if (!p.isBedrock) {
-                            createBreakParticles(p.x + pixelSize / 2, p.y + pixelSize / 2, oreTiers[p.tier].color);
+                            createBreakParticles(p.x + pixelSize / 2, p.y + pixelSize / 2, oreTiers[p.tier].color, 6);
                             p.hp -= (1 + orgDmgBonus);
                             if (p.hp <= 0) destroyBlock(i, p);
                         }
@@ -1409,9 +1449,9 @@
                 }
             }
 
-            // 2. ert balls (0.1초당 0.1데미지 = 초당 1데미지)
+            // 2. ert balls
             const laserRange = pixelSize * 5;
-            const dps = 1.0 + (ertDmgBonus * 1.0); // 초당 데미지
+            const dps = 1.0 + (ertDmgBonus * 1.0);
             const frameDmg = dps / 60;
 
             for (let b = 0; b < ertBalls.length; b++) {
@@ -1471,7 +1511,7 @@
                     if (p.hp <= 0) {
                         const index = pixels.indexOf(p);
                         if (index !== -1) {
-                            createBreakParticles(target.cx, target.cy, oreTiers[p.tier].color);
+                            createBreakParticles(target.cx, target.cy, oreTiers[p.tier].color, 6);
                             destroyBlock(index, p);
                         }
                     }
@@ -1520,10 +1560,10 @@
                 }
             }
 
-            // 4. CBL balls (보라색 공 & 회전 톱니)
-            const cogSpeed = 0.03 + (cblCogSpeedLevel * 0.015);
-            const cogDistOffset = pixelSize * (1.0 + (cblCogRange - 1) * 1.0); // 1블록씩 멀어짐
-            const cogBaseRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.5); // 크기도 0.5블록 늘어남
+            // 4. CBL balls (뾰족한 톱니바퀴 회전 및 속도 상향)
+            const cogSpeed = 0.06 + (cblCogSpeedLevel * 0.03); // 톱니 개개인 회전 속도 빠르게 상향
+            const cogDistOffset = pixelSize * (1.0 + (cblCogRange - 1) * 1.0);
+            const cogBaseRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.3); // 크기 증가 0.3씩 적용
             const cblDamage = 1.0 + cblDmgBonus;
 
             for (let b = 0; b < cblBalls.length; b++) {
@@ -1540,7 +1580,6 @@
                 if (ball.y - ball.radius < 0) { ball.y = ball.radius; ball.dy = Math.abs(ball.dy); }
                 else if (ball.y + ball.radius > canvas.height) { ball.y = canvas.height - ball.radius; ball.dy = -Math.abs(ball.dy); }
 
-                // 공 자체 충돌
                 for (let i = pixels.length - 1; i >= 0; i--) {
                     const p = pixels[i];
                     const closestX = Math.max(p.x, Math.min(ball.x, p.x + pixelSize));
@@ -1561,7 +1600,6 @@
                     }
                 }
 
-                // 톱니 충돌 및 연산 (균일 각도 정렬)
                 for (let c = 0; c < cblCogCount; c++) {
                     const angle = ball.cogAngle + (Math.PI * 2 / cblCogCount) * c;
                     const cogX = ball.x + Math.cos(angle) * (ball.radius + cogDistOffset);
@@ -1579,23 +1617,21 @@
 
                         if (distance < cogBaseRadius) {
                             createBreakParticles(p.x + pixelSize / 2, p.y + pixelSize / 2, oreTiers[p.tier].color, 2);
-                            p.hp -= cblDamage * 0.1; // 스쳐가며 대미지
+                            p.hp -= cblDamage * 0.1;
                             if (p.hp <= 0) destroyBlock(i, p);
                         }
                     }
                 }
             }
 
-            // 파티클
             for (let i = particles.length - 1; i >= 0; i--) {
                 const pt = particles[i];
                 pt.x += pt.dx;
                 pt.y += pt.dy;
-                pt.alpha -= 0.04;
+                pt.alpha -= 0.05;
                 if (pt.alpha <= 0) particles.splice(i, 1);
             }
 
-            // 폭발 링
             for (let i = ringEffects.length - 1; i >= 0; i--) {
                 const ring = ringEffects[i];
                 ring.currentRadius += (ring.maxRadius - ring.currentRadius) * 0.15 + 1.0;
@@ -1632,36 +1668,44 @@
             return maxLight;
         }
 
-        // 가운데 비어있는 톱니바퀴 그리기 함수
-        function drawCogwheel(x, y, radius, innerRadius, teethCount) {
+        // 뾰족한 날카로운 톱니바퀴 그리기 함수
+        function drawSharpCogwheel(x, y, radius, rotationAngle) {
             ctx.save();
             ctx.translate(x, y);
+            ctx.rotate(rotationAngle);
+
             ctx.fillStyle = '#b026ff';
             ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth = 1.2;
+
+            const teeth = 8;
+            const outerR = radius;
+            const innerR = radius * 0.6;
 
             ctx.beginPath();
-            const toothDepth = radius * 0.25;
-            for (let i = 0; i < teethCount; i++) {
-                const a1 = (Math.PI * 2 / teethCount) * i;
-                const a2 = a1 + (Math.PI * 2 / teethCount) * 0.5;
+            for (let i = 0; i < teeth; i++) {
+                const a1 = (Math.PI * 2 / teeth) * i;
+                const a2 = a1 + (Math.PI * 2 / teeth) * 0.5;
 
-                const rOuter = radius + toothDepth;
-                const rInner = radius;
+                const x1 = Math.cos(a1) * outerR;
+                const y1 = Math.sin(a1) * outerR;
+                const xMid = Math.cos(a1 + (Math.PI * 2 / teeth) * 0.25) * innerR;
+                const yMid = Math.sin(a1 + (Math.PI * 2 / teeth) * 0.25) * innerR;
+                const x2 = Math.cos(a2) * outerR;
+                const y2 = Math.sin(a2) * outerR;
 
-                ctx.lineTo(Math.cos(a1) * rInner, Math.sin(a1) * rInner);
-                ctx.lineTo(Math.cos(a1) * rOuter, Math.sin(a1) * rOuter);
-                ctx.lineTo(Math.cos(a2) * rOuter, Math.sin(a2) * rOuter);
-                ctx.lineTo(Math.cos(a2) * rInner, Math.sin(a2) * rInner);
+                if (i === 0) ctx.moveTo(x1, y1);
+                ctx.lineTo(xMid, yMid);
+                ctx.lineTo(x2, y2);
             }
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
 
-            // 가운데 뚫린 구멍 (원)
-            ctx.globalCompositeOperation = 'destination-out';
+            // 중심부 작은 원
             ctx.beginPath();
-            ctx.arc(0, 0, innerRadius, 0, Math.PI * 2);
+            ctx.arc(0, 0, radius * 0.3, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
             ctx.fill();
             ctx.closePath();
 
@@ -1748,9 +1792,9 @@
                 ctx.restore();
             }
 
-            // 6. CBL 톱니바퀴 그리기
+            // 6. CBL 뾰족한 톱니바퀴 그리기
             const cogDistOffset = pixelSize * (1.0 + (cblCogRange - 1) * 1.0);
-            const cogRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.5);
+            const cogRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.3);
             for (let b = 0; b < cblBalls.length; b++) {
                 const ball = cblBalls[b];
                 for (let c = 0; c < cblCogCount; c++) {
@@ -1758,7 +1802,7 @@
                     const cogX = ball.x + Math.cos(angle) * (ball.radius + cogDistOffset);
                     const cogY = ball.y + Math.sin(angle) * (ball.radius + cogDistOffset);
 
-                    drawCogwheel(cogX, cogY, cogRadius, cogRadius * 0.4, 8);
+                    drawSharpCogwheel(cogX, cogY, cogRadius, ball.cogAngle * 2);
                 }
             }
 
