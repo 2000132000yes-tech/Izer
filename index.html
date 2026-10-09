@@ -645,7 +645,6 @@
         const pixelSize = size / gridCount;
 
         let emptyLights = [];
-        let lightGrid = Array.from({ length: gridCount }, () => Array(gridCount).fill(false));
 
         const centerStart = Math.floor(gridCount / 2) - 1;
         const centerEnd = centerStart + 2;
@@ -660,12 +659,10 @@
         function initFloorMap() {
             pixels = [];
             emptyLights = [];
-            lightGrid = Array.from({ length: gridCount }, () => Array(gridCount).fill(false));
 
             for (let r = centerStart; r <= centerEnd; r++) {
                 for (let c = centerStart; c <= centerEnd; c++) {
                     emptyLights.push({ x: (c + 0.5) * pixelSize, y: (r + 0.5) * pixelSize });
-                    lightGrid[r][c] = true;
                 }
             }
 
@@ -969,7 +966,6 @@
             const blockCenterY = p.y + pixelSize / 2;
 
             emptyLights.push({ x: blockCenterX, y: blockCenterY });
-            lightGrid[p.r][p.c] = true;
 
             const baseReward = oreTiers[p.tier].reward;
             gems += baseReward * gemsPerBlockBonus;
@@ -1173,46 +1169,45 @@
             }
         }
 
-        // 공 주변 및 시야 가시성 복원 (기존처럼 넓고 시원한 명암 비춰짐)
-        function isBlockLit(r, c, px, py) {
-            // 이미 부서진 곳 시야
-            if (lightGrid[r][c]) return 0.85;
+        // 빛의 감쇄(Distance-based Alpha)를 직접 연산하는 시야 시스템
+        function getLightFactor(px, py) {
+            let maxLight = 0;
 
-            // 공 주변 시야 범위 계산 (공 근처면 밝게 보임)
-            const lightRadius = pixelSize * 5.0; // 시야 범위 확장
-            for (let b = 0; b < balls.length; b++) {
-                const dist = Math.hypot(px - balls[b].x, py - balls[b].y);
-                if (dist < lightRadius) {
-                    return 0.18 + (1 - dist / lightRadius) * 0.67;
-                }
-            }
-            for (let b = 0; b < ertBalls.length; b++) {
-                const dist = Math.hypot(px - ertBalls[b].x, py - ertBalls[b].y);
-                if (dist < lightRadius) {
-                    return 0.18 + (1 - dist / lightRadius) * 0.67;
-                }
-            }
-            for (let b = 0; b < redBalls.length; b++) {
-                const dist = Math.hypot(px - redBalls[b].x, py - redBalls[b].y);
-                if (dist < lightRadius) {
-                    return 0.18 + (1 - dist / lightRadius) * 0.67;
+            // 1. 공백(파낸 공간) 광원 연산
+            const emptyLightRadius = pixelSize * 4.0;
+            for (let i = 0; i < emptyLights.length; i++) {
+                const dist = Math.hypot(px - emptyLights[i].x, py - emptyLights[i].y);
+                if (dist < emptyLightRadius) {
+                    const val = (1 - dist / emptyLightRadius) * 0.45; // 은은함 0.45
+                    if (val > maxLight) maxLight = val;
                 }
             }
 
-            // 멀리 있는 광물도 아예 칠흑처럼 까맣지 않고 은은하게 보임
-            return 0.18;
+            // 2. 공 주변 광원 연산
+            const ballLightRadius = pixelSize * 5.0;
+            const allBalls = [...balls, ...ertBalls, ...redBalls];
+            for (let i = 0; i < allBalls.length; i++) {
+                const b = allBalls[i];
+                const dist = Math.hypot(px - b.x, py - b.y);
+                if (dist < ballLightRadius) {
+                    const val = (1 - dist / ballLightRadius) * 0.95; // 공 근처 0.95
+                    if (val > maxLight) maxLight = val;
+                }
+            }
+
+            return maxLight; // 빛 범위 밖(0)은 암흑 처리
         }
 
         function draw() {
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Render Blocks
+            // 1. Render Blocks (빛 받은 영역만 렌더링)
             for (let i = 0; i < pixels.length; i++) {
                 const p = pixels[i];
-                const lightFactor = isBlockLit(p.r, p.c, p.x + pixelSize / 2, p.y + pixelSize / 2);
+                const lightFactor = getLightFactor(p.x + pixelSize / 2, p.y + pixelSize / 2);
 
-                if (lightFactor > 0) {
+                if (lightFactor > 0.02) {
                     ctx.save();
                     ctx.globalAlpha = lightFactor;
                     ctx.fillStyle = p.isBedrock ? '#ffffff' : oreTiers[p.tier].color;
@@ -1227,7 +1222,24 @@
                 }
             }
 
-            // 2. Render ert ball Lasers
+            // 2. 공백 영역 은은한 가산 광원 레이어 (Lighter Mode)
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            const emptyRadius = pixelSize * 3.5;
+            for (let i = 0; i < emptyLights.length; i++) {
+                const el = emptyLights[i];
+                const grad = ctx.createRadialGradient(el.x, el.y, 0, el.x, el.y, emptyRadius);
+                grad.addColorStop(0, 'rgba(255, 220, 150, 0.08)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.beginPath();
+                ctx.arc(el.x, el.y, emptyRadius, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // 3. Render ert ball Lasers
             for (let b = 0; b < ertBalls.length; b++) {
                 const ball = ertBalls[b];
                 for (let t = 0; t < ball.targets.length; t++) {
@@ -1242,14 +1254,14 @@
                 }
             }
 
-            // 3. Particles
+            // 4. Particles
             for (let i = 0; i < particles.length; i++) {
                 const pt = particles[i];
                 ctx.fillStyle = pt.color || `rgba(255, 165, 0, ${pt.alpha})`;
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
 
-            // 4. Render Balls
+            // 5. Render Balls
             // org ball
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
