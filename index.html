@@ -383,13 +383,13 @@
         const gridCount = 50;
         const pixelSize = size / gridCount;
 
-        // 공백(빈 공간)에 위치한 영구 원형 광원 좌표 목록
+        // 공백 은은한 광원 지점 배열
         const emptyLights = [];
 
         const centerStart = Math.floor(gridCount / 2) - 1;
         const centerEnd = centerStart + 2;
 
-        // 중앙 3x3 기본 공백 공간에 부드러운 원형 광원 생성
+        // 중앙 기본 3x3 공백
         for (let r = centerStart; r <= centerEnd; r++) {
             for (let c = centerStart; c <= centerEnd; c++) {
                 emptyLights.push({
@@ -426,7 +426,7 @@
                 radius: currentRadius,
                 dx: Math.cos(angle) * baseSpeed,
                 dy: Math.sin(angle) * baseSpeed,
-                color: 'orange',
+                color: '#ff9900',
                 history: []
             });
         }
@@ -505,7 +505,7 @@
                 const ball = balls[b];
 
                 ball.history.push({ x: ball.x, y: ball.y });
-                if (ball.history.length > 8) {
+                if (ball.history.length > 6) {
                     ball.history.shift();
                 }
 
@@ -537,7 +537,7 @@
 
                         createParticles(blockCenterX, blockCenterY);
 
-                        // 블록이 부숴진 빈 공간 자리에 원형 광원 추가 (무조건 은은하게 밝음)
+                        // 파괴된 공백 자리에 광원 배치
                         emptyLights.push({
                             x: blockCenterX,
                             y: blockCenterY
@@ -573,84 +573,64 @@
         }
 
         function draw() {
-            // 전체 검은색 배경
+            // 검은색 배경
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. 회색 블록들
-            ctx.fillStyle = '#888888';
+            // 1. 회색 블록
+            ctx.fillStyle = '#666666';
             for (let i = 0; i < pixels.length; i++) {
                 ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
 
-            // 2. 공백(빈 공간)에 켜져 있는 부드러운 원 모양 광원들
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-
-            const lightRadius = pixelSize * 2.5; // 자연스럽게 이어지도록 지정한 광원 반지름
+            // 2. 공백(빈 공간)에 대한 상한선(Max Cap)이 적용된 은은한 원형 조명
+            const lightRadius = pixelSize * 2.2;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)'; // 한계 밝기를 은은하게 고정
+            
             for (let i = 0; i < emptyLights.length; i++) {
                 const light = emptyLights[i];
-                const grad = ctx.createRadialGradient(
-                    light.x, light.y, 0,
-                    light.x, light.y, lightRadius
-                );
-                grad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
-                grad.addColorStop(0.5, 'rgba(200, 200, 255, 0.1)');
-                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
                 ctx.beginPath();
                 ctx.arc(light.x, light.y, lightRadius, 0, Math.PI * 2);
-                ctx.fillStyle = grad;
                 ctx.fill();
                 ctx.closePath();
             }
 
-            // 3. 이펙트 파티클
+            // 3. 파티클 이펙트
             for (let i = 0; i < particles.length; i++) {
                 const pt = particles[i];
                 ctx.fillStyle = `rgba(255, 165, 0, ${pt.alpha})`;
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
 
-            // 4. 빛나는 주황색 공과 실시간 공 이동 광원
+            // 4. 주황색 공 (과도한 빛은 빼고 단정하고 깔끔한 형태)
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
-                // 공 잔상
+                // 슬림한 잔상
                 for (let i = 0; i < ball.history.length; i++) {
                     const pos = ball.history[i];
                     const alpha = (i + 1) / ball.history.length;
                     ctx.beginPath();
-                    ctx.arc(pos.x, pos.y, ball.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255, 140, 0, ${alpha * 0.35})`;
+                    ctx.arc(pos.x, pos.y, ball.radius * 0.9, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 153, 0, ${alpha * 0.3})`;
                     ctx.fill();
                     ctx.closePath();
                 }
 
-                // 공 주변 실시간 원형 빛
-                const glowGradient = ctx.createRadialGradient(
-                    ball.x, ball.y, ball.radius * 0.2,
-                    ball.x, ball.y, ball.radius * 3.5
-                );
-                glowGradient.addColorStop(0, 'rgba(255, 165, 0, 0.85)');
-                glowGradient.addColorStop(0.4, 'rgba(255, 140, 0, 0.3)');
-                glowGradient.addColorStop(1, 'rgba(255, 140, 0, 0)');
-
+                // 공 자체의 최소한의 외곽 테두리 (눈부신 거대 광원 제거!)
                 ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius * 3.5, 0, Math.PI * 2);
-                ctx.fillStyle = glowGradient;
+                ctx.arc(ball.x, ball.y, ball.radius + 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 200, 100, 0.4)';
                 ctx.fill();
                 ctx.closePath();
 
                 // 주황색 공 본체
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffaa00';
+                ctx.fillStyle = ball.color;
                 ctx.fill();
                 ctx.closePath();
             }
-
-            ctx.restore();
         }
 
         function loop() {
