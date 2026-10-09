@@ -336,7 +336,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1DMG</div>
+                            <div class="upgrade-info">+1 Block</div>
                             <button class="upgrade-cost-btn" id="buyBlockBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="blockCostText">500</span>
@@ -388,10 +388,10 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">피격대상 추가</div>
+                            <div class="upgrade-info">+1 Target</div>
                             <button class="upgrade-cost-btn" id="buyTargetBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
-                                <span id="targetCostText">500</span>
+                                <span id="targetCostText">200</span>
                             </button>
                         </div>
                     </div>
@@ -445,7 +445,7 @@
         let ertBallCost = 10;
         let ertSpeedCost = 20;
         let ertDmgCost = 100;
-        let targetCost = 500;
+        let targetCost = 200;
 
         let ballSpeedLevel = 0;
         let ballSizeBonus = 0;
@@ -453,7 +453,7 @@
 
         let ertSpeedLevel = 0;
         let ertDmgBonus = 0;
-        let ertMaxTargets = 1; // 기본 1개 피격 타겟, 최대 10개까지 가능
+        let ertMaxTargets = 1;
 
         const oreTiers = [
             { color: '#777777', hp: 1,  reward: 1 },
@@ -598,8 +598,8 @@
         function createErtBall() {
             const angle = Math.random() * Math.PI * 2;
             const baseSpeed = pixelSize * 0.22 + (ertSpeedLevel * pixelSize * 0.05);
-            // ert ball 크기: 주황공의 약 2/3 크기
-            const currentRadius = pixelSize * 0.23;
+            // 크기를 적당히 확충하여 끼임 원천 방지
+            const currentRadius = pixelSize * 0.32;
 
             ertBalls.push({
                 x: (centerStart + 1.5) * pixelSize,
@@ -729,7 +729,7 @@
             if (gems >= targetCost && ertMaxTargets < 10) {
                 gems -= targetCost;
                 ertMaxTargets += 1;
-                targetCost += 500;
+                targetCost += 200;
 
                 if (ertMaxTargets >= 10) {
                     targetCostText.textContent = "MAX";
@@ -759,7 +759,7 @@
         }
 
         function update() {
-            // 1. org ball 업데이트
+            // 1. org ball
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
@@ -839,10 +839,10 @@
                 }
             }
 
-            // 2. ert ball (노란색 공 레이저 공격) 업데이트
-            const laserRange = pixelSize * 5; // 주변 5블록 사정거리
-            const dps = 0.1 + ertDmgBonus;   // 기본 초당 0.1 데미지 + 추가 강화
-            const frameDmg = dps / 60;       // 60fps 기준 프레임당 지속 데미지
+            // 2. ert ball (레이저 데미지 보정: 실질적으로 빠르게 부서지도록)
+            const laserRange = pixelSize * 5;
+            const dps = 10 + (ertDmgBonus * 10); // 기본 초당 10 데미지 적용
+            const frameDmg = dps / 60;
 
             for (let b = 0; b < ertBalls.length; b++) {
                 const ball = ertBalls[b];
@@ -871,7 +871,7 @@
                     ball.dy = -Math.abs(ball.dy);
                 }
 
-                // 일반 벽 충돌
+                // 위치 밀어내기로 틈새 보정
                 for (let i = pixels.length - 1; i >= 0; i--) {
                     const p = pixels[i];
                     const closestX = Math.max(p.x, Math.min(ball.x, p.x + pixelSize));
@@ -896,11 +896,11 @@
                     }
                 }
 
-                // 주변 5블록 이내 사정거리의 블록 탐색 및 레이저 타격
+                // 레이저 대상 탐색
                 const candidateBlocks = [];
                 for (let i = 0; i < pixels.length; i++) {
                     const p = pixels[i];
-                    if (p.isBedrock) continue; // 기반암 제외
+                    if (p.isBedrock) continue;
 
                     const blockCenterX = p.x + pixelSize / 2;
                     const blockCenterY = p.y + pixelSize / 2;
@@ -916,26 +916,22 @@
                     }
                 }
 
-                // 거리순 정렬 후 최대 타겟 수(ertMaxTargets) 만큼 타격
                 candidateBlocks.sort((a, b) => a.dist - b.dist);
                 const activeTargets = candidateBlocks.slice(0, ertMaxTargets);
                 ball.targets = activeTargets;
 
-                // 레이저 데미지 적용
                 for (let t = 0; t < activeTargets.length; t++) {
                     const target = activeTargets[t];
                     const p = target.pixel;
 
                     p.hp -= frameDmg;
 
-                    // 스파크 파티클 효과
-                    if (Math.random() < 0.2) {
-                        createParticles(target.cx, target.cy, '#ffea00');
-                    }
-
+                    // 파괴될 때만 파티클 생성 (평소에는 노란 이펙트 안 나옴)
                     if (p.hp <= 0) {
                         const index = pixels.indexOf(p);
                         if (index !== -1) {
+                            createParticles(target.cx, target.cy, oreTiers[p.tier].color);
+
                             emptyLights.push({
                                 x: target.cx,
                                 y: target.cy
@@ -1022,7 +1018,7 @@
                 }
             }
 
-            // 2. 광원
+            // 2. 은은한 광원
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
             const lightRadius = pixelSize * 3.2;
@@ -1044,7 +1040,7 @@
                 ctx.closePath();
             }
 
-            // 3. ert ball 지속 레이저 공격 광선 렌더링
+            // 3. ert ball 레이저 비주얼 렌더링
             for (let b = 0; b < ertBalls.length; b++) {
                 const ball = ertBalls[b];
                 for (let t = 0; t < ball.targets.length; t++) {
@@ -1053,9 +1049,7 @@
                     ctx.moveTo(ball.x, ball.y);
                     ctx.lineTo(target.cx, target.cy);
                     ctx.strokeStyle = 'rgba(255, 234, 0, 0.85)';
-                    ctx.lineWidth = pixelSize * 0.15;
-                    ctx.shadowColor = '#ffea00';
-                    ctx.shadowBlur = 6;
+                    ctx.lineWidth = pixelSize * 0.12;
                     ctx.stroke();
                     ctx.closePath();
                 }
@@ -1070,7 +1064,7 @@
             ctx.restore();
 
             // 5. 공 렌더링
-            // org ball (주황색 공)
+            // org ball
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
@@ -1091,7 +1085,7 @@
                 ctx.closePath();
             }
 
-            // ert ball (노란색 레이저 공)
+            // ert ball
             for (let b = 0; b < ertBalls.length; b++) {
                 const ball = ertBalls[b];
 
