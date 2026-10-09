@@ -362,7 +362,21 @@
 
         let ballSpeedBonus = 0;
         let ballSizeBonus = 0;
-        let gemsPerBlock = 1;
+        let gemsPerBlockBonus = 0;
+
+        // 순서별 광원/블록 데이터 (회색 ~ 보라색)
+        const oreTiers = [
+            { color: '#777777', value: 1 },  // 1. 회색
+            { color: '#ffea00', value: 2 },  // 2. 노랑
+            { color: '#ff9900', value: 3 },  // 3. 주황
+            { color: '#ff3333', value: 4 },  // 4. 빨강
+            { color: '#a6ff00', value: 5 },  // 5. 연두
+            { color: '#00cc44', value: 6 },  // 6. 초록
+            { color: '#0066ff', value: 7 },  // 7. 파랑
+            { color: '#00e5ff', value: 8 },  // 8. 하늘
+            { color: '#ff66cc', value: 9 },  // 9. 핑크
+            { color: '#9933ff', value: 10 }  // 10. 보라색
+        ];
 
         function updateGemUI() {
             gemCountTexts.forEach(el => el.textContent = gems);
@@ -408,7 +422,8 @@
                 }
                 pixels.push({
                     x: c * pixelSize,
-                    y: r * pixelSize
+                    y: r * pixelSize,
+                    tier: 0 // 기본 0단계 (회색, 가치: 1)
                 });
             }
         }
@@ -424,7 +439,7 @@
                 radius: currentRadius,
                 dx: Math.cos(angle) * baseSpeed,
                 dy: Math.sin(angle) * baseSpeed,
-                color: '#ff9900',
+                color: '#ffaa00',
                 history: []
             });
         }
@@ -477,12 +492,12 @@
                 gems -= blockCost;
                 blockCost += 500;
                 blockCostText.textContent = blockCost;
-                gemsPerBlock += 1;
+                gemsPerBlockBonus += 1;
                 updateGemUI();
             }
         });
 
-        function createParticles(x, y) {
+        function createParticles(x, y, color) {
             for (let i = 0; i < 8; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const speed = Math.random() * 2 + 1;
@@ -493,7 +508,8 @@
                     dy: Math.sin(angle) * speed,
                     size: pixelSize * 0.3,
                     alpha: 1,
-                    life: 0.05
+                    life: 0.05,
+                    color: color
                 });
             }
         }
@@ -533,17 +549,25 @@
                         const blockCenterX = p.x + pixelSize / 2;
                         const blockCenterY = p.y + pixelSize / 2;
 
-                        createParticles(blockCenterX, blockCenterY);
+                        const currentTierData = oreTiers[p.tier];
+
+                        createParticles(blockCenterX, blockCenterY, currentTierData.color);
 
                         emptyLights.push({
                             x: blockCenterX,
                             y: blockCenterY
                         });
 
-                        pixels.splice(i, 1);
-
-                        gems += gemsPerBlock;
+                        // 획득 재화 = 현재 광원의 티어 가치 + 업그레이드 보너스
+                        gems += currentTierData.value + gemsPerBlockBonus;
                         updateGemUI();
+
+                        // 블록 단계 상향 (다음 티어로 변환)
+                        if (p.tier < oreTiers.length - 1) {
+                            p.tier += 1;
+                        } else {
+                            pixels.splice(i, 1); // 최고 단계 도달 시 파괴
+                        }
 
                         if (Math.abs(distX) > Math.abs(distY)) {
                             ball.dx = -ball.dx;
@@ -573,22 +597,21 @@
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. 회색 블록
-            ctx.fillStyle = '#555555';
+            // 1. 단계별 광물 블록 렌더링
             for (let i = 0; i < pixels.length; i++) {
-                ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
+                const p = pixels[i];
+                ctx.fillStyle = oreTiers[p.tier].color;
+                ctx.fillRect(p.x, p.y, pixelSize - 0.5, pixelSize - 0.5);
             }
 
-            // 2. 외곽선이 남지 않는 부드러운 방사형 페이드아웃 광원 연출
+            // 2. 공백 광원 레이어 (빛을 아래 레이어로 연출)
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
 
-            const lightRadius = pixelSize * 3.5; 
+            const lightRadius = pixelSize * 3.5;
 
             for (let i = 0; i < emptyLights.length; i++) {
                 const light = emptyLights[i];
-                
-                // 중심에서부터 외곽으로 갈수록 알파값이 부드럽게 감소하는 그라데이션
                 const grad = ctx.createRadialGradient(
                     light.x, light.y, 0,
                     light.x, light.y, lightRadius
@@ -608,46 +631,40 @@
             // 3. 파티클 이펙트
             for (let i = 0; i < particles.length; i++) {
                 const pt = particles[i];
-                ctx.fillStyle = `rgba(255, 165, 0, ${pt.alpha})`;
+                ctx.fillStyle = pt.color || `rgba(255, 165, 0, ${pt.alpha})`;
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
+            ctx.restore();
 
-            // 4. 주황색 공 (부드러운 외곽 포함)
+            // 4. 주황색 공 (빛 레이어 가장 최상단 위쪽에 렌더링하여 선명하게 보이도록 설정)
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
+                // 잔상
                 for (let i = 0; i < ball.history.length; i++) {
                     const pos = ball.history[i];
                     const alpha = (i + 1) / ball.history.length;
                     ctx.beginPath();
-                    ctx.arc(pos.x, pos.y, ball.radius * 0.9, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255, 153, 0, ${alpha * 0.3})`;
+                    ctx.arc(pos.x, pos.y, ball.radius * 0.85, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 170, 0, ${alpha * 0.4})`;
                     ctx.fill();
                     ctx.closePath();
                 }
 
-                // 공의 자연스러운 주변 보더
-                const ballGlow = ctx.createRadialGradient(
-                    ball.x, ball.y, ball.radius * 0.5,
-                    ball.x, ball.y, ball.radius * 1.8
-                );
-                ballGlow.addColorStop(0, 'rgba(255, 200, 100, 0.6)');
-                ballGlow.addColorStop(1, 'rgba(255, 153, 0, 0)');
-
+                // 외곽 테두리 링
                 ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius * 1.8, 0, Math.PI * 2);
-                ctx.fillStyle = ballGlow;
+                ctx.arc(ball.x, ball.y, ball.radius + 1.2, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
                 ctx.fill();
                 ctx.closePath();
 
+                // 공 본체
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
                 ctx.fillStyle = ball.color;
                 ctx.fill();
                 ctx.closePath();
             }
-
-            ctx.restore();
         }
 
         function loop() {
