@@ -667,28 +667,27 @@
             }
         }
 
-        // 광원과의 거리에 따른 블록의 가시성(밝기) 계산
+        // 광원과의 거리에 따른 밝기 계산 (상한선 제한 적용)
         function getBlockLightAlpha(bx, by) {
-            let maxLight = 0.12; // 빛이 안 닿는 영역 기본 마스킹 (어둡게 처리)
+            let maxLight = 0.12; // 빛이 없는 곳 기본 어둠
             const lightRadius = pixelSize * 3.5;
 
-            // 1. 공백 광원 체크
             for (let i = 0; i < emptyLights.length; i++) {
                 const light = emptyLights[i];
                 const dist = Math.hypot(bx - light.x, by - light.y);
                 if (dist < lightRadius) {
                     const factor = 1 - (dist / lightRadius);
-                    maxLight = Math.max(maxLight, 0.12 + factor * 0.88);
+                    // 과노출을 방지하기 위해 최대 가시성을 0.85로 제어
+                    maxLight = Math.max(maxLight, Math.min(0.85, 0.12 + factor * 0.73));
                 }
             }
 
-            // 2. 공 주변 실시간 광원 체크
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
                 const dist = Math.hypot(bx - ball.x, by - ball.y);
                 if (dist < lightRadius * 1.2) {
                     const factor = 1 - (dist / (lightRadius * 1.2));
-                    maxLight = Math.max(maxLight, 0.12 + factor * 0.88);
+                    maxLight = Math.max(maxLight, Math.min(0.85, 0.12 + factor * 0.73));
                 }
             }
 
@@ -699,7 +698,7 @@
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. 블록 렌더링 (빛 근처에 있을수록 선명해지고 멀어지면 어두워짐)
+            // 1. 톤다운된 블록 렌더링
             for (let i = 0; i < pixels.length; i++) {
                 const p = pixels[i];
                 const centerX = p.x + pixelSize / 2;
@@ -708,7 +707,7 @@
                 const lightFactor = getBlockLightAlpha(centerX, centerY);
 
                 ctx.save();
-                ctx.globalAlpha = lightFactor; // 빛 거리에 따른 자연스러운 투명도 적용
+                ctx.globalAlpha = lightFactor;
                 ctx.fillStyle = p.isBedrock ? '#ffffff' : oreTiers[p.tier].color;
                 ctx.fillRect(p.x, p.y, pixelSize - 0.5, pixelSize - 0.5);
 
@@ -720,10 +719,10 @@
                 ctx.restore();
             }
 
-            // 2. 은은하게 퍼지는 화사한 원형 공백 광원 효과 (따뜻하고 밝은 톤)
+            // 2. 은은하게 누적되는 광원 (중첩 시 밝아짐 대폭 억제)
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
-            const lightRadius = pixelSize * 3.5;
+            const lightRadius = pixelSize * 3.2;
 
             for (let i = 0; i < emptyLights.length; i++) {
                 const light = emptyLights[i];
@@ -731,8 +730,9 @@
                     light.x, light.y, 0,
                     light.x, light.y, lightRadius
                 );
-                grad.addColorStop(0, 'rgba(255, 240, 200, 0.18)');
-                grad.addColorStop(0.5, 'rgba(255, 200, 150, 0.08)');
+                // 투명도를 낮추어 밝기가 지나치게 오르는 현상 차단
+                grad.addColorStop(0, 'rgba(255, 230, 180, 0.06)');
+                grad.addColorStop(0.5, 'rgba(255, 190, 120, 0.025)');
                 grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
                 ctx.beginPath();
@@ -750,11 +750,10 @@
             }
             ctx.restore();
 
-            // 4. 최상단 최우선 주황색 공 렌더링
+            // 4. 최상단 선명한 주황색 공
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
-                // 공 이동 경로 빛 및 잔상
                 for (let i = 0; i < ball.history.length; i++) {
                     const pos = ball.history[i];
                     const alpha = (i + 1) / ball.history.length;
@@ -765,7 +764,6 @@
                     ctx.closePath();
                 }
 
-                // 주황색 공 본체
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
                 ctx.fillStyle = ball.color;
