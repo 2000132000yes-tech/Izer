@@ -157,7 +157,7 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             padding-right: 4px;
         }
 
@@ -192,6 +192,16 @@
             display: inline-block;
             margin-left: 8px;
             box-shadow: 0 0 8px rgba(255, 165, 0, 0.9);
+        }
+
+        .yellow-ball-icon {
+            width: 14px;
+            height: 14px;
+            background-color: #ffea00;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+            box-shadow: 0 0 8px rgba(255, 234, 0, 0.9);
         }
 
         .upgrade-cost-btn {
@@ -283,10 +293,11 @@
             </div>
 
             <div class="upgrade-list">
+                <!-- org ball 카드 -->
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
-                            +1 ball <span class="orange-ball-icon"></span>
+                            +1 org ball <span class="orange-ball-icon"></span>
                         </div>
                         <button class="upgrade-cost-btn" id="buyBallBtn">
                             <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
@@ -294,13 +305,13 @@
                         </button>
                     </div>
                     <button class="toggle-arrow-btn" id="toggleOrangeBallBtn">
-                        <span id="arrowIcon">▼</span> 주황색 공 강화 옵션
+                        <span id="arrowIcon">▼</span> org ball 강화 옵션
                     </button>
                 </div>
 
                 <div class="sub-upgrade-container" id="orangeBallSubMenu">
                     <div class="section-title">
-                        <span class="orange-ball-icon" style="margin-left:0;"></span> 주황색 공 전용 옵션
+                        <span class="orange-ball-icon" style="margin-left:0;"></span> org ball 전용 옵션
                     </div>
 
                     <div class="upgrade-card">
@@ -325,10 +336,62 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Block</div>
+                            <div class="upgrade-info">+1DMG</div>
                             <button class="upgrade-cost-btn" id="buyBlockBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="blockCostText">500</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ert ball 카드 -->
+                <div class="upgrade-card">
+                    <div class="card-row">
+                        <div class="upgrade-info">
+                            +1 ert ball <span class="yellow-ball-icon"></span>
+                        </div>
+                        <button class="upgrade-cost-btn" id="buyErtBallBtn">
+                            <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                            <span id="ertBallCostText">10</span>
+                        </button>
+                    </div>
+                    <button class="toggle-arrow-btn" id="toggleYellowBallBtn">
+                        <span id="yellowArrowIcon">▼</span> ert ball 강화 옵션
+                    </button>
+                </div>
+
+                <div class="sub-upgrade-container" id="yellowBallSubMenu">
+                    <div class="section-title">
+                        <span class="yellow-ball-icon" style="margin-left:0;"></span> ert ball 전용 옵션
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+1 Speed</div>
+                            <button class="upgrade-cost-btn" id="buyErtSpeedBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="ertSpeedCostText">20</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">+0.5DMG</div>
+                            <button class="upgrade-cost-btn" id="buyErtDmgBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="ertDmgCostText">100</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div class="card-row">
+                            <div class="upgrade-info">피격대상 추가</div>
+                            <button class="upgrade-cost-btn" id="buyTargetBtn">
+                                <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
+                                <span id="targetCostText">500</span>
                             </button>
                         </div>
                     </div>
@@ -351,6 +414,10 @@
         const orangeBallSubMenu = document.getElementById('orangeBallSubMenu');
         const arrowIcon = document.getElementById('arrowIcon');
 
+        const toggleYellowBallBtn = document.getElementById('toggleYellowBallBtn');
+        const yellowBallSubMenu = document.getElementById('yellowBallSubMenu');
+        const yellowArrowIcon = document.getElementById('yellowArrowIcon');
+
         const buyBallBtn = document.getElementById('buyBallBtn');
         const ballCostText = document.getElementById('ballCostText');
         const buySpeedBtn = document.getElementById('buySpeedBtn');
@@ -360,15 +427,33 @@
         const buyBlockBtn = document.getElementById('buyBlockBtn');
         const blockCostText = document.getElementById('blockCostText');
 
+        const buyErtBallBtn = document.getElementById('buyErtBallBtn');
+        const ertBallCostText = document.getElementById('ertBallCostText');
+        const buyErtSpeedBtn = document.getElementById('buyErtSpeedBtn');
+        const ertSpeedCostText = document.getElementById('ertSpeedCostText');
+        const buyErtDmgBtn = document.getElementById('buyErtDmgBtn');
+        const ertDmgCostText = document.getElementById('ertDmgCostText');
+        const buyTargetBtn = document.getElementById('buyTargetBtn');
+        const targetCostText = document.getElementById('targetCostText');
+
         let gems = 0;
         let ballCost = 10;
         let speedCost = 20;
         let sizeCost = 50;
         let blockCost = 500;
 
+        let ertBallCost = 10;
+        let ertSpeedCost = 20;
+        let ertDmgCost = 100;
+        let targetCost = 500;
+
         let ballSpeedLevel = 0;
         let ballSizeBonus = 0;
         let gemsPerBlockBonus = 0;
+
+        let ertSpeedLevel = 0;
+        let ertDmgBonus = 0;
+        let ertMaxTargets = 1; // 기본 1개 피격 타겟, 최대 10개까지 가능
 
         const oreTiers = [
             { color: '#777777', hp: 1,  reward: 1 },
@@ -395,6 +480,11 @@
             arrowIcon.textContent = isOpen ? '▲' : '▼';
         });
 
+        toggleYellowBallBtn.addEventListener('click', () => {
+            const isOpen = yellowBallSubMenu.classList.toggle('open');
+            yellowArrowIcon.textContent = isOpen ? '▲' : '▼';
+        });
+
         const size = Math.min(window.innerWidth, window.innerHeight);
         canvas.width = size;
         canvas.height = size;
@@ -419,6 +509,7 @@
         let pixels = [];
         const particles = [];
         const balls = [];
+        const ertBalls = [];
 
         const gridMap = Array.from({ length: gridCount }, () => Array(gridCount).fill(null));
 
@@ -504,6 +595,24 @@
             });
         }
 
+        function createErtBall() {
+            const angle = Math.random() * Math.PI * 2;
+            const baseSpeed = pixelSize * 0.22 + (ertSpeedLevel * pixelSize * 0.05);
+            // ert ball 크기: 주황공의 약 2/3 크기
+            const currentRadius = pixelSize * 0.23;
+
+            ertBalls.push({
+                x: (centerStart + 1.5) * pixelSize,
+                y: (centerStart + 1.5) * pixelSize,
+                radius: currentRadius,
+                dx: Math.cos(angle) * baseSpeed,
+                dy: Math.sin(angle) * baseSpeed,
+                color: '#ffea00',
+                history: [],
+                targets: []
+            });
+        }
+
         createBall();
 
         buyBallBtn.addEventListener('click', () => {
@@ -572,6 +681,66 @@
             }
         });
 
+        // ert ball 업그레이드 이벤트
+        buyErtBallBtn.addEventListener('click', () => {
+            if (gems >= ertBallCost) {
+                gems -= ertBallCost;
+                ertBallCost += 10;
+                ertBallCostText.textContent = ertBallCost;
+                updateGemUI();
+                createErtBall();
+            }
+        });
+
+        buyErtSpeedBtn.addEventListener('click', () => {
+            if (gems >= ertSpeedCost && ertSpeedLevel < 5) {
+                gems -= ertSpeedCost;
+                ertSpeedLevel += 1;
+                ertSpeedCost += 20;
+
+                if (ertSpeedLevel >= 5) {
+                    ertSpeedCostText.textContent = "MAX";
+                    buyErtSpeedBtn.disabled = true;
+                } else {
+                    ertSpeedCostText.textContent = ertSpeedCost;
+                }
+                updateGemUI();
+
+                ertBalls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.22 + (ertSpeedLevel * pixelSize * 0.05);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+            }
+        });
+
+        buyErtDmgBtn.addEventListener('click', () => {
+            if (gems >= ertDmgCost) {
+                gems -= ertDmgCost;
+                ertDmgBonus += 0.5;
+                ertDmgCost += 100;
+                ertDmgCostText.textContent = ertDmgCost;
+                updateGemUI();
+            }
+        });
+
+        buyTargetBtn.addEventListener('click', () => {
+            if (gems >= targetCost && ertMaxTargets < 10) {
+                gems -= targetCost;
+                ertMaxTargets += 1;
+                targetCost += 500;
+
+                if (ertMaxTargets >= 10) {
+                    targetCostText.textContent = "MAX";
+                    buyTargetBtn.disabled = true;
+                } else {
+                    targetCostText.textContent = targetCost;
+                }
+                updateGemUI();
+            }
+        });
+
         function createParticles(x, y, color) {
             for (let i = 0; i < 8; i++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -590,6 +759,7 @@
         }
 
         function update() {
+            // 1. org ball 업데이트
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
@@ -598,11 +768,9 @@
                     ball.history.shift();
                 }
 
-                // 이동 적용
                 ball.x += ball.dx;
                 ball.y += ball.dy;
 
-                // 1. 외곽 벽면 충돌 및 끼임 방지
                 if (ball.x - ball.radius < 0) {
                     ball.x = ball.radius;
                     ball.dx = Math.abs(ball.dx);
@@ -619,11 +787,9 @@
                     ball.dy = -Math.abs(ball.dy);
                 }
 
-                // 2. 블록 충돌 및 밀어내기 처리 (끼임 해결)
                 for (let i = pixels.length - 1; i >= 0; i--) {
                     const p = pixels[i];
 
-                    // 블록 중심 및 가장 가까운 지점 계산
                     const closestX = Math.max(p.x, Math.min(ball.x, p.x + pixelSize));
                     const closestY = Math.max(p.y, Math.min(ball.y, p.y + pixelSize));
 
@@ -635,7 +801,6 @@
                         const blockCenterX = p.x + pixelSize / 2;
                         const blockCenterY = p.y + pixelSize / 2;
 
-                        // 위치 밀어내기 보정 (끼임 현상 원천 차단)
                         const overlap = ball.radius - distance;
                         if (distance > 0) {
                             ball.x += (distX / distance) * overlap;
@@ -664,13 +829,123 @@
                             }
                         }
 
-                        // 반사 방향 반전
                         if (Math.abs(distX) > Math.abs(distY)) {
                             ball.dx = -ball.dx;
                         } else {
                             ball.dy = -ball.dy;
                         }
                         break;
+                    }
+                }
+            }
+
+            // 2. ert ball (노란색 공 레이저 공격) 업데이트
+            const laserRange = pixelSize * 5; // 주변 5블록 사정거리
+            const dps = 0.1 + ertDmgBonus;   // 기본 초당 0.1 데미지 + 추가 강화
+            const frameDmg = dps / 60;       // 60fps 기준 프레임당 지속 데미지
+
+            for (let b = 0; b < ertBalls.length; b++) {
+                const ball = ertBalls[b];
+
+                ball.history.push({ x: ball.x, y: ball.y });
+                if (ball.history.length > 5) {
+                    ball.history.shift();
+                }
+
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+
+                if (ball.x - ball.radius < 0) {
+                    ball.x = ball.radius;
+                    ball.dx = Math.abs(ball.dx);
+                } else if (ball.x + ball.radius > canvas.width) {
+                    ball.x = canvas.width - ball.radius;
+                    ball.dx = -Math.abs(ball.dx);
+                }
+
+                if (ball.y - ball.radius < 0) {
+                    ball.y = ball.radius;
+                    ball.dy = Math.abs(ball.dy);
+                } else if (ball.y + ball.radius > canvas.height) {
+                    ball.y = canvas.height - ball.radius;
+                    ball.dy = -Math.abs(ball.dy);
+                }
+
+                // 일반 벽 충돌
+                for (let i = pixels.length - 1; i >= 0; i--) {
+                    const p = pixels[i];
+                    const closestX = Math.max(p.x, Math.min(ball.x, p.x + pixelSize));
+                    const closestY = Math.max(p.y, Math.min(ball.y, p.y + pixelSize));
+                    const distX = ball.x - closestX;
+                    const distY = ball.y - closestY;
+                    const distance = Math.hypot(distX, distY);
+
+                    if (distance < ball.radius) {
+                        const overlap = ball.radius - distance;
+                        if (distance > 0) {
+                            ball.x += (distX / distance) * overlap;
+                            ball.y += (distY / distance) * overlap;
+                        }
+
+                        if (Math.abs(distX) > Math.abs(distY)) {
+                            ball.dx = -ball.dx;
+                        } else {
+                            ball.dy = -ball.dy;
+                        }
+                        break;
+                    }
+                }
+
+                // 주변 5블록 이내 사정거리의 블록 탐색 및 레이저 타격
+                const candidateBlocks = [];
+                for (let i = 0; i < pixels.length; i++) {
+                    const p = pixels[i];
+                    if (p.isBedrock) continue; // 기반암 제외
+
+                    const blockCenterX = p.x + pixelSize / 2;
+                    const blockCenterY = p.y + pixelSize / 2;
+                    const dist = Math.hypot(ball.x - blockCenterX, ball.y - blockCenterY);
+
+                    if (dist <= laserRange) {
+                        candidateBlocks.push({
+                            pixel: p,
+                            dist: dist,
+                            cx: blockCenterX,
+                            cy: blockCenterY
+                        });
+                    }
+                }
+
+                // 거리순 정렬 후 최대 타겟 수(ertMaxTargets) 만큼 타격
+                candidateBlocks.sort((a, b) => a.dist - b.dist);
+                const activeTargets = candidateBlocks.slice(0, ertMaxTargets);
+                ball.targets = activeTargets;
+
+                // 레이저 데미지 적용
+                for (let t = 0; t < activeTargets.length; t++) {
+                    const target = activeTargets[t];
+                    const p = target.pixel;
+
+                    p.hp -= frameDmg;
+
+                    // 스파크 파티클 효과
+                    if (Math.random() < 0.2) {
+                        createParticles(target.cx, target.cy, '#ffea00');
+                    }
+
+                    if (p.hp <= 0) {
+                        const index = pixels.indexOf(p);
+                        if (index !== -1) {
+                            emptyLights.push({
+                                x: target.cx,
+                                y: target.cy
+                            });
+
+                            gems += oreTiers[p.tier].reward;
+                            updateGemUI();
+
+                            pixels.splice(index, 1);
+                        }
                     }
                 }
             }
@@ -708,6 +983,15 @@
                 }
             }
 
+            for (let b = 0; b < ertBalls.length; b++) {
+                const ball = ertBalls[b];
+                const dist = Math.hypot(bx - ball.x, by - ball.y);
+                if (dist < lightRadius * 1.2) {
+                    const factor = 1 - (dist / (lightRadius * 1.2));
+                    maxLight = Math.max(maxLight, Math.min(0.85, factor * 0.85));
+                }
+            }
+
             return maxLight;
         }
 
@@ -738,7 +1022,7 @@
                 }
             }
 
-            // 2. 은은하게 누적되는 광원
+            // 2. 광원
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
             const lightRadius = pixelSize * 3.2;
@@ -760,7 +1044,24 @@
                 ctx.closePath();
             }
 
-            // 3. 파티클 이펙트
+            // 3. ert ball 지속 레이저 공격 광선 렌더링
+            for (let b = 0; b < ertBalls.length; b++) {
+                const ball = ertBalls[b];
+                for (let t = 0; t < ball.targets.length; t++) {
+                    const target = ball.targets[t];
+                    ctx.beginPath();
+                    ctx.moveTo(ball.x, ball.y);
+                    ctx.lineTo(target.cx, target.cy);
+                    ctx.strokeStyle = 'rgba(255, 234, 0, 0.85)';
+                    ctx.lineWidth = pixelSize * 0.15;
+                    ctx.shadowColor = '#ffea00';
+                    ctx.shadowBlur = 6;
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+            }
+
+            // 4. 파티클 이펙트
             for (let i = 0; i < particles.length; i++) {
                 const pt = particles[i];
                 ctx.fillStyle = pt.color || `rgba(255, 165, 0, ${pt.alpha})`;
@@ -768,7 +1069,8 @@
             }
             ctx.restore();
 
-            // 4. 최상단 선명한 주황색 공
+            // 5. 공 렌더링
+            // org ball (주황색 공)
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
@@ -778,6 +1080,27 @@
                     ctx.beginPath();
                     ctx.arc(pos.x, pos.y, ball.radius * 0.85, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(255, 153, 0, ${alpha * 0.35})`;
+                    ctx.fill();
+                    ctx.closePath();
+                }
+
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            // ert ball (노란색 레이저 공)
+            for (let b = 0; b < ertBalls.length; b++) {
+                const ball = ertBalls[b];
+
+                for (let i = 0; i < ball.history.length; i++) {
+                    const pos = ball.history[i];
+                    const alpha = (i + 1) / ball.history.length;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, ball.radius * 0.85, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 234, 0, ${alpha * 0.35})`;
                     ctx.fill();
                     ctx.closePath();
                 }
