@@ -383,11 +383,21 @@
         const gridCount = 50;
         const pixelSize = size / gridCount;
 
-        // 퍼져나가는 원형 파동(Shockwave) 목록
-        const lightWaves = [];
+        // 공백(빈 공간)에 위치한 영구 원형 광원 좌표 목록
+        const emptyLights = [];
 
         const centerStart = Math.floor(gridCount / 2) - 1;
         const centerEnd = centerStart + 2;
+
+        // 중앙 3x3 기본 공백 공간에 부드러운 원형 광원 생성
+        for (let r = centerStart; r <= centerEnd; r++) {
+            for (let c = centerStart; c <= centerEnd; c++) {
+                emptyLights.push({
+                    x: (c + 0.5) * pixelSize,
+                    y: (r + 0.5) * pixelSize
+                });
+            }
+        }
 
         let pixels = [];
         const particles = [];
@@ -491,17 +501,6 @@
         }
 
         function update() {
-            // 퍼져나가는 빛의 파동 계산
-            for (let i = lightWaves.length - 1; i >= 0; i--) {
-                const wave = lightWaves[i];
-                wave.radius += wave.speed;
-                wave.alpha -= wave.fade;
-
-                if (wave.alpha <= 0) {
-                    lightWaves.splice(i, 1);
-                }
-            }
-
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
@@ -537,16 +536,11 @@
                         const blockCenterY = p.y + pixelSize / 2;
 
                         createParticles(blockCenterX, blockCenterY);
-                        
-                        // 부순 자리에서 바깥으로 퍼지는 빛의 링 생성
-                        lightWaves.push({
+
+                        // 블록이 부숴진 빈 공간 자리에 원형 광원 추가 (무조건 은은하게 밝음)
+                        emptyLights.push({
                             x: blockCenterX,
-                            y: blockCenterY,
-                            radius: pixelSize * 0.5,
-                            maxRadius: pixelSize * 5.0,
-                            speed: pixelSize * 0.25,
-                            alpha: 0.8,
-                            fade: 0.02
+                            y: blockCenterY
                         });
 
                         pixels.splice(i, 1);
@@ -579,7 +573,7 @@
         }
 
         function draw() {
-            // 검은색 배경
+            // 전체 검은색 배경
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -589,38 +583,40 @@
                 ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
 
-            // 2. 블록 부수었을 때 외부로 퍼져나가는 파동 빛
+            // 2. 공백(빈 공간)에 켜져 있는 부드러운 원 모양 광원들
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
 
-            for (let i = 0; i < lightWaves.length; i++) {
-                const wave = lightWaves[i];
+            const lightRadius = pixelSize * 2.5; // 자연스럽게 이어지도록 지정한 광원 반지름
+            for (let i = 0; i < emptyLights.length; i++) {
+                const light = emptyLights[i];
                 const grad = ctx.createRadialGradient(
-                    wave.x, wave.y, wave.radius * 0.2,
-                    wave.x, wave.y, wave.radius
+                    light.x, light.y, 0,
+                    light.x, light.y, lightRadius
                 );
-                grad.addColorStop(0, `rgba(255, 180, 50, ${wave.alpha})`);
-                grad.addColorStop(0.6, `rgba(255, 140, 0, ${wave.alpha * 0.4})`);
+                grad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+                grad.addColorStop(0.5, 'rgba(200, 200, 255, 0.1)');
                 grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
                 ctx.beginPath();
-                ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+                ctx.arc(light.x, light.y, lightRadius, 0, Math.PI * 2);
                 ctx.fillStyle = grad;
                 ctx.fill();
                 ctx.closePath();
             }
 
-            // 3. 파티클
+            // 3. 이펙트 파티클
             for (let i = 0; i < particles.length; i++) {
                 const pt = particles[i];
                 ctx.fillStyle = `rgba(255, 165, 0, ${pt.alpha})`;
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
 
-            // 4. 주황색 공 및 퍼지는 실시간 광원
+            // 4. 빛나는 주황색 공과 실시간 공 이동 광원
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
+                // 공 잔상
                 for (let i = 0; i < ball.history.length; i++) {
                     const pos = ball.history[i];
                     const alpha = (i + 1) / ball.history.length;
@@ -631,20 +627,22 @@
                     ctx.closePath();
                 }
 
+                // 공 주변 실시간 원형 빛
                 const glowGradient = ctx.createRadialGradient(
                     ball.x, ball.y, ball.radius * 0.2,
-                    ball.x, ball.y, ball.radius * 4.0
+                    ball.x, ball.y, ball.radius * 3.5
                 );
                 glowGradient.addColorStop(0, 'rgba(255, 165, 0, 0.85)');
                 glowGradient.addColorStop(0.4, 'rgba(255, 140, 0, 0.3)');
                 glowGradient.addColorStop(1, 'rgba(255, 140, 0, 0)');
 
                 ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius * 4.0, 0, Math.PI * 2);
+                ctx.arc(ball.x, ball.y, ball.radius * 3.5, 0, Math.PI * 2);
                 ctx.fillStyle = glowGradient;
                 ctx.fill();
                 ctx.closePath();
 
+                // 주황색 공 본체
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
                 ctx.fillStyle = '#ffaa00';
