@@ -383,20 +383,11 @@
         const gridCount = 50;
         const pixelSize = size / gridCount;
 
-        // 확장되는 원형 광원 객체 목록
-        const expandingLights = [];
+        // 퍼져나가는 원형 파동(Shockwave) 목록
+        const lightWaves = [];
 
         const centerStart = Math.floor(gridCount / 2) - 1;
         const centerEnd = centerStart + 2;
-
-        // 초기 3x3 중심 공간의 광원 (고정)
-        expandingLights.push({
-            x: (centerStart + 1.5) * pixelSize,
-            y: (centerStart + 1.5) * pixelSize,
-            currentRadius: pixelSize * 5.0,
-            targetRadius: pixelSize * 5.0,
-            expandSpeed: 0
-        });
 
         let pixels = [];
         const particles = [];
@@ -500,14 +491,14 @@
         }
 
         function update() {
-            // 부드럽게 반경이 확장되는 광원 계산
-            for (let i = 0; i < expandingLights.length; i++) {
-                const light = expandingLights[i];
-                if (light.currentRadius < light.targetRadius) {
-                    light.currentRadius += light.expandSpeed;
-                    if (light.currentRadius > light.targetRadius) {
-                        light.currentRadius = light.targetRadius;
-                    }
+            // 퍼져나가는 빛의 파동 계산
+            for (let i = lightWaves.length - 1; i >= 0; i--) {
+                const wave = lightWaves[i];
+                wave.radius += wave.speed;
+                wave.alpha -= wave.fade;
+
+                if (wave.alpha <= 0) {
+                    lightWaves.splice(i, 1);
                 }
             }
 
@@ -547,13 +538,15 @@
 
                         createParticles(blockCenterX, blockCenterY);
                         
-                        // 부순 자리에 커지면서 확장되는 광원 생성
-                        expandingLights.push({
+                        // 부순 자리에서 바깥으로 퍼지는 빛의 링 생성
+                        lightWaves.push({
                             x: blockCenterX,
                             y: blockCenterY,
-                            currentRadius: pixelSize * 0.5,
-                            targetRadius: pixelSize * 4.5,
-                            expandSpeed: pixelSize * 0.15 // 서서히 커지는 속도
+                            radius: pixelSize * 0.5,
+                            maxRadius: pixelSize * 5.0,
+                            speed: pixelSize * 0.25,
+                            alpha: 0.8,
+                            fade: 0.02
                         });
 
                         pixels.splice(i, 1);
@@ -586,32 +579,32 @@
         }
 
         function draw() {
-            // 어두운 배경
+            // 검은색 배경
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. 아직 어두운 안개 속의 회색 블록들
-            ctx.fillStyle = '#141414';
+            // 1. 회색 블록들
+            ctx.fillStyle = '#888888';
             for (let i = 0; i < pixels.length; i++) {
                 ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
 
-            // 2. 부드럽게 퍼지며 커지는 광원(Light Expansion Effect)
+            // 2. 블록 부수었을 때 외부로 퍼져나가는 파동 빛
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
 
-            for (let i = 0; i < expandingLights.length; i++) {
-                const light = expandingLights[i];
+            for (let i = 0; i < lightWaves.length; i++) {
+                const wave = lightWaves[i];
                 const grad = ctx.createRadialGradient(
-                    light.x, light.y, 0,
-                    light.x, light.y, light.currentRadius
+                    wave.x, wave.y, wave.radius * 0.2,
+                    wave.x, wave.y, wave.radius
                 );
-                grad.addColorStop(0, 'rgba(120, 120, 120, 0.45)');
-                grad.addColorStop(0.6, 'rgba(50, 50, 50, 0.2)');
+                grad.addColorStop(0, `rgba(255, 180, 50, ${wave.alpha})`);
+                grad.addColorStop(0.6, `rgba(255, 140, 0, ${wave.alpha * 0.4})`);
                 grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
                 ctx.beginPath();
-                ctx.arc(light.x, light.y, light.currentRadius, 0, Math.PI * 2);
+                ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
                 ctx.fillStyle = grad;
                 ctx.fill();
                 ctx.closePath();
@@ -624,7 +617,7 @@
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
 
-            // 4. 주황색 공 및 주변 실시간 광원
+            // 4. 주황색 공 및 퍼지는 실시간 광원
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
