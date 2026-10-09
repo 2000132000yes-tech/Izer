@@ -208,7 +208,13 @@
             gap: 6px;
         }
 
-        .upgrade-cost-btn:active {
+        .upgrade-cost-btn:disabled {
+            background: #555555;
+            color: #aaaaaa;
+            cursor: not-allowed;
+        }
+
+        .upgrade-cost-btn:active:not(:disabled) {
             transform: scale(0.96);
         }
 
@@ -360,22 +366,22 @@
         let sizeCost = 50;
         let blockCost = 500;
 
-        let ballSpeedBonus = 0;
+        let ballSpeedLevel = 0; // 최대 5회 제한
         let ballSizeBonus = 0;
         let gemsPerBlockBonus = 0;
 
-        // 광물 레벨별 체력(hp)과 보상 재화 설정 (회색부터 보라색까지)
+        // 돌(1원) 시작, 노랑부터 5원씩 증가
         const oreTiers = [
-            { color: '#777777', hp: 1,  reward: 5 },   // 1. 회색
-            { color: '#ffea00', hp: 2,  reward: 10 },  // 2. 노랑
-            { color: '#ff9900', hp: 3,  reward: 15 },  // 3. 주황
-            { color: '#ff3333', hp: 4,  reward: 20 },  // 4. 빨강
-            { color: '#a6ff00', hp: 5,  reward: 25 },  // 5. 연두
-            { color: '#00cc44', hp: 6,  reward: 30 },  // 6. 초록
-            { color: '#0066ff', hp: 7,  reward: 35 },  // 7. 파랑
-            { color: '#00e5ff', hp: 8,  reward: 40 },  // 8. 하늘
-            { color: '#ff66cc', hp: 9,  reward: 45 },  // 9. 핑크
-            { color: '#9933ff', hp: 10, reward: 50 }   // 10. 보라색
+            { color: '#777777', hp: 1,  reward: 1 },   // 1. 회색 (돌: 1원)
+            { color: '#ffea00', hp: 2,  reward: 5 },   // 2. 노랑 (5원)
+            { color: '#ff9900', hp: 3,  reward: 10 },  // 3. 주황 (10원)
+            { color: '#ff3333', hp: 4,  reward: 15 },  // 4. 빨강 (15원)
+            { color: '#a6ff00', hp: 5,  reward: 20 },  // 5. 연두 (20원)
+            { color: '#00cc44', hp: 6,  reward: 25 },  // 6. 초록 (25원)
+            { color: '#0066ff', hp: 7,  reward: 30 },  // 7. 파랑 (30원)
+            { color: '#00e5ff', hp: 8,  reward: 35 },  // 8. 하늘 (35원)
+            { color: '#ff66cc', hp: 9,  reward: 40 },  // 9. 핑크 (40원)
+            { color: '#9933ff', hp: 10, reward: 45 }   // 10. 보라색 (45원)
         ];
 
         function updateGemUI() {
@@ -411,16 +417,14 @@
             }
         }
 
-        // 맵 및 광원 뭉침(클러스터) 스폰 로직
         let pixels = [];
         const particles = [];
         const balls = [];
 
-        // 2D 그리드 배열 생성
         const gridMap = Array.from({ length: gridCount }, () => Array(gridCount).fill(null));
 
-        // 1. 기반암 (파괴 불가능한 하얀색 블록) 무작위 생성
-        const bedrockCount = Math.floor(gridCount * gridCount * 0.03); // 전체의 약 3%
+        // 1. 기반암 (스폰율 1% 미만으로 대폭 감소)
+        const bedrockCount = Math.floor(gridCount * gridCount * 0.008);
         for (let i = 0; i < bedrockCount; i++) {
             const r = Math.floor(Math.random() * gridCount);
             const c = Math.floor(Math.random() * gridCount);
@@ -429,15 +433,18 @@
             }
         }
 
-        // 2. 마인크래프트 스타일 광물 클러스터(군집) 생성
+        // 2. 등급이 낮을수록 흔하게, 높을수록 희귀하게 스폰
         function generateOreVeins() {
             for (let tier = 1; tier < oreTiers.length; tier++) {
-                const veinCount = Math.floor(Math.random() * 4) + 2; // 각 종류별 2~5개 군집
+                // 고티어로 갈수록 군집 발생 확률 및 크기 감소
+                const chance = (oreTiers.length - tier) / oreTiers.length;
+                const veinCount = Math.floor(chance * 5) + 1;
+
                 for (let v = 0; v < veinCount; v++) {
                     let vr = Math.floor(Math.random() * gridCount);
                     let vc = Math.floor(Math.random() * gridCount);
 
-                    const veinSize = Math.floor(Math.random() * 8) + 4; // 군집 크기
+                    const veinSize = Math.floor(chance * 6) + 2;
                     for (let s = 0; s < veinSize; s++) {
                         const nr = vr + Math.floor(Math.random() * 3) - 1;
                         const nc = vc + Math.floor(Math.random() * 3) - 1;
@@ -456,7 +463,7 @@
 
         generateOreVeins();
 
-        // 3. 나머지 빈자리를 기본 회색(0단계) 광물로 채우기
+        // 3. 나머지 자리는 회색 돌(0단계)로 매핑
         for (let r = 0; r < gridCount; r++) {
             for (let c = 0; c < gridCount; c++) {
                 if (r >= centerStart && r <= centerEnd && c >= centerStart && c <= centerEnd) {
@@ -487,8 +494,11 @@
 
         function createBall() {
             const angle = Math.random() * Math.PI * 2;
-            const baseSpeed = pixelSize * 0.22 + (ballSpeedBonus * pixelSize * 0.12);
-            const currentRadius = pixelSize * 0.35 + (ballSizeBonus * pixelSize * 0.12);
+            const baseSpeed = pixelSize * 0.2 + (ballSpeedLevel * pixelSize * 0.05);
+            
+            // 크기 제한: 블록 크기(pixelSize)의 최대 1.5배 (반지름 기준 pixelSize * 0.75)
+            const maxRadius = pixelSize * 0.75;
+            const currentRadius = Math.min(maxRadius, pixelSize * 0.35 + (ballSizeBonus * pixelSize * 0.1));
 
             balls.push({
                 x: (centerStart + 1.5) * pixelSize,
@@ -513,33 +523,50 @@
             }
         });
 
+        // 속도 제한: 최대 5회까지만 올릴 수 있음
         buySpeedBtn.addEventListener('click', () => {
-            if (gems >= speedCost) {
+            if (gems >= speedCost && ballSpeedLevel < 5) {
                 gems -= speedCost;
+                ballSpeedLevel += 1;
                 speedCost += 20;
-                speedCostText.textContent = speedCost;
-                ballSpeedBonus += 1;
+                
+                if (ballSpeedLevel >= 5) {
+                    speedCostText.textContent = "MAX";
+                    buySpeedBtn.disabled = true;
+                } else {
+                    speedCostText.textContent = speedCost;
+                }
                 updateGemUI();
 
                 balls.forEach(ball => {
                     const currentAngle = Math.atan2(ball.dy, ball.dx);
-                    const newSpeed = pixelSize * 0.22 + (ballSpeedBonus * pixelSize * 0.12);
+                    const newSpeed = pixelSize * 0.2 + (ballSpeedLevel * pixelSize * 0.05);
                     ball.dx = Math.cos(currentAngle) * newSpeed;
                     ball.dy = Math.sin(currentAngle) * newSpeed;
                 });
             }
         });
 
+        // 크기 제한: 블록 1.5배 도달 시 제한
         buySizeBtn.addEventListener('click', () => {
-            if (gems >= sizeCost) {
+            const maxRadius = pixelSize * 0.75;
+            const nextRadius = pixelSize * 0.35 + ((ballSizeBonus + 0.5) * pixelSize * 0.1);
+
+            if (gems >= sizeCost && nextRadius <= maxRadius) {
                 gems -= sizeCost;
-                sizeCost += 50;
-                sizeCostText.textContent = sizeCost;
                 ballSizeBonus += 0.5;
+                sizeCost += 50;
+
+                if (pixelSize * 0.35 + ((ballSizeBonus + 0.5) * pixelSize * 0.1) > maxRadius) {
+                    sizeCostText.textContent = "MAX";
+                    buySizeBtn.disabled = true;
+                } else {
+                    sizeCostText.textContent = sizeCost;
+                }
                 updateGemUI();
 
                 balls.forEach(ball => {
-                    ball.radius = pixelSize * 0.35 + (ballSizeBonus * pixelSize * 0.12);
+                    ball.radius = Math.min(maxRadius, pixelSize * 0.35 + (ballSizeBonus * pixelSize * 0.1));
                 });
             }
         });
@@ -607,17 +634,14 @@
                         const blockCenterY = p.y + pixelSize / 2;
 
                         if (p.isBedrock) {
-                            // 부술 수 없는 흰색 기반암: 타격 시 파티클만 발생시키고 반사
-                            createParticles(blockCenterX, blockCenterY, '#ffffff');
+                            // 하얀 블록 부딪힐 때는 이펙트(파티클) 없음!
                         } else {
-                            // 일반 광물 충돌 처리
                             const currentTierData = oreTiers[p.tier];
                             createParticles(blockCenterX, blockCenterY, currentTierData.color);
 
-                            p.hp -= 1; // 체력 감소
+                            p.hp -= 1;
 
                             if (p.hp <= 0) {
-                                // 광물 최종 파괴 시 재화 지급 및 광원 생성
                                 emptyLights.push({
                                     x: blockCenterX,
                                     y: blockCenterY
@@ -655,21 +679,16 @@
         }
 
         function draw() {
-            // 검은색 배경
+            // 어두운 바탕
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. 광물 및 기반암 블록 렌더링
+            // 1. 미발견 지역은 어둡게 비춰지고 발견한/빛 근처 위치만 드러남
             for (let i = 0; i < pixels.length; i++) {
                 const p = pixels[i];
-                if (p.isBedrock) {
-                    ctx.fillStyle = '#ffffff';
-                } else {
-                    ctx.fillStyle = oreTiers[p.tier].color;
-                }
+                ctx.fillStyle = p.isBedrock ? '#ffffff' : oreTiers[p.tier].color;
                 ctx.fillRect(p.x, p.y, pixelSize - 0.5, pixelSize - 0.5);
 
-                // 체력이 남은 광물의 경우 내구도 표시 (어둡게 마스킹)
                 if (!p.isBedrock && p.hp < p.maxHp) {
                     const damageRatio = 1 - (p.hp / p.maxHp);
                     ctx.fillStyle = `rgba(0, 0, 0, ${damageRatio * 0.5})`;
@@ -677,20 +696,25 @@
                 }
             }
 
-            // 2. 공백 광원 렌더링 (자연스러운 안개 연출, 눈부심 없음)
+            // 2. 안개(Fog of War) 오버레이: 빛이 없는 미발견 지역을 어둡게 마스킹
             ctx.save();
-            ctx.globalCompositeOperation = 'source-over'; // 눈부신 가중치 현상 방지
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.72)'; // 미발견 어둠의 짙기
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const lightRadius = pixelSize * 3.5;
+            // 3. 빛이 비추는 공간(공백 및 공 위치)을 구멍내어 빛나게 표현
+            ctx.globalCompositeOperation = 'destination-out';
 
+            const lightRadius = pixelSize * 4.0;
+
+            // 공백 공간의 지점별 밝은 빛 연출
             for (let i = 0; i < emptyLights.length; i++) {
                 const light = emptyLights[i];
                 const grad = ctx.createRadialGradient(
                     light.x, light.y, 0,
                     light.x, light.y, lightRadius
                 );
-                grad.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
-                grad.addColorStop(0.4, 'rgba(255, 255, 255, 0.03)');
+                grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+                grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.6)');
                 grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
                 ctx.beginPath();
@@ -700,19 +724,37 @@
                 ctx.closePath();
             }
 
-            // 3. 파티클 이펙트
+            // 공 이동 실시간 빛 영역
+            for (let b = 0; b < balls.length; b++) {
+                const ball = balls[b];
+                const grad = ctx.createRadialGradient(
+                    ball.x, ball.y, 0,
+                    ball.x, ball.y, lightRadius * 1.2
+                );
+                grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+                grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.5)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, lightRadius * 1.2, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            ctx.restore();
+
+            // 4. 파티클 이펙트
             for (let i = 0; i < particles.length; i++) {
                 const pt = particles[i];
                 ctx.fillStyle = pt.color || `rgba(255, 165, 0, ${pt.alpha})`;
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
-            ctx.restore();
 
-            // 4. 주황색 공 (하얀 테두리 제거 및 또렷한 본체만 렌더링)
+            // 5. 최상단에 깨끗하게 그리는 주황색 공
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
-                // 잔상
                 for (let i = 0; i < ball.history.length; i++) {
                     const pos = ball.history[i];
                     const alpha = (i + 1) / ball.history.length;
@@ -723,7 +765,6 @@
                     ctx.closePath();
                 }
 
-                // 주황색 공 본체 (깔끔하게 구현)
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
                 ctx.fillStyle = ball.color;
