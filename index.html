@@ -667,9 +667,9 @@
             }
         }
 
-        // 광원과의 거리에 따른 밝기 계산 (상한선 제한 적용)
+        // 광원과의 거리에 따른 밝기 계산 (멀리 있으면 0 -> 아예 안 보임)
         function getBlockLightAlpha(bx, by) {
-            let maxLight = 0.12; // 빛이 없는 곳 기본 어둠
+            let maxLight = 0.0; // 멀리 떨어진 미탐사 블록은 0 (완전 어둠)
             const lightRadius = pixelSize * 3.5;
 
             for (let i = 0; i < emptyLights.length; i++) {
@@ -677,8 +677,7 @@
                 const dist = Math.hypot(bx - light.x, by - light.y);
                 if (dist < lightRadius) {
                     const factor = 1 - (dist / lightRadius);
-                    // 과노출을 방지하기 위해 최대 가시성을 0.85로 제어
-                    maxLight = Math.max(maxLight, Math.min(0.85, 0.12 + factor * 0.73));
+                    maxLight = Math.max(maxLight, Math.min(0.85, factor * 0.85));
                 }
             }
 
@@ -687,7 +686,7 @@
                 const dist = Math.hypot(bx - ball.x, by - ball.y);
                 if (dist < lightRadius * 1.2) {
                     const factor = 1 - (dist / (lightRadius * 1.2));
-                    maxLight = Math.max(maxLight, Math.min(0.85, 0.12 + factor * 0.73));
+                    maxLight = Math.max(maxLight, Math.min(0.85, factor * 0.85));
                 }
             }
 
@@ -698,7 +697,7 @@
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. 톤다운된 블록 렌더링
+            // 1. 블록 렌더링 (멀리 있으면 globalAlpha = 0으로 완전히 안 보임)
             for (let i = 0; i < pixels.length; i++) {
                 const p = pixels[i];
                 const centerX = p.x + pixelSize / 2;
@@ -706,20 +705,22 @@
 
                 const lightFactor = getBlockLightAlpha(centerX, centerY);
 
-                ctx.save();
-                ctx.globalAlpha = lightFactor;
-                ctx.fillStyle = p.isBedrock ? '#ffffff' : oreTiers[p.tier].color;
-                ctx.fillRect(p.x, p.y, pixelSize - 0.5, pixelSize - 0.5);
-
-                if (!p.isBedrock && p.hp < p.maxHp) {
-                    const damageRatio = 1 - (p.hp / p.maxHp);
-                    ctx.fillStyle = `rgba(0, 0, 0, ${damageRatio * 0.5})`;
+                if (lightFactor > 0) {
+                    ctx.save();
+                    ctx.globalAlpha = lightFactor;
+                    ctx.fillStyle = p.isBedrock ? '#ffffff' : oreTiers[p.tier].color;
                     ctx.fillRect(p.x, p.y, pixelSize - 0.5, pixelSize - 0.5);
+
+                    if (!p.isBedrock && p.hp < p.maxHp) {
+                        const damageRatio = 1 - (p.hp / p.maxHp);
+                        ctx.fillStyle = `rgba(0, 0, 0, ${damageRatio * 0.5})`;
+                        ctx.fillRect(p.x, p.y, pixelSize - 0.5, pixelSize - 0.5);
+                    }
+                    ctx.restore();
                 }
-                ctx.restore();
             }
 
-            // 2. 은은하게 누적되는 광원 (중첩 시 밝아짐 대폭 억제)
+            // 2. 은은하게 누적되는 광원
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
             const lightRadius = pixelSize * 3.2;
@@ -730,7 +731,6 @@
                     light.x, light.y, 0,
                     light.x, light.y, lightRadius
                 );
-                // 투명도를 낮추어 밝기가 지나치게 오르는 현상 차단
                 grad.addColorStop(0, 'rgba(255, 230, 180, 0.06)');
                 grad.addColorStop(0.5, 'rgba(255, 190, 120, 0.025)');
                 grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
