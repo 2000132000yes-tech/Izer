@@ -383,17 +383,19 @@
         const gridCount = 50;
         const pixelSize = size / gridCount;
 
-        // 부드럽게 밝혀진 영구 광원 지점 배열 (Light Spot List)
-        const lightSpots = [];
+        // 확장되는 원형 광원 객체 목록
+        const expandingLights = [];
 
         const centerStart = Math.floor(gridCount / 2) - 1;
         const centerEnd = centerStart + 2;
 
-        // 중앙 공백 공간 기본 부드러운 빛 추가
-        lightSpots.push({
+        // 초기 3x3 중심 공간의 광원 (고정)
+        expandingLights.push({
             x: (centerStart + 1.5) * pixelSize,
             y: (centerStart + 1.5) * pixelSize,
-            radius: pixelSize * 5.0
+            currentRadius: pixelSize * 5.0,
+            targetRadius: pixelSize * 5.0,
+            expandSpeed: 0
         });
 
         let pixels = [];
@@ -498,6 +500,17 @@
         }
 
         function update() {
+            // 부드럽게 반경이 확장되는 광원 계산
+            for (let i = 0; i < expandingLights.length; i++) {
+                const light = expandingLights[i];
+                if (light.currentRadius < light.targetRadius) {
+                    light.currentRadius += light.expandSpeed;
+                    if (light.currentRadius > light.targetRadius) {
+                        light.currentRadius = light.targetRadius;
+                    }
+                }
+            }
+
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
@@ -534,11 +547,13 @@
 
                         createParticles(blockCenterX, blockCenterY);
                         
-                        // 부순 위치에 자연스럽게 퍼지는 원형 광원 추가
-                        lightSpots.push({
+                        // 부순 자리에 커지면서 확장되는 광원 생성
+                        expandingLights.push({
                             x: blockCenterX,
                             y: blockCenterY,
-                            radius: pixelSize * 3.5
+                            currentRadius: pixelSize * 0.5,
+                            targetRadius: pixelSize * 4.5,
+                            expandSpeed: pixelSize * 0.15 // 서서히 커지는 속도
                         });
 
                         pixels.splice(i, 1);
@@ -571,32 +586,32 @@
         }
 
         function draw() {
-            // 기본 완전 어두운 배경
+            // 어두운 배경
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. 어둡게 깔린 기본 블록들
-            ctx.fillStyle = '#181818';
+            // 1. 아직 어두운 안개 속의 회색 블록들
+            ctx.fillStyle = '#141414';
             for (let i = 0; i < pixels.length; i++) {
                 ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
 
-            // 2. 부수면서 축적된 부드러운 광원들 오버레이 (밝은 톤 덧그리기)
+            // 2. 부드럽게 퍼지며 커지는 광원(Light Expansion Effect)
             ctx.save();
-            ctx.globalCompositeOperation = 'lighter'; // 부드러운 빛 중첩 효과
+            ctx.globalCompositeOperation = 'lighter';
 
-            for (let i = 0; i < lightSpots.length; i++) {
-                const spot = lightSpots[i];
+            for (let i = 0; i < expandingLights.length; i++) {
+                const light = expandingLights[i];
                 const grad = ctx.createRadialGradient(
-                    spot.x, spot.y, 0,
-                    spot.x, spot.y, spot.radius
+                    light.x, light.y, 0,
+                    light.x, light.y, light.currentRadius
                 );
-                grad.addColorStop(0, 'rgba(100, 100, 100, 0.45)');
-                grad.addColorStop(0.5, 'rgba(60, 60, 60, 0.2)');
+                grad.addColorStop(0, 'rgba(120, 120, 120, 0.45)');
+                grad.addColorStop(0.6, 'rgba(50, 50, 50, 0.2)');
                 grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
                 ctx.beginPath();
-                ctx.arc(spot.x, spot.y, spot.radius, 0, Math.PI * 2);
+                ctx.arc(light.x, light.y, light.currentRadius, 0, Math.PI * 2);
                 ctx.fillStyle = grad;
                 ctx.fill();
                 ctx.closePath();
@@ -609,11 +624,10 @@
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
 
-            // 4. 주황색 공 & 실시간 광원(Glow)
+            // 4. 주황색 공 및 주변 실시간 광원
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
-                // 공 잔상
                 for (let i = 0; i < ball.history.length; i++) {
                     const pos = ball.history[i];
                     const alpha = (i + 1) / ball.history.length;
@@ -624,7 +638,6 @@
                     ctx.closePath();
                 }
 
-                // 공 주변 실시간 부드러운 광원
                 const glowGradient = ctx.createRadialGradient(
                     ball.x, ball.y, ball.radius * 0.2,
                     ball.x, ball.y, ball.radius * 4.0
@@ -639,7 +652,6 @@
                 ctx.fill();
                 ctx.closePath();
 
-                // 공 본체
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
                 ctx.fillStyle = '#ffaa00';
