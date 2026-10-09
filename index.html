@@ -251,13 +251,13 @@
             align-items: center;
             font-size: 15px;
             font-weight: bold;
+            gap: 6px;
         }
 
-        .target-label {
-            font-size: 11px;
+        .desc-label {
+            font-size: 12px;
             color: #888888;
             font-weight: normal;
-            margin-left: 4px;
         }
 
         .stat-preview {
@@ -403,7 +403,7 @@
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
-                            +1 org ball <span class="orange-ball-icon" style="margin-left:8px;"></span>
+                            +1 org ball <span class="orange-ball-icon" style="margin-left:4px;"></span>
                         </div>
                         <button class="upgrade-cost-btn" id="buyBallBtn">
                             <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
@@ -423,7 +423,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Speed <span class="target-label">(All Org)</span></div>
+                            <div class="upgrade-info">+1 Speed <span class="desc-label">(속도 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buySpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="speedCostText">20</span>
@@ -433,7 +433,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Block <span class="target-label">(All Org)</span></div>
+                            <div class="upgrade-info">+1 Block <span class="desc-label">(획득량 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyBlockBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="blockCostText">500</span>
@@ -443,7 +443,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 DMG <span class="target-label">(All Org)</span></div>
+                            <div class="upgrade-info">+1 DMG <span class="desc-label">(데미지 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyDmgBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="dmgCostText">500</span>
@@ -456,7 +456,7 @@
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
-                            +1 ert ball <span class="yellow-ball-icon" style="margin-left:8px;"></span>
+                            +1 ert ball <span class="yellow-ball-icon" style="margin-left:4px;"></span>
                         </div>
                         <button class="upgrade-cost-btn" id="buyErtBallBtn" disabled>
                             <span id="ertBallCostText">🔒 Need 10 Org</span>
@@ -475,7 +475,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Speed <span class="target-label">(All Ert)</span></div>
+                            <div class="upgrade-info">+1 Speed <span class="desc-label">(속도 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyErtSpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="ertSpeedCostText">20</span>
@@ -485,7 +485,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+0.1 DMG <span class="target-label">(All Ert)</span></div>
+                            <div class="upgrade-info">+0.1 DMG <span class="desc-label">(데미지 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyErtDmgBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="ertDmgCostText">100</span>
@@ -495,7 +495,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Target <span class="target-label">(All Ert)</span></div>
+                            <div class="upgrade-info">+1 Target <span class="desc-label">(타겟 수 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyTargetBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="targetCostText">200</span>
@@ -508,7 +508,7 @@
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
-                            +1 bmb ball <span class="red-ball-icon" style="margin-left:8px;"></span>
+                            +1 bmb ball <span class="red-ball-icon" style="margin-left:4px;"></span>
                         </div>
                         <button class="upgrade-cost-btn" id="buyRedBallBtn" disabled>
                             <span id="redBallCostText">🔒 Need 10 Ert</span>
@@ -527,7 +527,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Speed <span class="target-label">(All Bmb)</span></div>
+                            <div class="upgrade-info">+1 Speed <span class="desc-label">(속도 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyRedSpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="redSpeedCostText">20</span>
@@ -537,7 +537,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Range <span class="target-label">(All Bmb)</span></div>
+                            <div class="upgrade-info">+1 Range <span class="desc-label">(폭발 범위 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyRedRangeBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="redRangeCostText">50</span>
@@ -547,7 +547,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 DMG <span class="target-label">(All Bmb)</span></div>
+                            <div class="upgrade-info">+1 DMG <span class="desc-label">(데미지 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyRedDmgBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="redDmgCostText">100</span>
@@ -557,7 +557,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1% Luck <span class="target-label">(All Bmb)</span></div>
+                            <div class="upgrade-info">+1% Luck <span class="desc-label">(크리티컬 확률)</span></div>
                             <button class="upgrade-cost-btn" id="buyRedLuckBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="redLuckCostText">10</span>
@@ -570,7 +570,7 @@
                 <div class="upgrade-card">
                     <div class="card-row">
                         <div class="upgrade-info">
-                            +1 CBL ball <span class="purple-ball-icon" style="margin-left:8px;"></span>
+                            +1 CBL ball <span class="purple-ball-icon" style="margin-left:4px;"></span>
                         </div>
                         <button class="upgrade-cost-btn" id="buyCblBallBtn" disabled>
                             <span id="cblBallCostText">🔒 Need 10 Bmb</span>
@@ -589,7 +589,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Cog Speed <span class="target-label">(All CBL)</span></div>
+                            <div class="upgrade-info">+1 Cog Speed <span class="desc-label">(톱니 회전속도)</span></div>
                             <button class="upgrade-cost-btn" id="buyCogSpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cogSpeedCostText">150</span>
@@ -599,7 +599,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Ball Speed <span class="target-label">(All CBL)</span></div>
+                            <div class="upgrade-info">+1 Ball Speed <span class="desc-label">(공 이동속도)</span></div>
                             <button class="upgrade-cost-btn" id="buyCblSpeedBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cblSpeedCostText">150</span>
@@ -609,7 +609,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Cog <span class="target-label">(All CBL)</span></div>
+                            <div class="upgrade-info">+1 Cog <span class="desc-label">(톱니 개수 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyCogCountBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cogCountCostText">100</span>
@@ -619,7 +619,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 DMG <span class="target-label">(All CBL)</span></div>
+                            <div class="upgrade-info">+1 DMG <span class="desc-label">(데미지 증가)</span></div>
                             <button class="upgrade-cost-btn" id="buyCblDmgBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cblDmgCostText">100</span>
@@ -629,7 +629,7 @@
 
                     <div class="upgrade-card">
                         <div class="card-row">
-                            <div class="upgrade-info">+1 Cog Range <span class="target-label">(All CBL)</span></div>
+                            <div class="upgrade-info">+1 Cog Range <span class="desc-label">(톱니 거리/크기)</span></div>
                             <button class="upgrade-cost-btn" id="buyCogRangeBtn">
                                 <div class="diamond-icon" style="background:#000; box-shadow:none;"></div>
                                 <span id="cogRangeCostText">100</span>
@@ -1021,14 +1021,12 @@
             [...balls, ...ertBalls, ...redBalls, ...cblBalls].forEach(ball => {
                 ball.x = centerX;
                 ball.y = centerY;
-                // 맵 커짐에 따라 상대적으로 공 크기 축소 반영
                 ball.radius = pixelSize * 0.35;
             });
         }
 
         function nextFloor() {
             currentFloor++;
-            // 맵 커지는 건 최대 5칸(줄)까지만 제한 (+5)
             if (gridCount < baseGridCount + 5) {
                 gridCount += 1;
             }
@@ -1560,10 +1558,10 @@
                 }
             }
 
-            // 4. CBL balls (더 날카롭고 빠른 회전 톱니, 크기 증가 0.3 반영)
+            // 4. CBL balls (기존의 뭉툭하고 둥근 톱니바퀴 스타일로 원복)
             const cogSpeed = 0.08 + (cblCogSpeedLevel * 0.04);
             const cogDistOffset = pixelSize * (1.0 + (cblCogRange - 1) * 1.0);
-            const cogBaseRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.3); // 0.3씩 증가
+            const cogBaseRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.3);
             const cblDamage = 1.0 + cblDmgBonus;
 
             for (let b = 0; b < cblBalls.length; b++) {
@@ -1668,8 +1666,8 @@
             return maxLight;
         }
 
-        // 아주 날카롭고 뾰족한 형태의 톱니바퀴 그리기
-        function drawSharpCogwheel(x, y, radius, rotationAngle) {
+        // 뭉툭하고 도톰한 톱니바퀴 형태로 원복
+        function drawChubbyCogwheel(x, y, radius, rotationAngle) {
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(rotationAngle);
@@ -1678,37 +1676,30 @@
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 1.2;
 
-            const teeth = 8;
-            const outerR = radius;
-            const innerR = radius * 0.5;
+            const teethCount = 6;
+            const toothDepth = radius * 0.3;
 
             ctx.beginPath();
-            for (let i = 0; i < teeth; i++) {
-                const a1 = (Math.PI * 2 / teeth) * i;
-                const a2 = a1 + (Math.PI * 2 / teeth) * 0.5;
-                const aMid = a1 + (Math.PI * 2 / teeth) * 0.25;
+            for (let i = 0; i < teethCount; i++) {
+                const a1 = (Math.PI * 2 / teethCount) * i;
+                const a2 = a1 + (Math.PI * 2 / teethCount) * 0.5;
 
-                const x1 = Math.cos(a1) * outerR;
-                const y1 = Math.sin(a1) * outerR;
-                const xTip = Math.cos(aMid - 0.1) * (outerR * 1.3);
-                const yTip = Math.sin(aMid - 0.1) * (outerR * 1.3);
-                const xInner = Math.cos(aMid) * innerR;
-                const yInner = Math.sin(aMid) * innerR;
-                const x2 = Math.cos(a2) * outerR;
-                const y2 = Math.sin(a2) * outerR;
+                const rOuter = radius + toothDepth;
+                const rInner = radius;
 
-                if (i === 0) ctx.moveTo(x1, y1);
-                ctx.lineTo(xTip, yTip);
-                ctx.lineTo(xInner, yInner);
-                ctx.lineTo(x2, y2);
+                ctx.lineTo(Math.cos(a1) * rInner, Math.sin(a1) * rInner);
+                ctx.lineTo(Math.cos(a1) * rOuter, Math.sin(a1) * rOuter);
+                ctx.lineTo(Math.cos(a2) * rOuter, Math.sin(a2) * rOuter);
+                ctx.lineTo(Math.cos(a2) * rInner, Math.sin(a2) * rInner);
             }
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
 
+            // 가운데 구멍 뚫기
+            ctx.globalCompositeOperation = 'destination-out';
             ctx.beginPath();
-            ctx.arc(0, 0, radius * 0.3, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffffff';
+            ctx.arc(0, 0, radius * 0.35, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
 
@@ -1795,7 +1786,7 @@
                 ctx.restore();
             }
 
-            // 6. CBL 날카로운 톱니바퀴 그리기
+            // 6. CBL 뭉툭한 톱니바퀴 그리기
             const cogDistOffset = pixelSize * (1.0 + (cblCogRange - 1) * 1.0);
             const cogRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.3);
             for (let b = 0; b < cblBalls.length; b++) {
@@ -1805,7 +1796,7 @@
                     const cogX = ball.x + Math.cos(angle) * (ball.radius + cogDistOffset);
                     const cogY = ball.y + Math.sin(angle) * (ball.radius + cogDistOffset);
 
-                    drawSharpCogwheel(cogX, cogY, cogRadius, ball.cogAngle * 3);
+                    drawChubbyCogwheel(cogX, cogY, cogRadius, ball.cogAngle * 2);
                 }
             }
 
