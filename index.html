@@ -383,13 +383,11 @@
         const gridCount = 50;
         const pixelSize = size / gridCount;
 
-        // 공백 은은한 광원 지점 배열
         const emptyLights = [];
 
         const centerStart = Math.floor(gridCount / 2) - 1;
         const centerEnd = centerStart + 2;
 
-        // 중앙 기본 3x3 공백
         for (let r = centerStart; r <= centerEnd; r++) {
             for (let c = centerStart; c <= centerEnd; c++) {
                 emptyLights.push({
@@ -537,7 +535,6 @@
 
                         createParticles(blockCenterX, blockCenterY);
 
-                        // 파괴된 공백 자리에 광원 배치
                         emptyLights.push({
                             x: blockCenterX,
                             y: blockCenterY
@@ -573,24 +570,37 @@
         }
 
         function draw() {
-            // 검은색 배경
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // 1. 회색 블록
-            ctx.fillStyle = '#666666';
+            ctx.fillStyle = '#555555';
             for (let i = 0; i < pixels.length; i++) {
                 ctx.fillRect(pixels[i].x, pixels[i].y, pixelSize - 0.5, pixelSize - 0.5);
             }
 
-            // 2. 공백(빈 공간)에 대한 상한선(Max Cap)이 적용된 은은한 원형 조명
-            const lightRadius = pixelSize * 2.2;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)'; // 한계 밝기를 은은하게 고정
-            
+            // 2. 외곽선이 남지 않는 부드러운 방사형 페이드아웃 광원 연출
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+
+            const lightRadius = pixelSize * 3.5; 
+
             for (let i = 0; i < emptyLights.length; i++) {
                 const light = emptyLights[i];
+                
+                // 중심에서부터 외곽으로 갈수록 알파값이 부드럽게 감소하는 그라데이션
+                const grad = ctx.createRadialGradient(
+                    light.x, light.y, 0,
+                    light.x, light.y, lightRadius
+                );
+                grad.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+                grad.addColorStop(0.3, 'rgba(255, 255, 255, 0.06)');
+                grad.addColorStop(0.7, 'rgba(255, 255, 255, 0.015)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
                 ctx.beginPath();
                 ctx.arc(light.x, light.y, lightRadius, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
                 ctx.fill();
                 ctx.closePath();
             }
@@ -602,11 +612,10 @@
                 ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
             }
 
-            // 4. 주황색 공 (과도한 빛은 빼고 단정하고 깔끔한 형태)
+            // 4. 주황색 공 (부드러운 외곽 포함)
             for (let b = 0; b < balls.length; b++) {
                 const ball = balls[b];
 
-                // 슬림한 잔상
                 for (let i = 0; i < ball.history.length; i++) {
                     const pos = ball.history[i];
                     const alpha = (i + 1) / ball.history.length;
@@ -617,20 +626,28 @@
                     ctx.closePath();
                 }
 
-                // 공 자체의 최소한의 외곽 테두리 (눈부신 거대 광원 제거!)
+                // 공의 자연스러운 주변 보더
+                const ballGlow = ctx.createRadialGradient(
+                    ball.x, ball.y, ball.radius * 0.5,
+                    ball.x, ball.y, ball.radius * 1.8
+                );
+                ballGlow.addColorStop(0, 'rgba(255, 200, 100, 0.6)');
+                ballGlow.addColorStop(1, 'rgba(255, 153, 0, 0)');
+
                 ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius + 1.5, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 200, 100, 0.4)';
+                ctx.arc(ball.x, ball.y, ball.radius * 1.8, 0, Math.PI * 2);
+                ctx.fillStyle = ballGlow;
                 ctx.fill();
                 ctx.closePath();
 
-                // 주황색 공 본체
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
                 ctx.fillStyle = ball.color;
                 ctx.fill();
                 ctx.closePath();
             }
+
+            ctx.restore();
         }
 
         function loop() {
