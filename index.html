@@ -644,6 +644,104 @@
     </div>
 
     <script>
+        // ---- 사운드 매니저 (Web Audio API) ----
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'upgrade') {
+                // 업그레이드 성공음 (청량한 2단 상승음)
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } 
+            else if (type === 'hit_org') {
+                // 오렌지 공 타격음 (탁탁 가벼운 타격음)
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+            else if (type === 'hit_ert') {
+                // 노란 공 레이저 틱음 (전기/지지직 느낌의 고음)
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(1200, now);
+                gain.gain.setValueAtTime(0.03, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.03);
+                osc.start(now);
+                osc.stop(now + 0.03);
+            }
+            else if (type === 'hit_red') {
+                // 폭탄 공 공격음 (묵직한 폭발 타격음)
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+            else if (type === 'hit_cbl') {
+                // 톱니바퀴 썰리는 음 (금속성 마찰음)
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.linearRampToValueAtTime(200, now + 0.06);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.06);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            }
+            else if (type === 'break_low') {
+                // 저티어 블록 파괴음
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+            else if (type === 'break_high') {
+                // 고티어 블록 파괴음 (조금 더 화려하고 높은 톤)
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+        }
+
+        // 유저 인터랙션 시 오디오 컨텍스트 활성화
+        window.addEventListener('pointerdown', initAudio, { once: true });
+
+        // ---- 게임 로직 ----
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const gemCountTexts = document.querySelectorAll('.gem-count-text');
@@ -726,7 +824,6 @@
         const cblStatPreview = document.getElementById('cblStatPreview');
 
         let isDevMode = false;
-
         let currentFloor = 1;
         let gems = 0;
 
@@ -772,7 +869,7 @@
         let cblBallSpeedLevel = 0;
         let cblCogCount = 1;
         let cblDmgBonus = 0;
-        let cblCogRange = 1;
+        let cblCogRangeLevel = 0;
 
         const oreTiers = [
             { color: '#777777', hp: 1,  reward: 1 },
@@ -892,7 +989,7 @@
             orgStatPreview.textContent = `${(1 + orgDmgBonus).toFixed(1)} DMG | Speed: Lv.${ballSpeedLevel} | +${gemsPerBlockBonus} Block`;
             ertStatPreview.textContent = `${(0.1 + ertDmgBonus * 0.1).toFixed(1)} DMG | Speed: Lv.${ertSpeedLevel} | Target: ${ertMaxTargets}`;
             redStatPreview.textContent = `${(1.0 + redDmgBonus).toFixed(1)} DMG | ${(3 + redRangeBonus).toFixed(1)} Range | Speed: Lv.${redSpeedLevel} | +${redLuckBonus}% Luck`;
-            cblStatPreview.textContent = `${(1.0 + cblDmgBonus).toFixed(1)} DMG | ${cblCogCount} Cog | Range: ${cblCogRange} | Speed: Lv.${cblBallSpeedLevel}`;
+            cblStatPreview.textContent = `${(1.0 + cblDmgBonus).toFixed(1)} DMG | ${cblCogCount} Cog | Range: Lv.${cblCogRangeLevel} | Speed: Lv.${cblBallSpeedLevel}`;
         }
 
         function checkButtonAffordability(btn, cost) {
@@ -907,6 +1004,7 @@
         devBtn.addEventListener('click', () => {
             gems += 10000;
             isDevMode = true;
+            playSound('upgrade');
             updateGemUI();
         });
 
@@ -934,6 +1032,279 @@
             if (cblBalls.length === 0 && !isDevMode) return;
             const isOpen = purpleBallSubMenu.classList.toggle('open');
             purpleArrowIcon.textContent = isOpen ? '▲' : '▼';
+        });
+
+        // 공통 업그레이드 버튼 이벤트들에 사운드 연결
+        const allUpgradeButtons = [
+            buyBallBtn, buySpeedBtn, buyBlockBtn, buyDmgBtn,
+            buyErtBallBtn, buyErtSpeedBtn, buyErtDmgBtn, buyTargetBtn,
+            buyRedBallBtn, buyRedSpeedBtn, buyRedRangeBtn, buyRedDmgBtn, buyRedLuckBtn,
+            buyCblBallBtn, buyCogSpeedBtn, buyCblSpeedBtn, buyCogCountBtn, buyCblDmgBtn, buyCogRangeBtn
+        ];
+
+        buyBallBtn.addEventListener('click', () => {
+            if (gems >= ballCost) {
+                gems -= ballCost;
+                ballCost += 10;
+                ballCostText.textContent = ballCost;
+                playSound('upgrade');
+                createBall();
+            }
+        });
+
+        buySpeedBtn.addEventListener('click', () => {
+            if (gems >= speedCost && ballSpeedLevel < 5) {
+                gems -= speedCost;
+                ballSpeedLevel += 1;
+                speedCost += 20;
+                if (ballSpeedLevel >= 5) {
+                    speedCostText.textContent = "MAX";
+                    buySpeedBtn.disabled = true;
+                } else {
+                    speedCostText.textContent = speedCost;
+                }
+                playSound('upgrade');
+                balls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.2 + (ballSpeedLevel * pixelSize * 0.05);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+                updateGemUI();
+            }
+        });
+
+        buyBlockBtn.addEventListener('click', () => {
+            if (gems >= blockCost) {
+                gems -= blockCost;
+                blockCost += 500;
+                blockCostText.textContent = blockCost;
+                gemsPerBlockBonus += 1;
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyDmgBtn.addEventListener('click', () => {
+            if (gems >= dmgCost) {
+                gems -= dmgCost;
+                dmgCost += 500;
+                dmgCostText.textContent = dmgCost;
+                orgDmgBonus += 1;
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyErtBallBtn.addEventListener('click', () => {
+            if (gems >= ertBallCost && (balls.length >= 10 || isDevMode)) {
+                gems -= ertBallCost;
+                ertBallCost += 50;
+                ertBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${ertBallCost}`;
+                playSound('upgrade');
+                createErtBall();
+            }
+        });
+
+        buyErtSpeedBtn.addEventListener('click', () => {
+            if (gems >= ertSpeedCost && ertSpeedLevel < 5) {
+                gems -= ertSpeedCost;
+                ertSpeedLevel += 1;
+                ertSpeedCost += 20;
+                if (ertSpeedLevel >= 5) {
+                    ertSpeedCostText.textContent = "MAX";
+                    buyErtSpeedBtn.disabled = true;
+                } else {
+                    ertSpeedCostText.textContent = ertSpeedCost;
+                }
+                playSound('upgrade');
+                ertBalls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.22 + (ertSpeedLevel * pixelSize * 0.05);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+                updateGemUI();
+            }
+        });
+
+        buyErtDmgBtn.addEventListener('click', () => {
+            if (gems >= ertDmgCost) {
+                gems -= ertDmgCost;
+                ertDmgBonus += 1;
+                ertDmgCost += 100;
+                ertDmgCostText.textContent = ertDmgCost;
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyTargetBtn.addEventListener('click', () => {
+            if (gems >= targetCost && ertMaxTargets < 10) {
+                gems -= targetCost;
+                ertMaxTargets += 1;
+                targetCost += 200;
+                if (ertMaxTargets >= 10) {
+                    targetCostText.textContent = "MAX";
+                    buyTargetBtn.disabled = true;
+                } else {
+                    targetCostText.textContent = targetCost;
+                }
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyRedBallBtn.addEventListener('click', () => {
+            if (gems >= redBallCost && (ertBalls.length >= 10 || isDevMode)) {
+                gems -= redBallCost;
+                redBallCost += 100;
+                redBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${redBallCost}`;
+                playSound('upgrade');
+                createRedBall();
+            }
+        });
+
+        buyRedSpeedBtn.addEventListener('click', () => {
+            if (gems >= redSpeedCost && redSpeedLevel < 5) {
+                gems -= redSpeedCost;
+                redSpeedLevel += 1;
+                redSpeedCost += 20;
+                if (redSpeedLevel >= 5) {
+                    redSpeedCostText.textContent = "MAX";
+                    buyRedSpeedBtn.disabled = true;
+                } else {
+                    redSpeedCostText.textContent = redSpeedCost;
+                }
+                playSound('upgrade');
+                redBalls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.2 + (redSpeedLevel * pixelSize * 0.05);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+                updateGemUI();
+            }
+        });
+
+        buyRedRangeBtn.addEventListener('click', () => {
+            if (gems >= redRangeCost) {
+                gems -= redRangeCost;
+                redRangeBonus += 1;
+                redRangeCost += 50;
+                redRangeCostText.textContent = redRangeCost;
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyRedDmgBtn.addEventListener('click', () => {
+            if (gems >= redDmgCost) {
+                gems -= redDmgCost;
+                redDmgBonus += 1;
+                redDmgCost += 100;
+                redDmgCostText.textContent = redDmgCost;
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyRedLuckBtn.addEventListener('click', () => {
+            if (gems >= redLuckCost && redLuckBonus < 100) {
+                gems -= redLuckCost;
+                redLuckBonus += 1;
+                redLuckCost += 5;
+                if (redLuckBonus >= 100) {
+                    redLuckCostText.textContent = "MAX";
+                    buyRedLuckBtn.disabled = true;
+                } else {
+                    redLuckCostText.textContent = redLuckCost;
+                }
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyCblBallBtn.addEventListener('click', () => {
+            if (gems >= cblBallCost && (redBalls.length >= 10 || isDevMode)) {
+                gems -= cblBallCost;
+                cblBallCost += 150;
+                cblBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${cblBallCost}`;
+                playSound('upgrade');
+                createCblBall();
+            }
+        });
+
+        buyCogSpeedBtn.addEventListener('click', () => {
+            if (gems >= cogSpeedCost) {
+                gems -= cogSpeedCost;
+                cblCogSpeedLevel += 1;
+                cogSpeedCost += 200;
+                cogSpeedCostText.textContent = cogSpeedCost;
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyCblSpeedBtn.addEventListener('click', () => {
+            if (gems >= cblSpeedCost) {
+                gems -= cblSpeedCost;
+                cblBallSpeedLevel += 1;
+                cblSpeedCost += 200;
+                cblSpeedCostText.textContent = cblSpeedCost;
+                playSound('upgrade');
+
+                cblBalls.forEach(ball => {
+                    const currentAngle = Math.atan2(ball.dy, ball.dx);
+                    const newSpeed = pixelSize * 0.2 + (cblBallSpeedLevel * pixelSize * 0.05);
+                    ball.dx = Math.cos(currentAngle) * newSpeed;
+                    ball.dy = Math.sin(currentAngle) * newSpeed;
+                });
+                updateGemUI();
+            }
+        });
+
+        buyCogCountBtn.addEventListener('click', () => {
+            if (gems >= cogCountCost && cblCogCount < 6) {
+                gems -= cogCountCost;
+                cblCogCount += 1;
+                cogCountCost += 100;
+                if (cblCogCount >= 6) {
+                    cogCountCostText.textContent = "MAX";
+                    buyCogCountBtn.disabled = true;
+                } else {
+                    cogCountCostText.textContent = cogCountCost;
+                }
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyCblDmgBtn.addEventListener('click', () => {
+            if (gems >= cblDmgCost) {
+                gems -= cblDmgCost;
+                cblDmgBonus += 1;
+                cblDmgCost += 100;
+                cblDmgCostText.textContent = cblDmgCost;
+                playSound('upgrade');
+                updateGemUI();
+            }
+        });
+
+        buyCogRangeBtn.addEventListener('click', () => {
+            if (gems >= cogRangeCost && cblCogRangeLevel < 5) {
+                gems -= cogRangeCost;
+                cblCogRangeLevel += 1;
+                cogRangeCost += 100;
+                if (cblCogRangeLevel >= 5) {
+                    cogRangeCostText.textContent = "MAX";
+                    buyCogRangeBtn.disabled = true;
+                } else {
+                    cogRangeCostText.textContent = cogRangeCost;
+                }
+                playSound('upgrade');
+                updateGemUI();
+            }
         });
 
         function initFloorMap() {
@@ -1099,247 +1470,6 @@
         initFloorMap();
         createBall();
 
-        buyBallBtn.addEventListener('click', () => {
-            if (gems >= ballCost) {
-                gems -= ballCost;
-                ballCost += 10;
-                ballCostText.textContent = ballCost;
-                createBall();
-            }
-        });
-
-        buySpeedBtn.addEventListener('click', () => {
-            if (gems >= speedCost && ballSpeedLevel < 5) {
-                gems -= speedCost;
-                ballSpeedLevel += 1;
-                speedCost += 20;
-                if (ballSpeedLevel >= 5) {
-                    speedCostText.textContent = "MAX";
-                    buySpeedBtn.disabled = true;
-                } else {
-                    speedCostText.textContent = speedCost;
-                }
-                balls.forEach(ball => {
-                    const currentAngle = Math.atan2(ball.dy, ball.dx);
-                    const newSpeed = pixelSize * 0.2 + (ballSpeedLevel * pixelSize * 0.05);
-                    ball.dx = Math.cos(currentAngle) * newSpeed;
-                    ball.dy = Math.sin(currentAngle) * newSpeed;
-                });
-                updateGemUI();
-            }
-        });
-
-        buyBlockBtn.addEventListener('click', () => {
-            if (gems >= blockCost) {
-                gems -= blockCost;
-                blockCost += 500;
-                blockCostText.textContent = blockCost;
-                gemsPerBlockBonus += 1;
-                updateGemUI();
-            }
-        });
-
-        buyDmgBtn.addEventListener('click', () => {
-            if (gems >= dmgCost) {
-                gems -= dmgCost;
-                dmgCost += 500;
-                dmgCostText.textContent = dmgCost;
-                orgDmgBonus += 1;
-                updateGemUI();
-            }
-        });
-
-        buyErtBallBtn.addEventListener('click', () => {
-            if (gems >= ertBallCost && (balls.length >= 10 || isDevMode)) {
-                gems -= ertBallCost;
-                ertBallCost += 50;
-                ertBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${ertBallCost}`;
-                createErtBall();
-            }
-        });
-
-        buyErtSpeedBtn.addEventListener('click', () => {
-            if (gems >= ertSpeedCost && ertSpeedLevel < 5) {
-                gems -= ertSpeedCost;
-                ertSpeedLevel += 1;
-                ertSpeedCost += 20;
-                if (ertSpeedLevel >= 5) {
-                    ertSpeedCostText.textContent = "MAX";
-                    buyErtSpeedBtn.disabled = true;
-                } else {
-                    ertSpeedCostText.textContent = ertSpeedCost;
-                }
-                ertBalls.forEach(ball => {
-                    const currentAngle = Math.atan2(ball.dy, ball.dx);
-                    const newSpeed = pixelSize * 0.22 + (ertSpeedLevel * pixelSize * 0.05);
-                    ball.dx = Math.cos(currentAngle) * newSpeed;
-                    ball.dy = Math.sin(currentAngle) * newSpeed;
-                });
-                updateGemUI();
-            }
-        });
-
-        buyErtDmgBtn.addEventListener('click', () => {
-            if (gems >= ertDmgCost) {
-                gems -= ertDmgCost;
-                ertDmgBonus += 1;
-                ertDmgCost += 100;
-                ertDmgCostText.textContent = ertDmgCost;
-                updateGemUI();
-            }
-        });
-
-        buyTargetBtn.addEventListener('click', () => {
-            if (gems >= targetCost && ertMaxTargets < 10) {
-                gems -= targetCost;
-                ertMaxTargets += 1;
-                targetCost += 200;
-                if (ertMaxTargets >= 10) {
-                    targetCostText.textContent = "MAX";
-                    buyTargetBtn.disabled = true;
-                } else {
-                    targetCostText.textContent = targetCost;
-                }
-                updateGemUI();
-            }
-        });
-
-        buyRedBallBtn.addEventListener('click', () => {
-            if (gems >= redBallCost && (ertBalls.length >= 10 || isDevMode)) {
-                gems -= redBallCost;
-                redBallCost += 100;
-                redBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${redBallCost}`;
-                createRedBall();
-            }
-        });
-
-        buyRedSpeedBtn.addEventListener('click', () => {
-            if (gems >= redSpeedCost && redSpeedLevel < 5) {
-                gems -= redSpeedCost;
-                redSpeedLevel += 1;
-                redSpeedCost += 20;
-                if (redSpeedLevel >= 5) {
-                    redSpeedCostText.textContent = "MAX";
-                    buyRedSpeedBtn.disabled = true;
-                } else {
-                    redSpeedCostText.textContent = redSpeedCost;
-                }
-                redBalls.forEach(ball => {
-                    const currentAngle = Math.atan2(ball.dy, ball.dx);
-                    const newSpeed = pixelSize * 0.2 + (redSpeedLevel * pixelSize * 0.05);
-                    ball.dx = Math.cos(currentAngle) * newSpeed;
-                    ball.dy = Math.sin(currentAngle) * newSpeed;
-                });
-                updateGemUI();
-            }
-        });
-
-        buyRedRangeBtn.addEventListener('click', () => {
-            if (gems >= redRangeCost) {
-                gems -= redRangeCost;
-                redRangeBonus += 1;
-                redRangeCost += 50;
-                redRangeCostText.textContent = redRangeCost;
-                updateGemUI();
-            }
-        });
-
-        buyRedDmgBtn.addEventListener('click', () => {
-            if (gems >= redDmgCost) {
-                gems -= redDmgCost;
-                redDmgBonus += 1;
-                redDmgCost += 100;
-                redDmgCostText.textContent = redDmgCost;
-                updateGemUI();
-            }
-        });
-
-        buyRedLuckBtn.addEventListener('click', () => {
-            if (gems >= redLuckCost && redLuckBonus < 100) {
-                gems -= redLuckCost;
-                redLuckBonus += 1;
-                redLuckCost += 5;
-                if (redLuckBonus >= 100) {
-                    redLuckCostText.textContent = "MAX";
-                    buyRedLuckBtn.disabled = true;
-                } else {
-                    redLuckCostText.textContent = redLuckCost;
-                }
-                updateGemUI();
-            }
-        });
-
-        buyCblBallBtn.addEventListener('click', () => {
-            if (gems >= cblBallCost && (redBalls.length >= 10 || isDevMode)) {
-                gems -= cblBallCost;
-                cblBallCost += 150;
-                cblBallCostText.innerHTML = `<div class="diamond-icon" style="background:#000; box-shadow:none;"></div>${cblBallCost}`;
-                createCblBall();
-            }
-        });
-
-        buyCogSpeedBtn.addEventListener('click', () => {
-            if (gems >= cogSpeedCost) {
-                gems -= cogSpeedCost;
-                cblCogSpeedLevel += 1;
-                cogSpeedCost += 200;
-                cogSpeedCostText.textContent = cogSpeedCost;
-                updateGemUI();
-            }
-        });
-
-        buyCblSpeedBtn.addEventListener('click', () => {
-            if (gems >= cblSpeedCost) {
-                gems -= cblSpeedCost;
-                cblBallSpeedLevel += 1;
-                cblSpeedCost += 200;
-                cblSpeedCostText.textContent = cblSpeedCost;
-
-                cblBalls.forEach(ball => {
-                    const currentAngle = Math.atan2(ball.dy, ball.dx);
-                    const newSpeed = pixelSize * 0.2 + (cblBallSpeedLevel * pixelSize * 0.05);
-                    ball.dx = Math.cos(currentAngle) * newSpeed;
-                    ball.dy = Math.sin(currentAngle) * newSpeed;
-                });
-                updateGemUI();
-            }
-        });
-
-        buyCogCountBtn.addEventListener('click', () => {
-            if (gems >= cogCountCost && cblCogCount < 6) {
-                gems -= cogCountCost;
-                cblCogCount += 1;
-                cogCountCost += 100;
-                if (cblCogCount >= 6) {
-                    cogCountCostText.textContent = "MAX";
-                    buyCogCountBtn.disabled = true;
-                } else {
-                    cogCountCostText.textContent = cogCountCost;
-                }
-                updateGemUI();
-            }
-        });
-
-        buyCblDmgBtn.addEventListener('click', () => {
-            if (gems >= cblDmgCost) {
-                gems -= cblDmgCost;
-                cblDmgBonus += 1;
-                cblDmgCost += 100;
-                cblDmgCostText.textContent = cblDmgCost;
-                updateGemUI();
-            }
-        });
-
-        buyCogRangeBtn.addEventListener('click', () => {
-            if (gems >= cogRangeCost) {
-                gems -= cogRangeCost;
-                cblCogRange += 1;
-                cogRangeCost += 100;
-                cogRangeCostText.textContent = cogRangeCost;
-                updateGemUI();
-            }
-        });
-
         function createBreakParticles(x, y, color, count = 6) {
             for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -1372,6 +1502,10 @@
 
             emptyLights.push({ x: blockCenterX, y: blockCenterY });
 
+            // 티어에 따라 파괴음 높낮이 다르게 출력
+            if (p.tier >= 5) playSound('break_high');
+            else playSound('break_low');
+
             const baseReward = oreTiers[p.tier].reward;
             gems += baseReward * gemsPerBlockBonus;
             updateGemUI();
@@ -1391,6 +1525,7 @@
             const splashRadius = pixelSize * explosionRangeBlocks;
 
             createExplosionRing(x, y, splashRadius, isCriticalLuck ? '#ffea00' : '#ff3333');
+            playSound('hit_red'); // 폭탄 공격/폭발음
 
             const dmg = (1.0 + redDmgBonus) * dmgMultiplier;
 
@@ -1435,6 +1570,7 @@
                         }
 
                         if (!p.isBedrock) {
+                            playSound('hit_org');
                             createBreakParticles(p.x + pixelSize / 2, p.y + pixelSize / 2, oreTiers[p.tier].color, 6);
                             p.hp -= (1 + orgDmgBonus);
                             if (p.hp <= 0) destroyBlock(i, p);
@@ -1501,6 +1637,10 @@
                 const activeTargets = candidateBlocks.slice(0, ertMaxTargets);
                 ball.targets = activeTargets;
 
+                if (activeTargets.length > 0 && Math.random() < 0.2) {
+                    playSound('hit_ert'); // 레이저 공격 틱음
+                }
+
                 for (let t = 0; t < activeTargets.length; t++) {
                     const target = activeTargets[t];
                     const p = target.pixel;
@@ -1558,10 +1698,10 @@
                 }
             }
 
-            // 4. CBL balls (기존의 뭉툭하고 둥근 톱니바퀴 스타일로 원복)
+            // 4. CBL balls
             const cogSpeed = 0.08 + (cblCogSpeedLevel * 0.04);
-            const cogDistOffset = pixelSize * (1.0 + (cblCogRange - 1) * 1.0);
-            const cogBaseRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.3);
+            const cogDistOffset = pixelSize * (1.0 + cblCogRangeLevel * 0.4);
+            const cogBaseRadius = pixelSize * (0.8 + cblCogRangeLevel * 0.15);
             const cblDamage = 1.0 + cblDmgBonus;
 
             for (let b = 0; b < cblBalls.length; b++) {
@@ -1603,6 +1743,7 @@
                     const cogX = ball.x + Math.cos(angle) * (ball.radius + cogDistOffset);
                     const cogY = ball.y + Math.sin(angle) * (ball.radius + cogDistOffset);
 
+                    let hitAny = false;
                     for (let i = pixels.length - 1; i >= 0; i--) {
                         const p = pixels[i];
                         if (p.isBedrock) continue;
@@ -1614,10 +1755,14 @@
                         const distance = Math.hypot(distX, distY);
 
                         if (distance < cogBaseRadius) {
+                            hitAny = true;
                             createBreakParticles(p.x + pixelSize / 2, p.y + pixelSize / 2, oreTiers[p.tier].color, 2);
                             p.hp -= cblDamage * 0.1;
-                            if (p.hp <= 0) destroyBlock(index = i, p);
+                            if (p.hp <= 0) destroyBlock(i, p);
                         }
+                    }
+                    if (hitAny && Math.random() < 0.15) {
+                        playSound('hit_cbl'); // 톱니바퀴 마찰/공격음
                     }
                 }
             }
@@ -1666,7 +1811,6 @@
             return maxLight;
         }
 
-        // 뭉툭하고 도톰한 톱니바퀴 형태로 원복
         function drawChubbyCogwheel(x, y, radius, rotationAngle) {
             ctx.save();
             ctx.translate(x, y);
@@ -1696,7 +1840,6 @@
             ctx.fill();
             ctx.stroke();
 
-            // 가운데 구멍 뚫기
             ctx.globalCompositeOperation = 'destination-out';
             ctx.beginPath();
             ctx.arc(0, 0, radius * 0.35, 0, Math.PI * 2);
@@ -1786,9 +1929,9 @@
                 ctx.restore();
             }
 
-            // 6. CBL 뭉툭한 톱니바퀴 그리기
-            const cogDistOffset = pixelSize * (1.0 + (cblCogRange - 1) * 1.0);
-            const cogRadius = pixelSize * (0.8 + (cblCogRange - 1) * 0.3);
+            // 6. CBL 톱니바퀴 그리기
+            const cogDistOffset = pixelSize * (1.0 + cblCogRangeLevel * 0.4);
+            const cogRadius = pixelSize * (0.8 + cblCogRangeLevel * 0.15);
             for (let b = 0; b < cblBalls.length; b++) {
                 const ball = cblBalls[b];
                 for (let c = 0; c < cblCogCount; c++) {
@@ -1801,41 +1944,27 @@
             }
 
             // 7. Render Balls
-            for (let b = 0; b < balls.length; b++) {
-                const ball = balls[b];
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-                ctx.fillStyle = ball.color;
-                ctx.fill();
-                ctx.closePath();
+            function renderBallList(ballList) {
+                for (let b = 0; b < ballList.length; b++) {
+                    const ball = ballList[b];
+                    const isSpecial = (ballList.length >= 10 && b === 0);
+                    const r = isSpecial ? ball.radius * 2 : ball.radius;
+
+                    ctx.beginPath();
+                    ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = ball.color;
+                    ctx.shadowColor = ball.color;
+                    ctx.shadowBlur = isSpecial ? 25 : 8;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.closePath();
+                }
             }
 
-            for (let b = 0; b < ertBalls.length; b++) {
-                const ball = ertBalls[b];
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-                ctx.fillStyle = ball.color;
-                ctx.fill();
-                ctx.closePath();
-            }
-
-            for (let b = 0; b < redBalls.length; b++) {
-                const ball = redBalls[b];
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-                ctx.fillStyle = ball.color;
-                ctx.fill();
-                ctx.closePath();
-            }
-
-            for (let b = 0; b < cblBalls.length; b++) {
-                const ball = cblBalls[b];
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-                ctx.fillStyle = ball.color;
-                ctx.fill();
-                ctx.closePath();
-            }
+            renderBallList(balls);
+            renderBallList(ertBalls);
+            renderBallList(redBalls);
+            renderBallList(cblBalls);
         }
 
         function loop() {
